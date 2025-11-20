@@ -1,0 +1,34 @@
+{
+  "name": "@prolex/n8n-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for n8n workflow automation",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "watch": "tsx watch src/index.ts"
+  },
+  "keywords": [
+    "mcp",
+    "n8n",
+    "workflow",
+    "automation"
+  ],
+  "author": "ProlexAi",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.7.9",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
