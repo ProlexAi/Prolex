@@ -28,7 +28,12 @@ Thumbs.db
 .vscode/  
 .idea/
 
-\# \--- Divers \---  
-\*.tmp  
+\# \--- Divers \---
+\*.tmp
 \*.swp
+
+\# \--- MCP n8n-server \---
+mcp/n8n-server/package-lock.json
+mcp/n8n-server/.env.example
+mcp/n8n-server/.gitignore
 
