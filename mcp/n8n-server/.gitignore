@@ -1,0 +1,12 @@
+"n8n": {
+  "command": "npx",
+  "args": [
+    "-y",
+    "tsx",
+    "C:\\Users\\Matth\\OneDrive\\Documents\\GitHub\\Prolex\\mcp\\n8n-server\\src\\index.ts"
+  ],
+  "env": {
+    "N8N_BASE_URL": "http://localhost:5678",
+    "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiNWFhZjU0YS1iY2FmLTQ3ZWUtOTliOS0yODVhYWVjZmFiMmIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzYzNjUwNzMxfQ.DPNMJmOD7ksY7nLI7S1CRIOETqhQaL1zj2CchkzbEBw"
+  }
+}
