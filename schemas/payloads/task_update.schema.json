@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/task_update.schema.json",
+  "title": "Task Update Payload",
+  "description": "Payload pour mettre à jour une tâche existante",
+  "type": "object",
+  "required": ["task_id"],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "Identifiant unique de la tâche à mettre à jour"
+    },
+    "title": {
+      "type": "string",
+      "description": "Nouveau titre de la tâche",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "notes": {
+      "type": "string",
+      "description": "Nouvelle description"
+    },
+    "due": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Nouvelle date d'échéance"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["needsAction", "completed"],
+      "description": "Nouveau statut de la tâche"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Nouvelle priorité"
+    }
+  },
+  "additionalProperties": false
+}

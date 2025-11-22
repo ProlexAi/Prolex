@@ -1,3 +1,295 @@
+ claude/analyze-reflect-evaluate-01N6FPTwXHGCpgFhio5YZYSY
+# CATALOGUE DES WORKFLOWS OPEX v4
+# Ce fichier centralise tous les workflows n8n disponibles
+# Référencé par SPEC_OPEX_V4.md
+
+metadata:
+  version: "4.0"
+  last_updated: "2025-11-22"
+  total_workflows: 25
+  categories:
+    - core_proxy
+    - productivity
+    - devops_github
+    - client_workflows
+    - monitoring_backup
+    - reporting
+    - n8n_management
+    - examples_tests
+
+# ====================================================================
+# CORE / PROXY (000-099)
+# ====================================================================
+core_proxy:
+  - id: "010"
+    file: "010_sync-github-to-n8n.json"
+    name: "GitHub to n8n Sync"
+    role: "Synchro workflows depuis GitHub"
+    webhook: "/webhook/github-sync"
+    tool_id: null
+
+  - id: "020"
+    file: "020_proxy_master_exec.json"
+    name: "Proxy Master"
+    role: "Point d'entrée Prolex"
+    webhook: "/webhook/proxy-exec"
+    tool_id: "PROXY_EXEC"
+
+  - id: "030"
+    file: "030_kimmy_master.json"
+    name: "Kimmy Master"
+    role: "Filtre d'entrée"
+    webhook: "/webhook/kimmy-intake"
+    tool_id: null
+
+# ====================================================================
+# PRODUCTIVITÉ (100-199)
+# ====================================================================
+productivity:
+  - id: "100"
+    file: "100_task_create.json"
+    name: "Task Create"
+    role: "Créer tâche Google Tasks"
+    tool_id: "TASK_CREATE"
+    autonomy_levels: [1, 2, 3]
+
+  - id: "101"
+    file: "101_task_update.json"
+    name: "Task Update"
+    role: "Modifier tâche"
+    tool_id: "TASK_UPDATE"
+    autonomy_levels: [2, 3]
+
+  - id: "110"
+    file: "110_calendar_event_create.json"
+    name: "Calendar Event Create"
+    role: "Créer événement Google Calendar"
+    tool_id: "CAL_EVENT_CREATE"
+    autonomy_levels: [2, 3]
+
+  - id: "120"
+    file: "120_doc_create_note.json"
+    name: "Doc Create Note"
+    role: "Créer note Google Docs"
+    tool_id: "DOC_CREATE_NOTE"
+    autonomy_levels: [1, 2, 3]
+
+  - id: "121"
+    file: "121_doc_update.json"
+    name: "Doc Update"
+    role: "Mettre à jour un doc"
+    tool_id: "DOC_UPDATE"
+    autonomy_levels: [2, 3]
+
+# ====================================================================
+# DEV / GITHUB (200-299)
+# ====================================================================
+devops_github:
+  - id: "200"
+    file: "200_git_clone.json"
+    name: "Git Clone"
+    role: "Cloner un repo GitHub"
+    tool_id: "GIT_CLONE"
+    autonomy_levels: [3]
+
+  - id: "201"
+    file: "201_git_sync.json"
+    name: "Git Sync"
+    role: "Pull sur repo existant"
+    tool_id: "GIT_SYNC"
+    autonomy_levels: [3]
+
+  - id: "210"
+    file: "210_github_open_pr.json"
+    name: "GitHub Open PR"
+    role: "Créer une PR"
+    tool_id: "GITHUB_OPEN_PR"
+    autonomy_levels: [3]
+
+  - id: "220"
+    file: "220_github_list_repos.json"
+    name: "GitHub List Repos"
+    role: "Lister repos d'un compte/org"
+    tool_id: "GITHUB_LIST_REPOS"
+    autonomy_levels: [2, 3]
+
+# ====================================================================
+# CLIENT WORKFLOWS (300-399)
+# ====================================================================
+client_workflows:
+  - id: "300"
+    file: "300_client_workflow_run.json"
+    name: "Client Workflow Run"
+    role: "Exécuter workflow client générique"
+    tool_id: "CLIENT_WORKFLOW_RUN"
+    autonomy_levels: [3]
+
+  - id: "310"
+    file: "310_client_onboarding_standard.json"
+    name: "Client Onboarding"
+    role: "Onboarding standard nouveau client"
+    tool_id: "CLIENT_ONBOARDING"
+    autonomy_levels: [3]
+
+  - id: "320"
+    file: "320_client_monthly_report.json"
+    name: "Client Monthly Report"
+    role: "Rapport mensuel client"
+    tool_id: "CLIENT_MONTHLY_REPORT"
+    autonomy_levels: [2, 3]
+
+  - id: "330"
+    file: "330_client_automation_pack_basic.json"
+    name: "Pack Basic"
+    role: "Pack automatisations basique"
+    tool_id: null
+    autonomy_levels: [2, 3]
+
+  - id: "331"
+    file: "331_client_automation_pack_pro.json"
+    name: "Pack Pro"
+    role: "Pack automatisations pro"
+    tool_id: null
+    autonomy_levels: [3]
+
+# ====================================================================
+# MONITORING / BACKUP (400-499)
+# ====================================================================
+monitoring_backup:
+  - id: "400"
+    file: "400_healthcheck_services.json"
+    name: "Healthcheck Services"
+    role: "Vérifier état services (n8n, AnythingLLM, etc.)"
+    tool_id: "HEALTHCHECK_RUN"
+    autonomy_levels: [1, 2, 3]
+
+  - id: "410"
+    file: "410_global_error_alert.json"
+    name: "Global Error Alert"
+    role: "Alerte sur erreurs critiques"
+    tool_id: "GLOBAL_ERROR_ALERT"
+    autonomy_levels: [1, 2, 3]
+
+  - id: "420"
+    file: "420_security_alerts.json"
+    name: "Security Alerts"
+    role: "Alertes sécurité"
+    tool_id: null
+    autonomy_levels: [1, 2, 3]
+
+  - id: "450"
+    file: "450_backup_all_to_drive.json"
+    name: "Backup All"
+    role: "Backup complet vers Google Drive"
+    tool_id: "BACKUP_RUN"
+    autonomy_levels: [3]
+
+  - id: "451"
+    file: "451_restore_from_backup.json"
+    name: "Restore Backup"
+    role: "Restauration depuis backup"
+    tool_id: "RESTORE_BACKUP"
+    autonomy_levels: []  # Manuel uniquement
+
+# ====================================================================
+# REPORTING (500-599)
+# ====================================================================
+reporting:
+  - id: "500"
+    file: "500_systemjournal_entry.json"
+    name: "SystemJournal Entry"
+    role: "Ajouter entrée dans SystemJournal"
+    tool_id: "LOG_APPEND"
+    autonomy_levels: [1, 2, 3]
+
+  - id: "510"
+    file: "510_api_cost_tracker.json"
+    name: "API Cost Tracker"
+    role: "Tracker coûts APIs"
+    tool_id: "COST_REPORT_RUN"
+    autonomy_levels: [2, 3]
+
+  - id: "520"
+    file: "520_weekly_summary_to_sheet.json"
+    name: "Weekly Summary"
+    role: "Résumé hebdomadaire"
+    tool_id: "WEEKLY_SUMMARY"
+    autonomy_levels: [2, 3]
+
+  - id: "530"
+    file: "530_web_search.json"
+    name: "Web Search"
+    role: "Recherche web technique"
+    tool_id: "WEB_SEARCH"
+    autonomy_levels: [1, 2, 3]
+
+# ====================================================================
+# N8N MANAGEMENT (600-699) – Nouveauté v4+
+# ====================================================================
+n8n_management:
+  - id: "600"
+    file: "600_n8n_workflow_design.json"
+    name: "N8N Workflow Design"
+    role: "Concevoir un workflow"
+    tool_id: "N8N_WORKFLOW_DESIGN"
+    autonomy_levels: [2, 3]
+
+  - id: "601"
+    file: "601_n8n_workflow_upsert.json"
+    name: "N8N Workflow Upsert"
+    role: "Créer/modifier workflow"
+    tool_id: "N8N_WORKFLOW_UPSERT"
+    autonomy_levels: [3]
+
+  - id: "602"
+    file: "602_n8n_workflow_test.json"
+    name: "N8N Workflow Test"
+    role: "Tester workflow"
+    tool_id: "N8N_WORKFLOW_TEST"
+    autonomy_levels: [3]
+
+  - id: "603"
+    file: "603_n8n_workflow_promote.json"
+    name: "N8N Workflow Promote"
+    role: "Promouvoir sandbox → prod"
+    tool_id: "N8N_WORKFLOW_PROMOTE"
+    autonomy_levels: []  # Manuel uniquement
+
+  - id: "610"
+    file: "610_n8n_list_workflows.json"
+    name: "N8N List Workflows"
+    role: "Lister tous les workflows"
+    tool_id: "N8N_LIST_WORKFLOWS"
+    autonomy_levels: [1, 2, 3]
+
+# ====================================================================
+# EXEMPLES / TESTS (900-999)
+# ====================================================================
+examples_tests:
+  - id: "900"
+    file: "900_example_hello_world.json"
+    name: "Hello World"
+    role: "Workflow de test basique"
+    tool_id: null
+
+  - id: "910"
+    file: "910_test_systemjournal.json"
+    name: "Test SystemJournal"
+    role: "Tester log SystemJournal"
+    tool_id: null
+
+# ====================================================================
+# CONFIGURATION MVP
+# ====================================================================
+mvp_config:
+  max_autonomy_level: 2
+  core_workflows:
+    - "020_proxy_master_exec.json"      # Proxy Master
+    - "030_kimmy_master.json"           # Kimmy
+    - "100_task_create.json"            # Tasks
+    - "500_systemjournal_entry.json"    # Logging
+  description: "Configuration MVP : autonomie niveau 2 max, 4 workflows essentiels"
+
 # ============================================================================
 # CATALOGUE OPEX WORKFLOWS
 # ============================================================================
@@ -366,3 +658,4 @@ workflows:
     priority: 1
     tags: ["sandbox", "test"]
     notes: "Workflow de test libre pour expérimentations."
+main

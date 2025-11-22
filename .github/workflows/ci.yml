@@ -62,11 +62,11 @@ jobs:
       
       - name: Valider schemas/*.yml
         run: |
-          yamllint -d relaxed schemas/
-      
+          yamllint schemas/
+
       - name: Valider config/*.yml
         run: |
-          yamllint -d relaxed config/
+          yamllint config/
 
   # Job 3 : Lint de la documentation Markdown
   lint-docs:

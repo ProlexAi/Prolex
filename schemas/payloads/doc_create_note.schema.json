@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/doc_create_note.schema.json",
+  "title": "Document Create Note Payload",
+  "description": "Payload pour créer une note dans Google Docs",
+  "type": "object",
+  "required": ["title", "content"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Titre du document",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "content": {
+      "type": "string",
+      "description": "Contenu du document (Markdown ou texte brut)"
+    },
+    "folder_id": {
+      "type": "string",
+      "description": "ID du dossier Google Drive où créer le document"
+    },
+    "format": {
+      "type": "string",
+      "enum": ["markdown", "plain", "html"],
+      "default": "markdown",
+      "description": "Format du contenu"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags pour catégoriser le document"
+    }
+  },
+  "additionalProperties": false
+}

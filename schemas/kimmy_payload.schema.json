@@ -1,149 +1,155 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+<<<<<< claude/fix-json-schema-validation-015bQveWcNSNed8DmfLdnTXU
   "$id": "https://prolex.ai/schemas/kimmy_payload.schema.json",
+======
+  "$id": "https://automatt.ai/schemas/kimmy-payload.json",
+>>>>>> main
   "title": "KimmyPayload",
-  "description": "Structure de sortie du filtre intelligent Kimmy après analyse d'une requête utilisateur",
+  "description": "Payload structuré produit par Kimmy pour Prolex",
   "type": "object",
+  "required": [
+    "request_id",
+    "source",
+    "raw_input",
+    "language",
+    "kimmy_summary",
+    "intent",
+    "complexity",
+    "confidence",
+    "requires_prolex"
+  ],
   "properties": {
     "request_id": {
       "type": "string",
-      "description": "Identifiant unique de la requête (UUID v4)",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+      "format": "uuid",
+      "description": "Identifiant unique de la requête (UUID v4)"
     },
-    "timestamp": {
+    "source": {
       "type": "string",
-      "description": "Timestamp ISO 8601 de la requête",
-      "format": "date-time"
+      "enum": ["chat", "whatsapp", "telegram", "email", "api", "other"],
+      "description": "Canal d'origine de la demande"
     },
-    "user_id": {
+    "raw_input": {
       "type": "string",
-      "description": "Identifiant de l'utilisateur"
+      "minLength": 1,
+      "description": "Texte original de l'utilisateur, non modifié"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}$",
+      "description": "Code langue ISO 639-1 (ex: 'fr', 'en')"
+    },
+    "kimmy_summary": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500,
+      "description": "Résumé concis en 1-2 phrases de la demande"
     },
     "intent": {
       "type": "string",
-      "description": "Intent détecté (voir schemas/intents/kimmy_intents.yml)",
       "enum": [
-        "TASK_HELP",
-        "DOC_QUESTION",
-        "DEV_HELP",
-        "CLIENT_CONTEXT",
-        "SYSTEM_STATUS",
-        "HIGH_RISK_ACTION",
-        "SIMPLE_QUESTION",
-        "CLARIFICATION_NEEDED"
-      ]
+        "task_create",
+        "task_update",
+        "calendar_event",
+        "doc_note",
+        "doc_structuring",
+        "question_simple",
+        "question_systeme",
+        "debug_infra",
+        "client_workflow",
+        "dev_workflow",
+        "reporting",
+        "config_change",
+        "other"
+      ],
+      "description": "Intention classifiée de la demande"
+    },
+    "complexity": {
+      "type": "string",
+      "enum": ["simple", "complex", "unclear"],
+      "description": "Niveau de complexité évalué par Kimmy"
     },
     "confidence": {
       "type": "number",
-      "description": "Niveau de confiance de l'intent détecté (0-1)",
       "minimum": 0,
-      "maximum": 1
+      "maximum": 1,
+      "description": "Niveau de confiance de Kimmy dans sa classification (0-1)"
     },
-    "context": {
-      "type": "object",
-      "description": "Contexte extrait de la requête",
-      "properties": {
-        "client_id": {
-          "type": "string",
-          "description": "ID du client concerné (si applicable)"
-        },
-        "project_id": {
-          "type": "string",
-          "description": "ID du projet concerné (si applicable)"
-        },
-        "urgency": {
-          "type": "string",
-          "enum": ["low", "normal", "high", "critical"],
-          "default": "normal"
-        },
-        "entities": {
-          "type": "array",
-          "description": "Entités nommées extraites",
-          "items": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": ["person", "date", "url", "file", "tool", "custom"]
-              },
-              "value": {
-                "type": "string"
-              }
-            },
-            "required": ["type", "value"]
-          }
-        }
-      }
+    "requires_prolex": {
+      "type": "boolean",
+      "description": "Si true, Prolex doit traiter la demande; si false, Kimmy peut gérer"
     },
-    "structured_query": {
-      "type": "object",
-      "description": "Requête reformulée de manière structurée pour Prolex",
-      "properties": {
-        "original_text": {
-          "type": "string",
-          "description": "Texte original de la requête"
-        },
-        "cleaned_text": {
-          "type": "string",
-          "description": "Texte nettoyé et normalisé"
-        },
-        "extracted_params": {
-          "type": "object",
-          "description": "Paramètres extraits de la requête"
-        }
+    "suggested_tools": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z_]+$"
       },
-      "required": ["original_text", "cleaned_text"]
+      "description": "Liste d'outils suggérés (IDs en MAJUSCULES)"
     },
-    "routing": {
+    "parameters": {
       "type": "object",
-      "description": "Instructions de routing pour Prolex",
+      "description": "Paramètres extraits de la demande",
       "properties": {
-        "requires_prolex": {
-          "type": "boolean",
-          "description": "true si la requête nécessite Prolex, false si Kimmy peut répondre directement"
+        "title": {
+          "type": ["string", "null"],
+          "description": "Titre de la tâche/note/événement"
         },
-        "suggested_autonomy_level": {
-          "type": "integer",
-          "description": "Niveau d'autonomie suggéré (0-3)",
-          "minimum": 0,
-          "maximum": 3
+        "description": {
+          "type": ["string", "null"],
+          "description": "Description détaillée"
         },
-        "requires_human_validation": {
-          "type": "boolean",
-          "description": "true si validation humaine requise avant exécution"
-        }
-      },
-      "required": ["requires_prolex", "suggested_autonomy_level"]
-    },
-    "safety_flags": {
-      "type": "object",
-      "description": "Indicateurs de sécurité",
-      "properties": {
-        "is_sensitive": {
-          "type": "boolean",
-          "description": "true si la requête concerne des données sensibles"
+        "due_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Date d'échéance (format ISO 8601: YYYY-MM-DD)"
         },
-        "is_high_risk": {
-          "type": "boolean",
-          "description": "true si la requête implique une action à risque"
+        "client_name": {
+          "type": ["string", "null"],
+          "description": "Nom du client concerné"
         },
-        "blocked_keywords": {
+        "priority": {
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "urgent", null],
+          "description": "Niveau de priorité"
+        },
+        "tags": {
           "type": "array",
-          "description": "Mots-clés déclenchant des alertes de sécurité",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "Tags/labels associés"
+        }
+      },
+      "additionalProperties": true
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Contraintes d'exécution",
+      "properties": {
+        "max_cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Coût maximum autorisé en USD"
+        },
+        "can_use_web": {
+          "type": "boolean",
+          "description": "Autorisation d'utiliser des recherches web"
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Niveau de sensibilité des données"
         }
       }
+    },
+    "history_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Références à des requêtes ou actions précédentes"
     }
-  },
-  "required": [
-    "request_id",
-    "timestamp",
-    "user_id",
-    "intent",
-    "confidence",
-    "structured_query",
-    "routing"
-  ]
+  }
 }

@@ -164,6 +164,41 @@ Avec Prolex, vous :
 
 ---
 
+## 🎛️ Correspondance technique : Packs & Autonomie
+
+Pour mieux comprendre les capacités de chaque pack, voici le détail technique :
+
+### Tableau de correspondance
+
+| Pack | Niveau autonomie Prolex | Workflows disponibles | Nombre d'outils | Exemples concrets |
+|------|-------------------------|----------------------|-----------------|-------------------|
+| **Essentiel** | 0 à 2 | 15 workflows core | 15 outils | Tâches, calendrier, notes, recherche web, logs |
+| **Professionnel** | 0 à 3 | 30+ workflows | 30+ outils | + GitHub, workflows clients, design de workflows n8n |
+| **Entreprise** | 0 à 3 + custom | Illimité | Illimité | + Workflows sur-mesure, outils métier custom |
+
+### Qu'est-ce que le niveau d'autonomie ?
+
+Le **niveau d'autonomie** détermine quelles actions Prolex peut effectuer **sans confirmation manuelle** :
+
+| Niveau | Nom | Peut faire | Ne peut pas faire |
+|--------|-----|------------|-------------------|
+| **0** | Lecture seule | Lire documents, analyser, répondre aux questions | Exécuter des actions |
+| **1** | Lecture + Logs | + Logger dans SystemJournal, créer des notes | Modifier des données externes |
+| **2** | Actions low-risk | + Créer/modifier tâches, événements calendrier, recherche web | Toucher aux workflows clients, GitHub |
+| **3** | Actions avancées | + Gérer workflows clients, créer workflows n8n, Git sync | Promouvoir en production sans confirmation |
+
+### Configuration MVP (incluse dans tous les packs)
+
+Même le Pack Essentiel inclut le **MVP Prolex v4** :
+- ✅ Autonomie niveau 2 (actions low-risk automatiques)
+- ✅ 4 workflows core (Kimmy, Proxy Master, Tasks, Logging)
+- ✅ Traçabilité complète (SystemJournal)
+- ✅ Interface en langage naturel
+
+**Évolution** : Vous pouvez commencer en niveau 1 (confirmation à chaque action) et monter progressivement jusqu'au niveau autorisé par votre pack.
+
+---
+
 ## 🚀 Comment démarrer ?
 
 ### Phase 1 : Discovery (Semaine 1)
