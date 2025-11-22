@@ -96,6 +96,9 @@ Prolex/
 │   ├── rules/
 │   │   └── 01_REGLES_PRINCIPALES.md
 │   ├── examples/
+│   │   └── lead-example.json           # 📋 Exemple de lead pour offres
+│   ├── offres/
+│   │   └── proposition-v1.md           # 📝 Template offre commerciale v4.3
 │   └── context/
 │       └── 02_VARIABLES_ET_CONTEXTE.md
 │
@@ -107,6 +110,7 @@ Prolex/
 │   ├── 010_sync-github-to-n8n.json
 │   ├── 020_example-hello-world.json
 │   ├── 030_github-dev-log-to-sheets.json
+│   ├── 250_proposal_auto.json          # 💰 Offre commerciale automatique
 │   └── README.md
 │
 ├── mcp/                                # Serveurs MCP
@@ -220,7 +224,7 @@ Voir [rag/tools/tools.yml](rag/tools/tools.yml)
 | Catégorie | Nombre | Exemples |
 |-----------|--------|----------|
 | **Productivité** | 5 | TASK_CREATE, CAL_EVENT_CREATE, DOC_CREATE_NOTE |
-| **Documentation** | 2 | DOC_CREATE_NOTE, DOC_UPDATE |
+| **Documentation** | 3 | DOC_CREATE_NOTE, DOC_UPDATE, CREATE_GOOGLE_DOC |
 | **Logging** | 1 | LOG_APPEND |
 | **Recherche** | 1 | WEB_SEARCH |
 | **DevOps** | 4 | GIT_CLONE, GIT_SYNC, GITHUB_OPEN_PR |
@@ -229,9 +233,11 @@ Voir [rag/tools/tools.yml](rag/tools/tools.yml)
 | **Backup** | 2 | BACKUP_RUN, RESTORE_BACKUP |
 | **Reporting** | 3 | COST_REPORT_RUN, WEEKLY_SUMMARY |
 | **N8N Management** | 5 | N8N_WORKFLOW_DESIGN, N8N_WORKFLOW_UPSERT, N8N_WORKFLOW_TEST |
+| **Automation** | 1 | TRIGGER_WORKFLOW |
+| **Communication** | 2 | SEND_EMAIL, SEND_TELEGRAM_MESSAGE |
 | **Core** | 2 | PROXY_EXEC, TODO_CREATE |
 
-**Total** : 30+ outils
+**Total** : 34 outils
 
 ### Outils v4+ (nouveauté)
 
@@ -371,8 +377,11 @@ R: Utiliser `N8N_WORKFLOW_TEST` sur sandbox, puis `N8N_WORKFLOW_PROMOTE` avec co
 - ✨ Intégration Kimmy + Prolex + Opex
 - ✨ Gestion autonome workflows n8n
 - ✨ 4 niveaux d'autonomie
-- ✨ 30+ outils disponibles
+- ✨ 34 outils disponibles
 - ✨ Documentation complète
+- 💰 **Nouveau**: Workflow 250 - Offre commerciale automatique (lead → proposition → email)
+- 💰 **Nouveau**: 4 outils Sales & Automation (TRIGGER_WORKFLOW, SEND_EMAIL, SEND_TELEGRAM_MESSAGE, CREATE_GOOGLE_DOC)
+- 📝 **Nouveau**: Template offre Prolex v4.3 à 6 900 € HT
 
 ---
 
