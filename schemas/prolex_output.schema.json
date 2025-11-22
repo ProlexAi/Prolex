@@ -1,173 +1,189 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prolex.ai/schemas/prolex_output.schema.json",
   "title": "ProlexOutput",
+  "description": "Structure de sortie de l'orchestrateur Prolex après planification",
   "type": "object",
-  "additionalProperties": false,
   "properties": {
     "type": {
       "type": "string",
-      "description": "Type de sortie générée par Prolex.",
-      "enum": [
-        "answer",
-        "tool_call",
-        "multi_tool_plan",
-        "clarification"
-      ]
+      "description": "Type de réponse Prolex",
+      "enum": ["answer", "tool_call", "multi_tool_plan", "clarification"]
     },
-    "content": {
+    "request_id": {
       "type": "string",
-      "description": "Texte de la réponse pour l'utilisateur (utilisé principalement pour type = 'answer')."
+      "description": "ID de la requête originale (provenant de Kimmy)",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
     },
-    "tool": {
+    "timestamp": {
       "type": "string",
-      "description": "Identifiant logique de l'outil à appeler (ex: TASK_CREATE, LOG_APPEND, CLIENT_WORKFLOW_RUN...)."
+      "description": "Timestamp ISO 8601 de la réponse",
+      "format": "date-time"
+    },
+    "autonomy_level": {
+      "type": "integer",
+      "description": "Niveau d'autonomie de l'action (voir schemas/autonomy_levels.yml)",
+      "minimum": 0,
+      "maximum": 3
     },
     "payload": {
       "type": "object",
-      "description": "Payload structuré pour l'outil cible. Doit respecter le schema spécifique de l'outil.",
-      "additionalProperties": true
+      "description": "Contenu de la réponse (varie selon le type)"
     },
-    "plan": {
-      "type": "array",
-      "description": "Plan multi-étapes lorsque Prolex propose plusieurs tool_call structurés.",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "step_index": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Numéro d'étape (1, 2, 3, ...)."
-          },
-          "description": {
-            "type": "string",
-            "description": "Description courte de l'étape."
-          },
-          "tool": {
-            "type": "string",
-            "description": "Identifiant logique de l'outil à appeler pour cette étape."
-          },
-          "payload": {
-            "type": "object",
-            "description": "Payload structuré pour cette étape.",
-            "additionalProperties": true
+    "metadata": {
+      "type": "object",
+      "description": "Métadonnées de traitement",
+      "properties": {
+        "processing_time_ms": {
+          "type": "number",
+          "description": "Temps de traitement en millisecondes"
+        },
+        "model_used": {
+          "type": "string",
+          "description": "Modèle LLM utilisé (ex: claude-sonnet-4)"
+        },
+        "tokens_used": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "integer"
+            },
+            "output": {
+              "type": "integer"
+            }
           }
         },
-        "required": [
-          "step_index",
-          "description",
-          "tool",
-          "payload"
-        ]
-      }
-    },
-    "questions": {
-      "type": "array",
-      "description": "Questions de clarification à poser à l'utilisateur lorsque type = 'clarification'.",
-      "items": {
-        "type": "string"
-      }
-    },
-    "meta": {
-      "type": "object",
-      "description": "Métadonnées optionnelles à des fins de traçabilité et de contrôle.",
-      "additionalProperties": false,
-      "properties": {
-        "original_request_id": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Identifiant de la requête initiale (request_id du KimmyPayload)."
-        },
-        "intent": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Intention principale telle que comprise par Prolex."
-        },
-        "autonomy_level_used": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "description": "Niveau d'autonomie de Prolex lors de la génération de cette réponse."
-        },
-        "notes_for_human": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Notes internes à l'usage de Matthieu (ex: risques, hypothèses, TODO)."
-        },
-        "dry_run": {
-          "type": "boolean",
-          "description": "Indique si la proposition est un plan sans exécution réelle (dry run).",
-          "default": false
+        "cost_estimate_usd": {
+          "type": "number",
+          "description": "Coût estimé en USD"
         }
       }
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "Explication du raisonnement de Prolex (optionnel, pour debug/audit)"
+    },
+    "validation_required": {
+      "type": "boolean",
+      "description": "true si validation humaine requise avant exécution"
+    },
+    "validation_token": {
+      "type": "string",
+      "description": "Token UUID pour validation (si validation_required = true)"
     }
   },
   "required": [
-    "type"
+    "type",
+    "request_id",
+    "timestamp",
+    "autonomy_level",
+    "payload"
   ],
-  "allOf": [
+  "oneOf": [
     {
-      "if": {
-        "properties": {
-          "type": {
-            "const": "answer"
-          }
+      "properties": {
+        "type": { "const": "answer" },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "Réponse textuelle directe"
+            },
+            "format": {
+              "type": "string",
+              "enum": ["plain", "markdown", "html"],
+              "default": "markdown"
+            }
+          },
+          "required": ["text"]
         }
-      },
-      "then": {
-        "required": [
-          "content"
-        ]
       }
     },
     {
-      "if": {
-        "properties": {
-          "type": {
-            "const": "tool_call"
-          }
+      "properties": {
+        "type": { "const": "tool_call" },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "tool_id": {
+              "type": "string",
+              "description": "ID du workflow Opex à appeler (ex: 100_10_TASK_CREATE)"
+            },
+            "parameters": {
+              "type": "object",
+              "description": "Paramètres à passer au workflow"
+            }
+          },
+          "required": ["tool_id", "parameters"]
         }
-      },
-      "then": {
-        "required": [
-          "tool",
-          "payload"
-        ]
       }
     },
     {
-      "if": {
-        "properties": {
-          "type": {
-            "const": "multi_tool_plan"
-          }
+      "properties": {
+        "type": { "const": "multi_tool_plan" },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "plan_id": {
+              "type": "string",
+              "description": "ID unique du plan"
+            },
+            "steps": {
+              "type": "array",
+              "description": "Liste ordonnée des étapes",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "step_number": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "tool_id": {
+                    "type": "string"
+                  },
+                  "parameters": {
+                    "type": "object"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "depends_on": {
+                    "type": "array",
+                    "description": "Numéros des étapes dont celle-ci dépend",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "required": ["step_number", "tool_id", "parameters"]
+              }
+            }
+          },
+          "required": ["plan_id", "steps"]
         }
-      },
-      "then": {
-        "required": [
-          "plan"
-        ]
       }
     },
     {
-      "if": {
-        "properties": {
-          "type": {
-            "const": "clarification"
-          }
+      "properties": {
+        "type": { "const": "clarification" },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "description": "Question de clarification à poser à l'utilisateur"
+            },
+            "suggestions": {
+              "type": "array",
+              "description": "Suggestions de réponses",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["question"]
         }
-      },
-      "then": {
-        "required": [
-          "questions"
-        ]
       }
     }
   ]

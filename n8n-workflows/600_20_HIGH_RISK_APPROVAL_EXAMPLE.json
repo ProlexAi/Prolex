@@ -1,0 +1,184 @@
+{
+  "name": "600_20_HIGH_RISK_APPROVAL",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook (Demande Validation)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "high-risk-approval-request",
+      "id": "webhook-request"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Génération d'un token de validation unique\nconst { v4: uuidv4 } = require('uuid');\nconst crypto = require('crypto');\n\nconst validationToken = `val_${uuidv4()}`;\nconst actionDescription = $json.action_description || 'Action à risque';\nconst requestId = $json.request_id;\n\n// Création des liens de validation\nconst approveLink = `https://n8n.automatt.ai/webhook/validate?token=${validationToken}&decision=approve`;\nconst rejectLink = `https://n8n.automatt.ai/webhook/validate?token=${validationToken}&decision=reject`;\n\nreturn {\n  validationToken,\n  requestId,\n  actionDescription,\n  approveLink,\n  rejectLink,\n  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h\n};"
+      },
+      "name": "Générer Token Validation",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "id": "generate-token"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "SYSTEM_JOURNAL_SHEET_ID",
+        "range": "Validations!A:F",
+        "options": {}
+      },
+      "name": "Enregistrer dans Journal",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "id": "log-validation-request"
+    },
+    {
+      "parameters": {
+        "channel": "#prolex-validations",
+        "text": "",
+        "attachments": [
+          {
+            "color": "#ff9900",
+            "title": "⚠️ Validation requise : Action à risque",
+            "text": "={{ $json.actionDescription }}",
+            "fields": {
+              "field": [
+                {
+                  "short": true,
+                  "title": "Request ID",
+                  "value": "={{ $json.requestId }}"
+                },
+                {
+                  "short": true,
+                  "title": "Expire dans",
+                  "value": "24 heures"
+                }
+              ]
+            },
+            "actions": {
+              "action": [
+                {
+                  "name": "approve",
+                  "text": "✅ Approuver",
+                  "type": "button",
+                  "url": "={{ $json.approveLink }}",
+                  "style": "primary"
+                },
+                {
+                  "name": "reject",
+                  "text": "❌ Refuser",
+                  "type": "button",
+                  "url": "={{ $json.rejectLink }}",
+                  "style": "danger"
+                }
+              ]
+            }
+          }
+        ],
+        "otherOptions": {}
+      },
+      "name": "Envoyer Notification Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "id": "send-slack"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "limit": 86400,
+        "options": {}
+      },
+      "name": "Attendre Décision (Wait)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "webhookId": "validate",
+      "id": "wait-decision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.query.decision }}",
+              "operation": "equals",
+              "value2": "approve"
+            }
+          ]
+        }
+      },
+      "name": "Décision = Approve ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "id": "check-decision"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Exécuter l'action approuvée\nconst originalRequest = $node['Webhook (Demande Validation)'].json;\n\nreturn {\n  status: 'approved',\n  action: originalRequest.action_to_execute,\n  approvedAt: new Date().toISOString(),\n  message: 'Action approuvée et exécutée'\n};"
+      },
+      "name": "Exécuter Action",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 200],
+      "id": "execute-action"
+    },
+    {
+      "parameters": {
+        "functionCode": "return {\n  status: 'rejected',\n  rejectedAt: new Date().toISOString(),\n  message: 'Action refusée par validation humaine'\n};"
+      },
+      "name": "Action Refusée",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 400],
+      "id": "reject-action"
+    },
+    {
+      "parameters": {},
+      "name": "Retour Résultat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1650, 300],
+      "id": "respond"
+    }
+  ],
+  "connections": {
+    "Webhook (Demande Validation)": {
+      "main": [[{"node": "Générer Token Validation", "type": "main", "index": 0}]]
+    },
+    "Générer Token Validation": {
+      "main": [[{"node": "Enregistrer dans Journal", "type": "main", "index": 0}]]
+    },
+    "Enregistrer dans Journal": {
+      "main": [[{"node": "Envoyer Notification Slack", "type": "main", "index": 0}]]
+    },
+    "Envoyer Notification Slack": {
+      "main": [[{"node": "Attendre Décision (Wait)", "type": "main", "index": 0}]]
+    },
+    "Attendre Décision (Wait)": {
+      "main": [[{"node": "Décision = Approve ?", "type": "main", "index": 0}]]
+    },
+    "Décision = Approve ?": {
+      "main": [
+        [{"node": "Exécuter Action", "type": "main", "index": 0}],
+        [{"node": "Action Refusée", "type": "main", "index": 0}]
+      ]
+    },
+    "Exécuter Action": {
+      "main": [[{"node": "Retour Résultat", "type": "main", "index": 0}]]
+    },
+    "Action Refusée": {
+      "main": [[{"node": "Retour Résultat", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-22T10:00:00.000Z",
+  "versionId": "1"
+}

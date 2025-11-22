@@ -1,0 +1,148 @@
+# Docker Compose - Prolex v4 Infrastructure
+# Configuration avec n8n-core (production) et n8n-sandbox (test/génération IA)
+# Dernière mise à jour : 22/11/2025
+
+version: '3.8'
+
+services:
+  # ============================================
+  # n8n-core : Instance de production stable
+  # ============================================
+  n8n-core:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-core
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_HOST=${DOMAIN_NAME}
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://${DOMAIN_NAME}/
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n_core
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+      # Configuration timezone
+      - TZ=Europe/Paris
+      # Configuration sécurité
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_ADMIN_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_ADMIN_PASSWORD}
+    volumes:
+      - ./n8n-core-data:/home/node/.n8n
+      - ./n8n-workflows:/workflows:ro  # Workflows core en lecture seule
+    networks:
+      - prolex-net
+    depends_on:
+      - postgres
+    labels:
+      - "com.prolex.component=n8n-core"
+      - "com.prolex.role=production"
+
+  # ============================================
+  # n8n-sandbox : Instance de test/sandbox
+  # Pour workflows auto-générés par Prolex
+  # ============================================
+  n8n-sandbox:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-sandbox
+    restart: unless-stopped  # Pas de restart auto si stop manuel
+    ports:
+      - "5679:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_HOST=sandbox.${DOMAIN_NAME}
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://sandbox.${DOMAIN_NAME}/
+      - N8N_ENCRYPTION_KEY=${N8N_SBX_ENCRYPTION_KEY}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n_sandbox
+      - DB_POSTGRESDB_USER=${DB_USER}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+      - TZ=Europe/Paris
+      # Configuration sécurité (même admin pour simplifier)
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_ADMIN_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_ADMIN_PASSWORD}
+      # IMPORTANT : Limites de ressources pour éviter surcharge
+      - N8N_WORKFLOW_TIMEOUT=60  # Timeout 60s max par workflow
+    volumes:
+      - ./n8n-sandbox-data:/home/node/.n8n
+    networks:
+      - prolex-net
+    depends_on:
+      - postgres
+    # Limites de ressources Docker
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'      # Max 0.5 CPU core
+          memory: 1G        # Max 1 GB RAM
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    labels:
+      - "com.prolex.component=n8n-sandbox"
+      - "com.prolex.role=testing"
+
+  # ============================================
+  # PostgreSQL : Base de données partagée
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=n8n_core
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      # Script d'initialisation pour créer les DBs
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    networks:
+      - prolex-net
+    labels:
+      - "com.prolex.component=database"
+
+  # ============================================
+  # Caddy : Reverse proxy + HTTPS auto
+  # ============================================
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-data:/data
+      - ./caddy-config:/config
+    networks:
+      - prolex-net
+    labels:
+      - "com.prolex.component=reverse-proxy"
+
+networks:
+  prolex-net:
+    driver: bridge
+
+# Notes d'utilisation :
+# 1. Copier ce fichier en docker-compose.yml
+# 2. Créer un fichier .env avec les variables :
+#    - DOMAIN_NAME=automatt.ai
+#    - N8N_ENCRYPTION_KEY=<générer avec : openssl rand -hex 32>
+#    - N8N_SBX_ENCRYPTION_KEY=<générer avec : openssl rand -hex 32>
+#    - DB_USER=n8n_user
+#    - DB_PASSWORD=<mot de passe fort>
+#    - N8N_ADMIN_USER=admin
+#    - N8N_ADMIN_PASSWORD=<mot de passe fort>
+# 3. Créer le script init-db.sh pour créer la DB sandbox
+# 4. Démarrer avec : docker-compose up -d
