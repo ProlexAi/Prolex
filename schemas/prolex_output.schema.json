@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://prolex.ai/schemas/prolex_output.schema.json",
   "title": "ProlexOutput",
   "description": "Structure de sortie de l'orchestrateur Prolex après planification",
