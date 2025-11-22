@@ -1,4 +1,3 @@
- claude/analyze-reflect-evaluate-01N6FPTwXHGCpgFhio5YZYSY
 # CATALOGUE DES WORKFLOWS OPEX v4
 # Ce fichier centralise tous les workflows n8n disponibles
 # Référencé par SPEC_OPEX_V4.md
@@ -658,4 +657,3 @@ workflows:
     priority: 1
     tags: ["sandbox", "test"]
     notes: "Workflow de test libre pour expérimentations."
-main
