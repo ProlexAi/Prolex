@@ -1,3 +1,27 @@
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
+################################################################################
+# Configuration Traefik v3 - Prolex Production
+# Reverse proxy avec génération automatique de certificats SSL
+################################################################################
+
+################################################################################
+# API et Dashboard
+################################################################################
+api:
+  # Active le dashboard Traefik (à désactiver en production ou protéger)
+  dashboard: false
+  # Active l'API
+  insecure: false
+
+################################################################################
+# Points d'entrée (Entrypoints)
+################################################################################
+entryPoints:
+  # Point d'entrée HTTP (port 80)
+  web:
+    address: ":80"
+    # Redirection automatique HTTP -> HTTPS (optionnel, peut aussi être fait par les labels)
+======
 # ═══════════════════════════════════════════════════════════════════
 # 🌐 TRAEFIK - Configuration statique
 # ═══════════════════════════════════════════════════════════════════
@@ -22,6 +46,7 @@ entryPoints:
   web:
     address: ":80"
     # Redirection automatique HTTP → HTTPS
+>>>>>> main
     http:
       redirections:
         entryPoint:
@@ -29,11 +54,95 @@ entryPoints:
           scheme: https
           permanent: true
 
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
+  # Point d'entrée HTTPS (port 443)
+======
   # Port 443 - HTTPS
+>>>>>> main
   websecure:
     address: ":443"
     http:
       tls:
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
+        certResolver: letsencrypt
+
+################################################################################
+# Providers - Découverte automatique des services
+################################################################################
+providers:
+  # Docker provider - découverte automatique des conteneurs
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false  # N'expose que les services avec traefik.enable=true
+    network: traefik-public  # Réseau Docker par défaut pour Traefik
+    watch: true              # Surveille les changements en temps réel
+
+  # File provider - pour des configurations statiques (optionnel)
+  # file:
+  #   directory: /etc/traefik/dynamic
+  #   watch: true
+
+################################################################################
+# Certificats SSL - Let's Encrypt
+################################################################################
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      # Email pour les notifications Let's Encrypt
+      email: ${LETSENCRYPT_EMAIL:-admin@example.com}
+      # Fichier de stockage des certificats
+      storage: /acme.json
+      # Challenge HTTP (recommandé pour la plupart des cas)
+      httpChallenge:
+        entryPoint: web
+
+      # Alternative: DNS Challenge (pour certificats wildcard)
+      # Décommentez et configurez si vous avez besoin de certificats wildcard
+      # dnsChallenge:
+      #   provider: cloudflare
+      #   resolvers:
+      #     - "1.1.1.1:53"
+      #     - "8.8.8.8:53"
+
+################################################################################
+# Logs
+################################################################################
+log:
+  # Niveau de log (DEBUG, INFO, WARN, ERROR, FATAL, PANIC)
+  level: INFO
+  # Format (json ou common)
+  format: common
+
+# Logs d'accès
+accessLog:
+  # Active les logs d'accès
+  enabled: true
+  # Format (json ou common)
+  format: common
+  # Filtres (optionnel)
+  filters:
+    statusCodes:
+      - "200-299"
+      - "400-499"
+      - "500-599"
+    retryAttempts: true
+    minDuration: "10ms"
+
+################################################################################
+# Options globales
+################################################################################
+global:
+  # Vérification des nouvelles versions de Traefik
+  checkNewVersion: true
+  # Envoi de statistiques anonymes
+  sendAnonymousUsage: false
+
+################################################################################
+# Ping endpoint (healthcheck)
+################################################################################
+ping:
+  entryPoint: "web"
+=======
         # Activation du TLS (SSL)
         certResolver: letsencrypt
 
@@ -163,3 +272,4 @@ global:
 
   # Désactiver l'envoi de statistiques anonymes à Traefik Labs
   sendAnonymousUsage: false
+>>>>>> main
