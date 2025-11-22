@@ -1,0 +1,218 @@
+{
+  "name": "250 — Offre auto complète (lead → facture)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            },
+            {
+              "triggerAtHour": 15
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger-node",
+      "name": "2 fois par jour (9h et 15h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simule un lead pour test\n// En production, remplacer par une vraie source (Google Sheets, webhook, etc.)\nreturn [\n  {\n    json: {\n      action: \"create_proposal\",\n      lead: {\n        name: \"Jean Dupont\",\n        title: \"CEO\",\n        company: \"Dupont Solutions\",\n        email: \"jean@dupontsolutions.fr\",\n        linkedin: \"https://linkedin.com/in/jeandupont\"\n      }\n    }\n  }\n];"
+      },
+      "id": "simulate-lead-node",
+      "name": "Simule lead (TEST)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "filePath": "={{ $execution.path }}/rag/offres/proposition-v1.md",
+        "options": {}
+      },
+      "id": "read-template-node",
+      "name": "Lit template offre",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Personnalise le template avec les données du lead\nconst template = $input.first().binary.data.toString();\nconst lead = $('Simule lead (TEST)').item.json.lead;\n\n// Remplace les variables {{name}}, {{title}}, {{company}}\nlet personalized = template\n  .replace(/\\{\\{name\\}\\}/g, lead.name)\n  .replace(/\\{\\{title\\}\\}/g, lead.title)\n  .replace(/\\{\\{company\\}\\}/g, lead.company)\n  .replace(/\\{\\{lien_stripe\\}\\}/g, \"https://buy.stripe.com/test_xxxxxxx\");\n\nreturn [\n  {\n    json: {\n      lead: lead,\n      offer_text: personalized,\n      subject: `Offre Automatt.ai — Prolex v4.3 pour ${lead.company}`\n    }\n  }\n];"
+      },
+      "id": "personalize-node",
+      "name": "Personnalise offre",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.lead.email }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.offer_text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-email-node",
+      "name": "Envoie par Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1050, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-credentials",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "id",
+          "cachedResultName": "SystemJournal"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now.toISO() }}",
+            "agent": "Prolex",
+            "action": "SEND_EMAIL",
+            "target": "={{ $json.lead.email }}",
+            "status": "success",
+            "details": "Offre Prolex v4.3 envoyée à {{ $json.lead.company }}",
+            "cost": 0
+          }
+        },
+        "options": {}
+      },
+      "id": "log-journal-node",
+      "name": "Log dans SystemJournal",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [1250, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-credentials",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Formatage final du résultat\nreturn [\n  {\n    json: {\n      status: \"success\",\n      message: `Offre envoyée à ${$('Simule lead (TEST)').item.json.lead.name} (${$('Simule lead (TEST)').item.json.lead.company})`,\n      email_sent_to: $('Simule lead (TEST)').item.json.lead.email,\n      timestamp: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "id": "format-response-node",
+      "name": "Formate réponse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "2 fois par jour (9h et 15h)": {
+      "main": [
+        [
+          {
+            "node": "Simule lead (TEST)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simule lead (TEST)": {
+      "main": [
+        [
+          {
+            "node": "Lit template offre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lit template offre": {
+      "main": [
+        [
+          {
+            "node": "Personnalise offre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Personnalise offre": {
+      "main": [
+        [
+          {
+            "node": "Envoie par Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoie par Gmail": {
+      "main": [
+        [
+          {
+            "node": "Log dans SystemJournal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log dans SystemJournal": {
+      "main": [
+        [
+          {
+            "node": "Formate réponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-11-22T21:00:00.000Z",
+      "updatedAt": "2025-11-22T21:00:00.000Z",
+      "id": "sales-automation",
+      "name": "sales"
+    },
+    {
+      "createdAt": "2025-11-22T21:00:00.000Z",
+      "updatedAt": "2025-11-22T21:00:00.000Z",
+      "id": "prolex-v4",
+      "name": "prolex"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-22T21:00:00.000Z",
+  "versionId": "1",
+  "active": true
+}
