@@ -96,7 +96,7 @@ future_intents:
     label: "Demande d'apprentissage"
     description: "L'utilisateur veut enseigner quelque chose au système"
     status: vision
-    
+
   - id: WORKFLOW_GENERATION
     label: "Génération de workflow"
     description: "L'utilisateur demande la création d'un nouveau workflow automatisé"

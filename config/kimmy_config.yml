@@ -9,14 +9,14 @@ routing:
     - SYSTEM_STATUS
     - SIMPLE_QUESTION
     - CLARIFICATION_NEEDED
-  
+
   # Intents nécessitant obligatoirement Prolex
   force_prolex_intents:
     - DEV_HELP
     - CLIENT_CONTEXT
     - HIGH_RISK_ACTION
     - DOC_QUESTION
-  
+
   # Seuil de confiance pour escalade automatique vers Prolex
   # Si confidence < threshold, escalader vers Prolex même si kimmy_only
   escalation_confidence_threshold: 0.7
@@ -32,14 +32,14 @@ models:
     estimated_cost_per_1k_tokens:
       input: 0.00025
       output: 0.00125
-  
+
   # Modèle de fallback pour Kimmy si primary indisponible
   kimmy_fallback:
     provider: "openai"
     model: "gpt-4-turbo"
     max_tokens: 1024
     temperature: 0.3
-  
+
   # Modèle pour Prolex (orchestration & planning)
   prolex_primary:
     provider: "anthropic"
@@ -49,7 +49,7 @@ models:
     estimated_cost_per_1k_tokens:
       input: 0.003
       output: 0.015
-  
+
   # Modèle local de fallback (si APIs externes down)
   prolex_fallback_local:
     provider: "ollama"
@@ -62,16 +62,16 @@ cost_optimization:
   # Caching des prompts système
   enable_prompt_caching: true
   cache_ttl_seconds: 3600
-  
+
   # Estimation de coût avant exécution
   estimate_cost_before_execution: true
   cost_alert_threshold_usd: 0.05
-  
+
   # Limitation du nombre de tokens
   max_context_tokens: 8000
   truncate_old_messages: true
   keep_last_n_messages: 10
-  
+
   # Batch processing pour requêtes similaires
   enable_batching: false
   batch_window_seconds: 5
@@ -82,11 +82,11 @@ monitoring:
   # Tracking des coûts
   track_cost_per_request: true
   log_to_systemjournal: true
-  
+
   # Alertes
   daily_cost_alert_threshold_usd: 10.0
   monthly_cost_alert_threshold_usd: 200.0
-  
+
   # Analyse de performance
   track_processing_time: true
   track_model_performance: true
@@ -98,7 +98,7 @@ degraded_mode:
     fallback_to_kimmy_only: true
     notify_user: true
     message_template: "Je suis en mode lecture seule. Je ne peux pas exécuter d'actions pour le moment."
-  
+
   # Si tous les LLMs externes sont down
   on_all_llm_unavailable:
     use_local_fallback: true
@@ -110,15 +110,15 @@ cost_estimates:
   - intent: SIMPLE_QUESTION
     path: "Kimmy seul"
     estimated_cost_usd: 0.001
-    
+
   - intent: DOC_QUESTION
     path: "Kimmy → Prolex → 1 tool"
     estimated_cost_usd: 0.015
-    
+
   - intent: DEV_HELP
     path: "Kimmy → Prolex → multi_tool_plan (3 steps)"
     estimated_cost_usd: 0.035
-    
+
   - intent: HIGH_RISK_ACTION
     path: "Kimmy → Prolex → plan + validation"
     estimated_cost_usd: 0.025
@@ -131,7 +131,7 @@ security:
     - "rm -rf"
     - "DROP TABLE"
     - "DELETE FROM"
-  
+
   # Rate limiting par utilisateur
   rate_limiting:
     enabled: true
