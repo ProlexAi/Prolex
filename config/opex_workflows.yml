@@ -1,0 +1,177 @@
+# Configuration des workflows Opex v4
+# Distinction entre workflows CORE (MVP) et LATER (post-MVP)
+# Dernière mise à jour : 22/11/2025
+
+# Workflows CORE - Prioritaires pour MVP v4.0
+core_workflows:
+  # Famille 100 - Productivité
+  - id: 100_10_TASK_CREATE
+    name: "Créer une tâche"
+    description: "Création d'une nouvelle tâche dans le système de gestion"
+    status: ⏳ En cours
+    priority: HIGH
+    autonomy_level: 2
+    estimated_completion: "25/11/2025"
+
+  - id: 100_20_TASK_LIST
+    name: "Lister les tâches"
+    description: "Récupération de la liste des tâches avec filtres"
+    status: ⏳ En cours
+    priority: HIGH
+    autonomy_level: 1
+    estimated_completion: "24/11/2025"
+
+  # Famille 400 - Système & Logs
+  - id: 400_10_LOG_APPEND_SYSTEMJOURNAL
+    name: "Ajouter entrée au SystemJournal"
+    description: "Ajout d'une entrée de log dans le journal système centralisé"
+    status: ⏳ En cours
+    priority: CRITICAL
+    autonomy_level: 1
+    estimated_completion: "23/11/2025"
+
+  # Famille 600 - Orchestration
+  - id: 600_10_PROXY_MASTER
+    name: "Proxy Master (exécution plans)"
+    description: "Orchestrateur principal pour l'exécution des plans multi-outils"
+    status: ⏳ En cours
+    priority: CRITICAL
+    autonomy_level: 2
+    estimated_completion: "26/11/2025"
+    notes: "Nécessite implémentation de la résolution robuste de variables"
+
+# Workflows LATER - Post-MVP (v4.1+)
+later_workflows:
+  # Famille 100 - Productivité (étendu)
+  - id: 100_30_TASK_UPDATE
+    name: "Mettre à jour une tâche"
+    status: 💡 Vision
+    priority: MEDIUM
+    target_version: "v4.1"
+
+  - id: 100_40_TASK_DELETE
+    name: "Supprimer une tâche"
+    status: 💡 Vision
+    priority: LOW
+    target_version: "v4.1"
+
+  # Famille 200 - Dev & GitHub
+  - id: 200_10_GITHUB_ISSUE_CREATE
+    name: "Créer une issue GitHub"
+    status: 💡 Vision
+    priority: MEDIUM
+    autonomy_level: 2
+    target_version: "v4.1"
+
+  - id: 200_20_GITHUB_PR_CREATE
+    name: "Créer une pull request GitHub"
+    status: 💡 Vision
+    priority: MEDIUM
+    autonomy_level: 2
+    target_version: "v4.2"
+
+  - id: 200_30_GITHUB_PR_MERGE
+    name: "Merger une pull request"
+    status: 💡 Vision
+    priority: LOW
+    autonomy_level: 3
+    target_version: "v4.2"
+
+  # Famille 300 - Clients & Projets
+  - id: 300_10_CLIENT_INFO_GET
+    name: "Récupérer infos client"
+    status: 💡 Vision
+    priority: MEDIUM
+    autonomy_level: 1
+    target_version: "v4.1"
+
+  - id: 300_20_CLIENT_PIPELINE_UPDATE
+    name: "Mettre à jour pipeline client"
+    status: 💡 Vision
+    priority: MEDIUM
+    autonomy_level: 2
+    target_version: "v4.2"
+
+  # Famille 400 - Système (étendu)
+  - id: 400_20_LOG_SEARCH
+    name: "Rechercher dans les logs"
+    status: 💡 Vision
+    priority: MEDIUM
+    autonomy_level: 1
+    target_version: "v4.1"
+
+  - id: 400_30_BACKUP_RUN
+    name: "Lancer un backup"
+    status: 💡 Vision
+    priority: HIGH
+    autonomy_level: 3
+    target_version: "v4.2"
+
+  # Famille 500 - Reporting
+  - id: 500_10_REPORT_DAILY
+    name: "Générer rapport quotidien"
+    status: 💡 Vision
+    priority: LOW
+    autonomy_level: 1
+    target_version: "v4.2"
+
+  - id: 500_20_REPORT_CLIENT
+    name: "Générer rapport client"
+    status: 💡 Vision
+    priority: MEDIUM
+    autonomy_level: 1
+    target_version: "v4.2"
+
+  # Famille 600 - Orchestration (étendu)
+  - id: 600_20_HIGH_RISK_APPROVAL
+    name: "Validation d'actions à risque"
+    status: ⏳ En cours
+    priority: HIGH
+    autonomy_level: 2
+    target_version: "v4.0"
+    notes: "Implémentation clickable via webhooks"
+
+  - id: 600_30_N8N_WORKFLOW_UPSERT_SBX
+    name: "Créer/modifier workflow en sandbox"
+    status: ⏳ En cours
+    priority: HIGH
+    autonomy_level: 2
+    target_version: "v4.0"
+
+  - id: 600_40_N8N_WORKFLOW_PROMOTE_PROD
+    name: "Promouvoir workflow sandbox → prod"
+    status: 💡 Vision
+    priority: HIGH
+    autonomy_level: 3
+    target_version: "v4.1"
+
+# Métriques MVP
+mvp_metrics:
+  total_workflows_planned: 34
+  core_workflows_count: 4
+  core_workflows_percentage: 12%
+  estimated_mvp_completion_date: "26/11/2025"
+
+# Règles de prioritisation
+prioritization_rules:
+  - "CRITICAL : Workflows nécessaires au fonctionnement de base de Prolex"
+  - "HIGH : Workflows essentiels pour cas d'usage MVP"
+  - "MEDIUM : Workflows utiles mais pas bloquants"
+  - "LOW : Workflows de confort ou optimisation"
+
+# Dépendances inter-workflows
+dependencies:
+  - workflow: 600_10_PROXY_MASTER
+    depends_on:
+      - 400_10_LOG_APPEND_SYSTEMJOURNAL
+    reason: "Proxy Master doit logger toutes ses actions"
+
+  - workflow: 600_20_HIGH_RISK_APPROVAL
+    depends_on:
+      - 400_10_LOG_APPEND_SYSTEMJOURNAL
+    reason: "Les validations doivent être tracées"
+
+  - workflow: 600_40_N8N_WORKFLOW_PROMOTE_PROD
+    depends_on:
+      - 600_30_N8N_WORKFLOW_UPSERT_SBX
+    reason: "On ne peut promouvoir que ce qui existe en sandbox"

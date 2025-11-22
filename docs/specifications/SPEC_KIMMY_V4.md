@@ -3,7 +3,24 @@
 > **Composant** : Filtre d'entrée intelligent
 > **Version** : 4.0
 > **Date** : 2025-11-22
-> **Statut** : Spécification technique complète
+> **Statut** : Spécification COMPLÈTE / Implémentation ⏳ EN COURS
+
+---
+
+## ⚡ Statut d'implémentation v4.0
+
+| Aspect | Statut | Notes |
+|--------|--------|-------|
+| **Documentation** | ✅ Complète | Ce document |
+| **Schémas centralisés** | ✅ Complète | Voir `schemas/kimmy_payload.schema.json` et `schemas/intents/kimmy_intents.yml` |
+| **Workflow n8n** | ⏳ En cours | Workflow de base à implémenter |
+| **Tests** | ⏳ À faire | Tests d'intégration avec Prolex |
+| **MVP Ready** | ⏳ En cours | Cible : 30/11/2025 |
+
+**📖 Sources de vérité** :
+- **Intents** : `schemas/intents/kimmy_intents.yml` (source unique)
+- **Payload** : `schemas/kimmy_payload.schema.json` (structure JSON)
+- **Configuration** : `config/kimmy_config.yml` (routing LLM)
 
 ---
 
@@ -240,23 +257,43 @@ else:
 
 ---
 
-## 3. Intents v4 (liste complète)
+## 3. Intents v4
 
-| Intent | Description | Complexité typique | Traitement direct possible |
-|--------|-------------|--------------------|-----------------------------|
-| `task_create` | Créer une tâche perso/interne/technique | Simple | ✅ Oui (si paramètres clairs) |
-| `task_update` | Modifier une tâche existante | Simple à Medium | ⚠️ Si ID connu |
-| `calendar_event` | Créer/modifier événement calendrier | Simple | ✅ Oui |
-| `doc_note` | Créer note/mémo/idée | Simple | ✅ Oui |
-| `doc_structuring` | Organiser/restructurer un document | Medium à Complex | ❌ Non → Prolex |
-| `question_simple` | Question définition/explication courte | Simple | ✅ Oui |
-| `question_systeme` | Question sur Prolex/Opex/architecture | Medium à Complex | ❌ Non → Prolex |
-| `debug_infra` | Problème VPS/Docker/n8n/domaine | Complex | ❌ Non → Prolex |
-| `client_workflow` | Demande liée client/pack/métier | Medium à Complex | ❌ Non → Prolex |
-| `dev_workflow` | Demande code/GitHub/MCP/workflows | Medium à Complex | ❌ Non → Prolex |
-| `reporting` | Rapport coûts/erreurs/suivi | Medium à Complex | ❌ Non → Prolex |
-| `config_change` | Modification config système | High | ❌ Non → Prolex (+ confirmation) |
-| `other` | Ne rentre dans rien / trop flou | Unclear | ❌ Non → Prolex |
+> **⚠️ SOURCE UNIQUE DE VÉRITÉ** : `schemas/intents/kimmy_intents.yml`
+>
+> La liste complète et à jour des intents est centralisée dans le fichier YAML ci-dessus.
+> Ce document n'en présente qu'un **résumé** pour compréhension.
+
+### 3.1 Intents de base (MVP v4.0)
+
+Ces intents sont prioritaires pour le MVP :
+
+| Intent | Description | Prolex requis ? | Autonomie par défaut |
+|--------|-------------|-----------------|---------------------|
+| `TASK_HELP` | Aide tâche / productivité | Non | 1 |
+| `DOC_QUESTION` | Question sur un document | Oui | 1 |
+| `DEV_HELP` | Aide développement / GitHub | Oui | 2 |
+| `CLIENT_CONTEXT` | Contexte / info client | Oui | 1 |
+| `SYSTEM_STATUS` | Statut système / infrastructure | Non | 0 |
+
+### 3.2 Intents sensibles
+
+Ces intents nécessitent des précautions particulières :
+
+| Intent | Description | Validation requise ? |
+|--------|-------------|---------------------|
+| `HIGH_RISK_ACTION` | Action potentiellement dangereuse | ✅ Oui |
+
+### 3.3 Intents conversationnels
+
+Traités directement par Kimmy sans escalade vers Prolex :
+
+| Intent | Description |
+|--------|-------------|
+| `SIMPLE_QUESTION` | Question générale |
+| `CLARIFICATION_NEEDED` | Demande de clarification |
+
+📖 **Pour la liste complète avec exemples et règles de routing** : voir `schemas/intents/kimmy_intents.yml`
 
 ---
 
@@ -264,7 +301,10 @@ else:
 
 ### 4.1 Schéma complet
 
-**Référence** : `schemas/payloads/kimmy_payload.schema.json`
+> **⚠️ SOURCE UNIQUE DE VÉRITÉ** : `schemas/kimmy_payload.schema.json`
+>
+> Le schéma JSON Schema complet et validé est dans le fichier ci-dessus.
+> Cette section présente des exemples et explications pour compréhension.
 
 ### 4.2 Exemple annoté
 
@@ -701,7 +741,83 @@ Chaque passage par Kimmy génère une entrée :
 
 ---
 
-## 10. Évolutions futures
+## 10. MVP v4.0 - Définition du Minimum Viable
+
+### 10.1 Critères d'acceptation MVP
+
+Pour considérer Kimmy **opérationnel en production** (MVP v4.0), les critères suivants doivent être remplis :
+
+#### Fonctionnalités essentielles
+
+- [ ] **Support d'au moins 5 intents de base** (voir `schemas/intents/kimmy_intents.yml`) :
+  - `TASK_HELP` : Aide tâche / productivité
+  - `DOC_QUESTION` : Question sur un document
+  - `DEV_HELP` : Aide développement / GitHub
+  - `CLIENT_CONTEXT` : Contexte / info client
+  - `SYSTEM_STATUS` : Statut système / infrastructure
+
+- [ ] **Mode d'autonomie limité** :
+  - Niveaux supportés : 0 et 1 uniquement (pas d'actions high-risk)
+  - Escalade automatique vers Prolex pour autonomie > 1
+
+- [ ] **Sortie au format KimmyPayload** :
+  - Conforme à `schemas/kimmy_payload.schema.json`
+  - Validation JSON stricte
+  - Tous les champs requis présents
+
+- [ ] **Journalisation systématique** :
+  - Chaque requête loggée dans SystemJournal
+  - Traçabilité complète (request_id, timestamp, user_id)
+
+#### Performance et fiabilité
+
+- [ ] **Taux de succès** : > 90% des requêtes traitées sans erreur
+- [ ] **Temps de réponse** : < 3 secondes en moyenne
+- [ ] **Taux de confiance** : > 0.7 pour 80% des requêtes
+
+#### Sécurité
+
+- [ ] **Blocage des patterns dangereux** (voir `config/kimmy_config.yml`)
+- [ ] **Rate limiting** : 10 req/min, 100 req/heure par utilisateur
+- [ ] **Pas d'accès direct** aux workflows n8n ou à l'infrastructure
+
+### 10.2 Scope MVP (ce qui est EXCLU)
+
+Les fonctionnalités suivantes sont **reportées post-MVP** :
+
+❌ **Non inclus dans MVP v4.0** :
+- Support multilingue (uniquement français)
+- Voice-to-text
+- Apprentissage des préférences utilisateur
+- Auto-amélioration via feedback loop
+- Suggestions proactives
+- Intents avancés (> 5 de base)
+- Niveau d'autonomie 2-3
+
+✅ **Prévu pour v4.1** (voir section 11)
+
+### 10.3 Indicateurs de succès MVP
+
+| Métrique | Cible MVP | Mesure |
+|----------|-----------|--------|
+| Taux de succès | > 90% | Requêtes sans erreur / Total |
+| Temps de réponse | < 3s | Moyenne sur 100 requêtes |
+| Taux de confiance | > 0.7 | Moyenne sur 100 requêtes |
+| Coût par requête | < $0.005 | Coût LLM moyen |
+
+### 10.4 Date cible MVP
+
+**Date de lancement MVP** : 30 novembre 2025
+
+**Prérequis techniques** :
+1. Workflow n8n de base implémenté
+2. Intégration avec Prolex validée
+3. SystemJournal opérationnel
+4. Tests d'intégration passants
+
+---
+
+## 11. Évolutions futures
 
 ### v4.1 (court terme)
 - [ ] Support multilingue complet (EN, ES, DE)
@@ -720,17 +836,23 @@ Chaque passage par Kimmy génère une entrée :
 
 ---
 
-## 11. Références
+## 12. Références
 
 ### Documentation liée
-- [ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md](../architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)
+- [00_README_SYSTEME_V4.md](../00_README_SYSTEME_V4.md) - Point d'entrée système
+- [ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md](../../ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)
 - [SPEC_PROLEX_V4.md](./SPEC_PROLEX_V4.md)
+- [PROBLEMES_RESOLUS.md](../PROBLEMES_RESOLUS.md) - Tracker des résolutions
+- [ROADMAP_MVP.md](../ROADMAP_MVP.md)
 
-### Schémas JSON
-- [schemas/payloads/kimmy_payload.schema.json](../../schemas/payloads/kimmy_payload.schema.json)
+### Schémas et sources de vérité
+- [schemas/kimmy_payload.schema.json](../../schemas/kimmy_payload.schema.json) ⚠️ **Source unique**
+- [schemas/intents/kimmy_intents.yml](../../schemas/intents/kimmy_intents.yml) ⚠️ **Source unique**
+- [schemas/autonomy_levels.yml](../../schemas/autonomy_levels.yml)
 
 ### Configuration
-- [config/system.yml](../../config/system.yml)
+- [config/kimmy_config.yml](../../config/kimmy_config.yml) - Routing et optimisation LLM
+- [config/opex_workflows.yml](../../config/opex_workflows.yml)
 
 ---
 
