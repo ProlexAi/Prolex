@@ -124,6 +124,134 @@ Prolex/
 
 ---
 
+## 📊 Catalogue Opex (workflows n8n / Prolex)
+
+### Vue d'ensemble
+
+Le fichier **`config/opex_workflows.yml`** est la **source de vérité** pour tous les workflows Opex (workflows n8n pilotés par Prolex). Il offre deux vues complémentaires sur les workflows :
+
+- **Vue technique** (`categories`) : Organisation système par domaine fonctionnel (core, productivity, dev, clients, monitoring, reporting, n8n_admin, examples)
+- **Vue métier** (`biz_areas`) : Pilotage business par domaine d'activité (GE, PROD, MKT, GP, SYS, MULTI)
+
+### Structure du catalogue
+
+Le fichier `config/opex_workflows.yml` contient :
+
+1. **Header** : Version, date de mise à jour, mainteneur, contact
+2. **Categories** (vue technique) : Plages d'IDs et labels pour organiser les workflows par domaine fonctionnel
+3. **Biz_areas** (vue métier) : Codes et descriptions des domaines métier
+4. **Workflows** : Liste exhaustive avec métadonnées complètes pour chaque workflow
+
+#### Catégories techniques (categories)
+
+Les workflows sont organisés par **plages d'IDs** selon leur domaine fonctionnel :
+
+| Plage | Category | Description |
+|-------|----------|-------------|
+| 000-099 | `core` | Workflows fondamentaux, points d'entrée système, proxy master |
+| 100-199 | `productivity` | Gestion de tâches, calendrier, productivité personnelle |
+| 200-299 | `dev` | Développement, contrôle de version, intégration continue |
+| 300-399 | `clients` | Gestion des clients, projets clients, onboarding |
+| 400-499 | `monitoring` | Surveillance système, sauvegardes, alertes |
+| 500-599 | `reporting` | Tableaux de bord, rapports, KPIs, analytics |
+| 600-699 | `n8n_admin` | Workflows de gestion de n8n lui-même, méta-orchestration |
+| 900-999 | `examples` | Workflows de test, prototypes, exemples pédagogiques |
+
+#### Domaines métier (biz_areas)
+
+Classification métier pour pilotage business des workflows :
+
+| Code | Domaine | Description |
+|------|---------|-------------|
+| **GE** | Gestion Entreprise | Pilotage global, finances, reporting stratégique, décisions business |
+| **PROD** | Production / Opérations | Livraison clients, exécution des services, opérations quotidiennes |
+| **MKT** | Marketing / Acquisition | Prospects, communication, contenus, génération de leads |
+| **GP** | Gestion Personnelle | Organisation personnelle de Matthieu, tâches perso, productivité individuelle |
+| **SYS** | Système / Infrastructure | Maintenance technique, sécurité, déploiement, infrastructure |
+| **MULTI** | Multi-domaines | Workflows hybrides touchant plusieurs domaines (à utiliser rarement) |
+
+**Note** : Le code `MULTI` doit être utilisé rarement et uniquement pour les workflows vraiment hybrides. Quand utilisé, préciser les domaines concernés dans le champ `notes`.
+
+### Outil de filtrage : `tools/filter_workflows.py`
+
+Un script Python permet de filtrer et trier les workflows selon différents critères.
+
+#### Installation
+
+```bash
+# Installer la dépendance PyYAML
+pip install pyyaml
+```
+
+#### Utilisation
+
+```bash
+# Lister tous les workflows
+python tools/filter_workflows.py
+
+# Voir les workflows de production (PROD) en status MVP
+python tools/filter_workflows.py --biz_area=PROD --status=mvp
+
+# Voir les workflows de monitoring système
+python tools/filter_workflows.py --category=monitoring --biz_area=SYS
+
+# Trier par priorité (importance / usage estimé)
+python tools/filter_workflows.py --sort=priority
+
+# Workflows clients en production
+python tools/filter_workflows.py --category=clients --status=prod
+
+# Workflows en statut "planned" (planifiés)
+python tools/filter_workflows.py --status=planned
+
+# Workflows internes seulement
+python tools/filter_workflows.py --scope=internal
+```
+
+#### Options de filtrage
+
+- `--biz_area` : Filtrer par domaine métier (GE, PROD, MKT, GP, SYS, MULTI)
+- `--category` : Filtrer par catégorie technique (core, productivity, dev, clients, monitoring, reporting, n8n_admin, examples)
+- `--status` : Filtrer par statut (planned, mvp, prod, deprecated)
+- `--scope` : Filtrer par portée (internal, client)
+
+#### Options de tri
+
+- `--sort=id` (défaut) : Tri par ID croissant
+- `--sort=priority` : Tri par priorité décroissante (workflows sans priority en dernier)
+- `--sort=calls_7d` : Tri par fréquence d'utilisation (7 derniers jours) - **futur**
+- `--sort=calls_30d` : Tri par fréquence d'utilisation (30 derniers jours) - **futur**
+
+#### Format de sortie
+
+Le script affiche chaque workflow sur une ligne avec :
+
+```
+ID: 310 | Name: Client Onboarding | Cat: clients | Biz: PROD | Status: planned | Scope: client | Priority: 4
+```
+
+Les champs manquants affichent `N/A`. Le script génère des warnings pour les `biz_area` inconnus.
+
+### Vision future : Métriques d'utilisation
+
+À l'avenir, un fichier `config/opex_usage_cache.yml` sera alimenté automatiquement par les logs / SystemJournal pour fournir des **métriques réelles d'utilisation** :
+
+```yaml
+usage_stats:
+  "10":
+    total_calls: 132
+    calls_last_7d: 18
+    calls_last_30d: 64
+  "100":
+    total_calls: 45
+    calls_last_7d: 5
+    calls_last_30d: 22
+```
+
+Ces métriques permettront de trier les workflows par **fréquence d'utilisation réelle** plutôt que par priorité estimée, offrant ainsi une vision data-driven de l'importance des workflows.
+
+---
+
 ## 🚀 Démarrage rapide v4
 
 ### Pour comprendre le système

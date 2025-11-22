@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/n8n_workflow_design.schema.json",
+  "title": "N8N Workflow Design Payload",
+  "description": "Payload pour designer un nouveau workflow n8n",
+  "type": "object",
+  "required": ["workflow_name", "description", "trigger_type"],
+  "properties": {
+    "workflow_name": {
+      "type": "string",
+      "description": "Nom du workflow à créer",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "description": "Description détaillée du workflow et de son objectif"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "webhook",
+        "schedule",
+        "manual",
+        "email",
+        "file_watch"
+      ],
+      "description": "Type de déclencheur du workflow"
+    },
+    "trigger_config": {
+      "type": "object",
+      "description": "Configuration du déclencheur",
+      "additionalProperties": true
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["action", "description"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "Action à effectuer dans cette étape"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description de l'étape"
+          },
+          "node_type": {
+            "type": "string",
+            "description": "Type de nœud n8n suggéré"
+          }
+        }
+      },
+      "description": "Liste des étapes du workflow"
+    },
+    "output_format": {
+      "type": "object",
+      "description": "Format de sortie attendu du workflow",
+      "additionalProperties": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags pour catégoriser le workflow"
+    }
+  },
+  "additionalProperties": false
+}

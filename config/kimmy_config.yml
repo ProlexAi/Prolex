@@ -1,93 +1,139 @@
-# config/kimmy_config.yml
-# Configuration comportementale de Kimmy (filtre d'entrée v4)
+# Configuration Kimmy v4
+# Optimisation des coûts LLM et routing intelligent
+# Dernière mise à jour : 22/11/2025
 
-# Mode global de Kimmy :
-# - safe          : ne fait que l'analyse et l'escalade vers Prolex
-# - quick_actions : peut exécuter des actions simples et réversibles
-kimmy_mode: quick_actions
+# Routing intelligent des requêtes
+routing:
+  # Intents traités directement par Kimmy (pas d'appel Prolex)
+  kimmy_only_intents:
+    - SYSTEM_STATUS
+    - SIMPLE_QUESTION
+    - CLARIFICATION_NEEDED
 
-# Langue de réponse principale
-kimmy_language: fr
+  # Intents nécessitant obligatoirement Prolex
+  force_prolex_intents:
+    - DEV_HELP
+    - CLIENT_CONTEXT
+    - HIGH_RISK_ACTION
+    - DOC_QUESTION
 
-# Description courte de son rôle (utile pour les prompts système)
-kimmy_role: >
-  Kimmy est le filtre d'entrée de Prolex. Elle analyse les demandes,
-  comprend l'intention, évalue la complexité, extrait des paramètres simples
-  et décide si la demande peut être traitée en quick action ou doit être
-  escaladée vers Prolex.
+  # Seuil de confiance pour escalade automatique vers Prolex
+  # Si confidence < threshold, escalader vers Prolex même si kimmy_only
+  escalation_confidence_threshold: 0.7
 
-# Liste complète des intents que Kimmy peut assigner
-kimmy_intents:
-  - task_create
-  - task_update
-  - calendar_event
-  - doc_note
-  - doc_structuring
-  - question_simple
-  - question_systeme
-  - debug_infra
-  - client_workflow
-  - dev_workflow
-  - reporting
-  - config_change
-  - other
+# Configuration des modèles LLM
+models:
+  # Modèle pour Kimmy (filtre & structuration)
+  kimmy_primary:
+    provider: "anthropic"
+    model: "claude-haiku-3"
+    max_tokens: 1024
+    temperature: 0.3
+    estimated_cost_per_1k_tokens:
+      input: 0.00025
+      output: 0.00125
 
-# Intents considérés comme sensibles -> escalade obligatoire vers Prolex
-kimmy_sensitive_intents:
-  - question_systeme
-  - debug_infra
-  - client_workflow
-  - dev_workflow
-  - reporting
-  - config_change
-  - other
+  # Modèle de fallback pour Kimmy si primary indisponible
+  kimmy_fallback:
+    provider: "openai"
+    model: "gpt-4-turbo"
+    max_tokens: 1024
+    temperature: 0.3
 
-# Mots-clés sensibles dans le message -> escalade obligatoire vers Prolex
-kimmy_sensitive_keywords:
-  - architecture
-  - infra
-  - infrastructure
-  - vps
-  - serveur
-  - docker
-  - traefik
-  - n8n
-  - mcp
-  - ssl
-  - sécurité
-  - sécurité réseau
-  - client
-  - clients
-  - offre
-  - devis
-  - facturation
-  - argent
-  - pricing
-  - prix
-  - roadmap
-  - plan complet
+  # Modèle pour Prolex (orchestration & planning)
+  prolex_primary:
+    provider: "anthropic"
+    model: "claude-sonnet-4"
+    max_tokens: 4096
+    temperature: 0.5
+    estimated_cost_per_1k_tokens:
+      input: 0.003
+      output: 0.015
 
-# Seuils de décision pour simple / complexe / escalade
-kimmy_confidence_min_simple: 0.85        # Confiance minimale pour traiter en quick action
-kimmy_confidence_min_escalation: 0.80    # En dessous de ce seuil -> escalade systématique
+  # Modèle local de fallback (si APIs externes down)
+  prolex_fallback_local:
+    provider: "ollama"
+    model: "llama3:70b"
+    endpoint: "http://localhost:11434"
+    note: "Qualité moindre mais autonomie totale"
 
-# Quick actions (ce que Kimmy peut faire seule quand toutes les conditions sont réunies)
-kimmy_quick_actions_enabled: true
+# Optimisations de coûts
+cost_optimization:
+  # Caching des prompts système
+  enable_prompt_caching: true
+  cache_ttl_seconds: 3600
 
-# Intents autorisés en quick actions
-kimmy_quick_actions_intents_allowed:
-  - task_create
-  - doc_note
-  - question_simple
+  # Estimation de coût avant exécution
+  estimate_cost_before_execution: true
+  cost_alert_threshold_usd: 0.05
 
-# Niveau de sensibilité maximal pour autoriser une quick action
-# low < medium < high
-kimmy_quick_actions_max_sensitivity: low
+  # Limitation du nombre de tokens
+  max_context_tokens: 8000
+  truncate_old_messages: true
+  keep_last_n_messages: 10
 
-# Clarification : nombre maximal de questions que Kimmy peut poser avant d'escalader
-kimmy_max_questions_clarification: 3
+  # Batch processing pour requêtes similaires
+  enable_batching: false
+  batch_window_seconds: 5
+  max_batch_size: 3
 
-# Paramètres techniques / logs
-kimmy_log_agent_name: kimmy          # Nom d'agent dans SystemJournal
-kimmy_default_source: chat           # Source par défaut si inconnue
-kimmy_default_max_cost_usd: 0.02     # Budget max par défaut si non précisé dans constraints
+# Métriques et monitoring
+monitoring:
+  # Tracking des coûts
+  track_cost_per_request: true
+  log_to_systemjournal: true
+
+  # Alertes
+  daily_cost_alert_threshold_usd: 10.0
+  monthly_cost_alert_threshold_usd: 200.0
+
+  # Analyse de performance
+  track_processing_time: true
+  track_model_performance: true
+
+# Comportement en mode dégradé
+degraded_mode:
+  # Si Prolex indisponible
+  on_prolex_unavailable:
+    fallback_to_kimmy_only: true
+    notify_user: true
+    message_template: "Je suis en mode lecture seule. Je ne peux pas exécuter d'actions pour le moment."
+
+  # Si tous les LLMs externes sont down
+  on_all_llm_unavailable:
+    use_local_fallback: true
+    notify_user: true
+    message_template: "Fonctionnement en mode dégradé avec IA locale."
+
+# Exemples de coûts estimés (pour référence)
+cost_estimates:
+  - intent: SIMPLE_QUESTION
+    path: "Kimmy seul"
+    estimated_cost_usd: 0.001
+
+  - intent: DOC_QUESTION
+    path: "Kimmy → Prolex → 1 tool"
+    estimated_cost_usd: 0.015
+
+  - intent: DEV_HELP
+    path: "Kimmy → Prolex → multi_tool_plan (3 steps)"
+    estimated_cost_usd: 0.035
+
+  - intent: HIGH_RISK_ACTION
+    path: "Kimmy → Prolex → plan + validation"
+    estimated_cost_usd: 0.025
+
+# Règles de sécurité
+security:
+  # Blocage de certains patterns
+  block_suspicious_patterns: true
+  suspicious_keywords:
+    - "rm -rf"
+    - "DROP TABLE"
+    - "DELETE FROM"
+
+  # Rate limiting par utilisateur
+  rate_limiting:
+    enabled: true
+    max_requests_per_minute: 10
+    max_requests_per_hour: 100

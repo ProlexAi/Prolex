@@ -549,11 +549,183 @@ high_risk_tools:
 
 ---
 
-## 7. Contrats de logs – SystemJournal v4
+## 7. Modes dégradés et gestion des pannes
 
-### 7.1 Structure type d'une entrée SystemJournal
+### 7.1 Principe général de résilience
 
-**Schéma** : `schemas/logs/systemjournal_entry.schema.json`
+Le système Prolex v4 doit pouvoir continuer à fonctionner, même en mode réduit, lorsque certains composants sont indisponibles. La stratégie de résilience repose sur trois piliers :
+
+1. **Détection automatique** des pannes (healthchecks)
+2. **Basculement en mode dégradé** avec fonctionnalités limitées
+3. **Communication transparente** vers l'utilisateur sur les limitations temporaires
+
+### 7.2 Scénario 1 : n8n indisponible
+
+#### 7.2.1 Détection
+
+**Méthode** : Healthcheck HTTP sur l'API n8n (via MCP ou script)
+- URL de test : `https://n8n.automatt.ai/api/v1/workflows` (ou endpoint similaire)
+- Timeout : 5 secondes
+- Nombre de tentatives : 3
+- Intervalle entre tentatives : 2 secondes
+
+**Trigger de basculement** : 3 échecs consécutifs = n8n considéré comme DOWN
+
+#### 7.2.2 Comportement de Prolex en mode dégradé
+
+Lorsque n8n est indisponible, **Prolex ne doit plus émettre** :
+- `type = "tool_call"` (appel d'outil unique)
+- `type = "multi_tool_plan"` (plan multi-étapes)
+
+**Prolex se limite à** :
+- `type = "answer"` (réponse textuelle directe)
+- `type = "clarification"` (demande de précisions)
+
+#### 7.2.3 Message utilisateur
+
+Prolex doit inclure un message explicite dans sa réponse :
+
+```json
+{
+  "type": "answer",
+  "payload": {
+    "text": "⚠️ **Mode lecture seule temporaire**\n\nJe suis momentanément en mode lecture seule : je ne peux pas exécuter d'actions (création de tâches, modifications, etc.), mais je peux t'aider à :\n- Analyser une situation\n- Répondre à des questions\n- Planifier des actions (pour exécution ultérieure)\n\nLe système d'exécution (n8n) est temporairement indisponible. Réessaie dans quelques minutes.",
+    "format": "markdown"
+  },
+  "metadata": {
+    "degraded_mode": true,
+    "unavailable_components": ["n8n"]
+  }
+}
+```
+
+#### 7.2.4 Journalisation
+
+Chaque tentative d'action bloquée par le mode dégradé doit être loggée dans SystemJournal :
+
+```json
+{
+  "event_type": "degraded_mode_action_blocked",
+  "component": "prolex",
+  "severity": "warning",
+  "data": {
+    "requested_type": "tool_call",
+    "blocked_tool": "TASK_CREATE",
+    "reason": "n8n_unavailable",
+    "user_notified": true
+  }
+}
+```
+
+### 7.3 Scénario 2 : Google APIs indisponibles (Docs, Sheets, Drive)
+
+#### 7.3.1 Comportement
+
+Si les APIs Google sont down (détectées via échecs répétés des appels MCP) :
+- **Désactivation temporaire** des outils Docs/Sheets/Drive
+- Prolex doit **retirer ces outils** de sa liste d'outils disponibles
+- Prolex explique la limitation dans sa réponse
+
+#### 7.3.2 Message utilisateur
+
+```json
+{
+  "type": "clarification",
+  "payload": {
+    "question": "Je ne peux pas accéder à Google Docs/Sheets pour le moment (API temporairement indisponible). Veux-tu que je :\n1. Enregistre ta demande pour traitement ultérieur\n2. Te propose une solution alternative (ex: créer dans Notion à la place)\n3. Planifie l'action pour plus tard",
+    "suggestions": [
+      "Enregistrer pour plus tard",
+      "Solution alternative",
+      "Annuler"
+    ]
+  }
+}
+```
+
+### 7.4 Scénario 3 : LLM principal indisponible (Claude API down)
+
+#### 7.4.1 Fallback hiérarchique
+
+Configuration des fallbacks (voir `config/kimmy_config.yml`) :
+
+1. **Primary** : Claude Sonnet 4 (Anthropic)
+2. **Fallback 1** : GPT-4 Turbo (OpenAI)
+3. **Fallback 2** : Llama 3 70B (Ollama local)
+
+#### 7.4.2 Comportement
+
+- Tentative avec Primary
+- Si échec (timeout, erreur API, rate limit) → Fallback 1
+- Si échec → Fallback 2 (modèle local, qualité moindre mais autonomie totale)
+- Si tous les modèles échouent → Message d'erreur à l'utilisateur
+
+#### 7.4.3 Message utilisateur (fallback local activé)
+
+```
+⚠️ Fonctionnement en mode dégradé avec IA locale.
+La qualité des réponses peut être réduite. Les services externes redeviendront disponibles prochainement.
+```
+
+### 7.5 Scénario 4 : Sandbox n8n surchargée ou plantée
+
+#### 7.5.1 Protection contre les workflows auto-générés dangereux
+
+Pour les workflows créés automatiquement par Prolex (via `N8N_WORKFLOW_UPSERT_SBX`) :
+- **Exécution uniquement dans n8n-sandbox** (instance séparée)
+- **Limites de ressources strictes** :
+  - CPU : 0.5 core max
+  - RAM : 1 GB max
+  - Timeout d'exécution : 60 secondes max
+
+#### 7.5.2 Actions en cas de problème
+
+Si un workflow sandbox plante ou freeze :
+- **Isolation garantie** : n8n-core (production) non affecté
+- **Redémarrage automatique** de n8n-sandbox (via Docker restart policy)
+- **Notification** à l'admin système
+
+#### 7.5.3 Promotion vers prod
+
+Un workflow ne peut être promu de sandbox → prod **uniquement si** :
+- ✅ Exécuté avec succès au moins 3 fois en sandbox
+- ✅ Aucune erreur critique loggée
+- ✅ Validation humaine explicite (niveau autonomie 3)
+
+### 7.6 SLA et objectifs de résilience
+
+| Composant | Disponibilité cible | MTTR (temps de récupération) | Mode dégradé disponible ? |
+|-----------|-------------------|------------------------------|---------------------------|
+| n8n-core | 99% | < 5 min | ✅ Oui (answer/clarification uniquement) |
+| LLM (Anthropic) | 99.9% | Immédiat (fallback auto) | ✅ Oui (fallback GPT-4 ou local) |
+| Google APIs | 99.5% | N/A (dépend de Google) | ✅ Oui (outils désactivés) |
+| SystemJournal | 99.9% | < 2 min | ⚠️ Non (critique, pas de fallback) |
+
+### 7.7 Monitoring et alertes
+
+#### Métriques à surveiller
+- Taux de requêtes en mode dégradé (%)
+- Nombre de basculements n8n/LLM par jour
+- Temps passé en mode dégradé (minutes/jour)
+
+#### Alertes à configurer
+- **Critique** : SystemJournal down > 5 min
+- **Haute** : n8n down > 10 min
+- **Moyenne** : Mode dégradé activé > 30 min
+- **Info** : Basculement LLM vers fallback
+
+### 7.8 Références
+
+- Configuration des fallbacks : `config/kimmy_config.yml`
+- Healthchecks : `infra/monitoring/healthchecks.yml` (à créer)
+- Métriques : Dashboard Grafana (à configurer)
+
+---
+
+## 8. Contrats de logs – SystemJournal v4
+
+### 8.1 Structure type d'une entrée SystemJournal
+
+**Schéma** : `schemas/system_journal.schema.json`
 
 **Exemple** :
 ```json
@@ -596,7 +768,7 @@ Le SystemJournal sert de base à :
 
 ---
 
-## 8. Plan d'action v4+ (avec workflows éditables)
+## 9. Plan d'action v4+ (avec workflows éditables)
 
 ### Phase 1 : RAG & AnythingLLM
 - [ ] Mettre à jour les fichiers RAG (outils + payloads + contraintes) pour inclure les outils `N8N_*`
@@ -627,7 +799,7 @@ Le SystemJournal sert de base à :
 
 ---
 
-## 9. Références
+## 10. Références
 
 ### Documentation
 - [SPEC_KIMMY_V4.md](../specifications/SPEC_KIMMY_V4.md)

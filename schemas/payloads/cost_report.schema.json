@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/cost_report.schema.json",
+  "title": "Cost Report Payload",
+  "description": "Payload pour générer un rapport de coûts API",
+  "type": "object",
+  "properties": {
+    "period": {
+      "type": "string",
+      "enum": ["daily", "weekly", "monthly", "custom"],
+      "default": "monthly",
+      "description": "Période du rapport"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de début pour période custom"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date de fin pour période custom"
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "openai",
+          "anthropic",
+          "google_workspace",
+          "n8n",
+          "anythingllm",
+          "all"
+        ]
+      },
+      "default": ["all"],
+      "description": "Services à inclure dans le rapport"
+    },
+    "group_by": {
+      "type": "string",
+      "enum": ["service", "workflow", "client", "day"],
+      "default": "service",
+      "description": "Grouper les coûts par"
+    },
+    "include_breakdown": {
+      "type": "boolean",
+      "default": true,
+      "description": "Inclure une ventilation détaillée"
+    },
+    "format": {
+      "type": "string",
+      "enum": ["json", "csv", "pdf"],
+      "default": "json",
+      "description": "Format de sortie"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/doc_update.schema.json",
+  "title": "Document Update Payload",
+  "description": "Payload pour mettre à jour un document",
+  "type": "object",
+  "required": ["doc_id"],
+  "properties": {
+    "doc_id": {
+      "type": "string",
+      "description": "Identifiant unique du document à mettre à jour"
+    },
+    "title": {
+      "type": "string",
+      "description": "Nouveau titre du document",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "content": {
+      "type": "string",
+      "description": "Nouveau contenu (remplace tout le contenu existant)"
+    },
+    "append_content": {
+      "type": "string",
+      "description": "Contenu à ajouter à la fin du document"
+    },
+    "operation": {
+      "type": "string",
+      "enum": ["replace", "append", "prepend"],
+      "default": "replace",
+      "description": "Type d'opération de mise à jour"
+    }
+  },
+  "additionalProperties": false
+}

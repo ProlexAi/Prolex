@@ -1,40 +1,49 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/kimmy-payload.json",
   "title": "KimmyPayload",
+  "description": "Payload structuré produit par Kimmy pour Prolex",
   "type": "object",
-  "additionalProperties": false,
+  "required": [
+    "request_id",
+    "source",
+    "raw_input",
+    "language",
+    "kimmy_summary",
+    "intent",
+    "complexity",
+    "confidence",
+    "requires_prolex"
+  ],
   "properties": {
     "request_id": {
       "type": "string",
-      "description": "Identifiant unique de la requête (UUID v4 recommandé)."
+      "format": "uuid",
+      "description": "Identifiant unique de la requête (UUID v4)"
     },
     "source": {
       "type": "string",
-      "description": "Source de la demande.",
-      "enum": [
-        "chat",
-        "whatsapp",
-        "telegram",
-        "email",
-        "webform",
-        "other"
-      ]
+      "enum": ["chat", "whatsapp", "telegram", "email", "api", "other"],
+      "description": "Canal d'origine de la demande"
     },
     "raw_input": {
       "type": "string",
-      "description": "Texte brut original envoyé par l'utilisateur."
+      "minLength": 1,
+      "description": "Texte original de l'utilisateur, non modifié"
     },
     "language": {
       "type": "string",
-      "description": "Langue détectée du message (code ISO, ex. 'fr')."
+      "pattern": "^[a-z]{2}$",
+      "description": "Code langue ISO 639-1 (ex: 'fr', 'en')"
     },
     "kimmy_summary": {
       "type": "string",
-      "description": "Résumé en 1 à 2 phrases de la demande de l'utilisateur."
+      "minLength": 10,
+      "maxLength": 500,
+      "description": "Résumé concis en 1-2 phrases de la demande"
     },
     "intent": {
       "type": "string",
-      "description": "Intention principale de la demande.",
       "enum": [
         "task_create",
         "task_update",
@@ -49,146 +58,94 @@
         "reporting",
         "config_change",
         "other"
-      ]
+      ],
+      "description": "Intention classifiée de la demande"
     },
     "complexity": {
       "type": "string",
-      "description": "Niveau de complexité estimé par Kimmy.",
-      "enum": [
-        "simple",
-        "complex",
-        "unclear"
-      ]
+      "enum": ["simple", "complex", "unclear"],
+      "description": "Niveau de complexité évalué par Kimmy"
     },
     "confidence": {
       "type": "number",
-      "description": "Confiance de Kimmy dans la classification de l'intention (0 à 1).",
       "minimum": 0,
-      "maximum": 1
+      "maximum": 1,
+      "description": "Niveau de confiance de Kimmy dans sa classification (0-1)"
     },
     "requires_prolex": {
       "type": "boolean",
-      "description": "Indicateur si la demande doit être escaladée vers Prolex."
+      "description": "Si true, Prolex doit traiter la demande; si false, Kimmy peut gérer"
     },
     "suggested_tools": {
       "type": "array",
-      "description": "Liste d'IDs d'outils logiques que Kimmy suggère à Prolex (indicatif).",
       "items": {
-        "type": "string"
-      }
+        "type": "string",
+        "pattern": "^[A-Z_]+$"
+      },
+      "description": "Liste d'outils suggérés (IDs en MAJUSCULES)"
     },
     "parameters": {
       "type": "object",
-      "description": "Paramètres structurés extraits du message.",
-      "additionalProperties": false,
+      "description": "Paramètres extraits de la demande",
       "properties": {
         "title": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Titre possible (tâche, note, document...)."
+          "type": ["string", "null"],
+          "description": "Titre de la tâche/note/événement"
         },
         "description": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Description plus détaillée de la demande."
+          "type": ["string", "null"],
+          "description": "Description détaillée"
         },
         "due_date": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Date d'échéance (format ISO 'YYYY-MM-DD' recommandé)."
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Date d'échéance (format ISO 8601: YYYY-MM-DD)"
         },
         "client_name": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Nom du client s'il peut être déduit."
+          "type": ["string", "null"],
+          "description": "Nom du client concerné"
         },
         "priority": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Priorité estimée.",
-          "enum": [
-            "low",
-            "medium",
-            "high",
-            null
-          ]
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "urgent", null],
+          "description": "Niveau de priorité"
         },
         "tags": {
           "type": "array",
-          "description": "Étiquettes libres associées à la demande.",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "Tags/labels associés"
         }
       },
-      "required": [
-        "title",
-        "description",
-        "due_date",
-        "client_name",
-        "priority",
-        "tags"
-      ]
+      "additionalProperties": true
     },
     "constraints": {
       "type": "object",
-      "description": "Contraintes liées à la demande (coût, web, sensibilité).",
-      "additionalProperties": false,
+      "description": "Contraintes d'exécution",
       "properties": {
         "max_cost_usd": {
           "type": "number",
-          "description": "Budget maximum approximatif pour traiter cette demande.",
-          "minimum": 0
+          "minimum": 0,
+          "description": "Coût maximum autorisé en USD"
         },
         "can_use_web": {
           "type": "boolean",
-          "description": "Autorisation d'utiliser des appels externes / web."
+          "description": "Autorisation d'utiliser des recherches web"
         },
         "sensitivity": {
           "type": "string",
-          "description": "Niveau de sensibilité de la demande.",
-          "enum": [
-            "low",
-            "medium",
-            "high"
-          ]
+          "enum": ["low", "medium", "high"],
+          "description": "Niveau de sensibilité des données"
         }
-      },
-      "required": [
-        "max_cost_usd",
-        "can_use_web",
-        "sensitivity"
-      ]
+      }
     },
     "history_refs": {
       "type": "array",
-      "description": "Liste d'identifiants de requêtes ou logs précédents liés à cette demande.",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Références à des requêtes ou actions précédentes"
     }
-  },
-  "required": [
-    "request_id",
-    "source",
-    "raw_input",
-    "language",
-    "kimmy_summary",
-    "intent",
-    "complexity",
-    "confidence",
-    "requires_prolex",
-    "parameters",
-    "constraints"
-  ]
+  }
 }
