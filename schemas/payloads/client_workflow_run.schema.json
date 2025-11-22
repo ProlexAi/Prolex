@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/client_workflow_run.schema.json",
+  "title": "Client Workflow Run Payload",
+  "description": "Payload pour exécuter un workflow n8n packagé pour un client",
+  "type": "object",
+  "required": ["client_id", "workflow_name"],
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Identifiant unique du client"
+    },
+    "workflow_name": {
+      "type": "string",
+      "description": "Nom du workflow packagé à exécuter"
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Paramètres spécifiques au workflow",
+      "additionalProperties": true
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["sandbox", "production"],
+      "default": "sandbox",
+      "description": "Environnement d'exécution"
+    },
+    "async": {
+      "type": "boolean",
+      "default": true,
+      "description": "Exécution asynchrone (true) ou synchrone (false)"
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 300,
+      "description": "Timeout maximal en secondes"
+    }
+  },
+  "additionalProperties": false
+}
