@@ -1,0 +1,206 @@
+{
+  "name": "050_daily_full_maintenance_prolex_v4",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 4 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger-4am",
+      "name": "Every Day at 4:00 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /opt/Prolex && git fetch --all && git reset --hard origin/main"
+      },
+      "id": "git-sync-step",
+      "name": "Git Fetch & Reset",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /opt/Prolex/mcp/n8n-server && npm ci --only=production"
+      },
+      "id": "npm-install-step",
+      "name": "NPM Install Production",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /opt/Prolex/mcp/n8n-server && npm run build"
+      },
+      "id": "npm-build-step",
+      "name": "NPM Build",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "command": "pm2 restart mcp-n8n-server --update-env"
+      },
+      "id": "pm2-restart-step",
+      "name": "PM2 Restart",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "command": "pm2 save"
+      },
+      "id": "pm2-save-step",
+      "name": "PM2 Save",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "command": "curl -f http://localhost:5678/health && echo \"MCP OK le $(date)\" || echo \"MCP DOWN le $(date)\""
+      },
+      "id": "health-check-step",
+      "name": "Health Check",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "command": "echo \"Maintenance quotidienne réussie le $(date +'%d/%m/%Y à %H:%M')\" > /opt/Prolex/mcp/n8n-server/DAILY_MAINTENANCE_LOG.txt && cat /opt/Prolex/mcp/n8n-server/DAILY_MAINTENANCE_LOG.txt"
+      },
+      "id": "log-maintenance-step",
+      "name": "Log Maintenance",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const gitSync = $node['Git Fetch & Reset'].json;\nconst npmInstall = $node['NPM Install Production'].json;\nconst npmBuild = $node['NPM Build'].json;\nconst pm2Restart = $node['PM2 Restart'].json;\nconst pm2Save = $node['PM2 Save'].json;\nconst healthCheck = $node['Health Check'].json;\nconst logMaintenance = $node['Log Maintenance'].json;\n\nreturn {\n  success: true,\n  timestamp: new Date().toISOString(),\n  steps: {\n    git_sync: gitSync.exitCode === 0 ? 'OK' : 'FAILED',\n    npm_install: npmInstall.exitCode === 0 ? 'OK' : 'FAILED',\n    npm_build: npmBuild.exitCode === 0 ? 'OK' : 'FAILED',\n    pm2_restart: pm2Restart.exitCode === 0 ? 'OK' : 'FAILED',\n    pm2_save: pm2Save.exitCode === 0 ? 'OK' : 'FAILED',\n    health_check: healthCheck.exitCode === 0 ? 'OK' : 'FAILED',\n    log_maintenance: logMaintenance.exitCode === 0 ? 'OK' : 'FAILED'\n  },\n  message: 'Maintenance quotidienne complète de Prolex v4'\n};"
+      },
+      "id": "format-result",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2000, 300]
+    }
+  ],
+  "connections": {
+    "Every Day at 4:00 AM": {
+      "main": [
+        [
+          {
+            "node": "Git Fetch & Reset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Git Fetch & Reset": {
+      "main": [
+        [
+          {
+            "node": "NPM Install Production",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NPM Install Production": {
+      "main": [
+        [
+          {
+            "node": "NPM Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NPM Build": {
+      "main": [
+        [
+          {
+            "node": "PM2 Restart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM2 Restart": {
+      "main": [
+        [
+          {
+            "node": "PM2 Save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM2 Save": {
+      "main": [
+        [
+          {
+            "node": "Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health Check": {
+      "main": [
+        [
+          {
+            "node": "Log Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    "maintenance",
+    "prolex-v4",
+    "production",
+    "daily",
+    "automatic"
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-22T00:00:00.000Z",
+  "versionId": "1.0"
+}

@@ -82,7 +82,7 @@ export class WorkflowCache {
       ttl: ttl || config.CACHE_TTL,
     };
 
-    this.cache.set(workflowId, entry, ttl);
+    this.cache.set(workflowId, entry, ttl || config.CACHE_TTL);
     this.hashMap.set(workflowId, hash);
 
     journal.debug('workflow_cached', {
