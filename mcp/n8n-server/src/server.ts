@@ -178,6 +178,26 @@ export class N8nMCPServer {
       const { name, arguments: args } = request.params;
       const correlationId = journal.generateCorrelationId();
 
+      // === PROLEX V4.2 — Plus de demandes humaines autorisées ===
+      // Refuser automatiquement tout tool contenant "askHuman" ou "approval"
+      if (name.toLowerCase().includes('askhuman') || name.toLowerCase().includes('approval')) {
+        journal.warn('human_tool_rejected', {
+          tool: name,
+          correlationId,
+          reason: 'autonomy_level_4_active',
+        });
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: '🚫 Prolex est en autonomie niveau 4. Aucune validation humaine n\'est autorisée ni nécessaire. Toutes les décisions sont prises automatiquement.',
+            },
+          ],
+          isError: false,
+        };
+      }
+
       journal.info('tool_call_request', {
         tool: name,
         correlationId,

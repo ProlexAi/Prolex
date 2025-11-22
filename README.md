@@ -1,33 +1,13 @@
-<<<<<< claude/n8n-mcp-server-01Rq2sQFqRYYFXx2RPEigtpH
-# Prolex
-Projet Multi-task AAI
+# Prolex v4.2 — Automatt.ai
 
-## Serveurs MCP
+**Statut actuel : Autonomie niveau 4 activée le 22 novembre 2025** 🚀
 
-Ce depot contient des serveurs MCP (Model Context Protocol) pour etendre les capacites de Claude Desktop.
+> L'IA prend toutes les décisions business et techniques seule.
+> Matthieu ne reçoit que les alertes critiques (> 5000 €, modification règles, etc.).
 
-### n8n MCP Server
+**Plus de validation humaine** · **Factures auto** · **RAG auto-refresh** · **Déploiements instantanés**
 
-Serveur MCP pour piloter votre instance n8n depuis Claude.
-
-**Emplacement** : `mcp/n8n-server/`
-
-**Fonctionnalites** :
-- Liste tous vos workflows n8n
-- Declenche l'execution de workflows avec payload personnalise
-
-**Documentation complete** : [mcp/n8n-server/README.md](./mcp/n8n-server/README.md)
-
-**Demarrage rapide** :
-```bash
-cd mcp/n8n-server
-npm install
-cp .env.example .env
-# Editez .env avec vos credentials n8n
-npm run dev
-```
-======
-# Prolex v4 🧠
+---
 
 > **Cerveau IA orchestrateur** d'Automatt.ai avec autonomie étendue et gestion de workflows n8n
 
@@ -657,7 +637,3 @@ Prolex/
     SYSTEMJOURNAL_MODELE.md
     CLIENT_TEMPLATE_AUTOMATT.md
   INDEX_PROLEX.md   <- fichier index central
-
-
-
->>>>>> main
