@@ -1,0 +1,196 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════════════════
+# Script de backup complet - Prolex VPS Production
+# ═══════════════════════════════════════════════════════════════════
+#
+# Ce script effectue une sauvegarde complète de :
+#   - Base de données PostgreSQL (n8n)
+#   - Données n8n (workflows, credentials)
+#   - Données AnythingLLM (documents, embeddings)
+#
+# Usage :
+#   1. Copier ce fichier : cp backup-all.sh.template backup-all.sh
+#   2. Rendre exécutable : chmod +x backup-all.sh
+#   3. Exécuter : ./backup-all.sh
+#   4. Automatiser avec cron : crontab -e
+#      Exemple (tous les jours à 2h) : 0 2 * * * /opt/prolex/scripts/backup-all.sh
+#
+# ═══════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────
+# CONFIGURATION
+# ───────────────────────────────────────────────────────────────────
+
+# Répertoire racine de Prolex
+PROLEX_DIR="/opt/prolex"
+
+# Répertoire de backup
+BACKUP_DIR="$PROLEX_DIR/backup"
+
+# Date du backup (format : YYYYMMDD_HHMMSS)
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# Nombre de jours de rétention des backups
+RETENTION_DAYS=7
+
+# Email pour les notifications (optionnel, laisser vide pour désactiver)
+NOTIFY_EMAIL=""
+
+# Fichier de log
+LOG_FILE="/var/log/prolex-backup.log"
+
+# ───────────────────────────────────────────────────────────────────
+# FONCTIONS
+# ───────────────────────────────────────────────────────────────────
+
+# Fonction de log
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+# Fonction d'envoi d'email (si configuré)
+send_notification() {
+    if [ -n "$NOTIFY_EMAIL" ]; then
+        echo "$1" | mail -s "Prolex Backup - $2" "$NOTIFY_EMAIL"
+    fi
+}
+
+# ───────────────────────────────────────────────────────────────────
+# DÉBUT DU BACKUP
+# ───────────────────────────────────────────────────────────────────
+
+log "═══════════════════════════════════════════════════════════════════"
+log "Début du backup Prolex - $DATE"
+log "═══════════════════════════════════════════════════════════════════"
+
+# Vérifier que Docker est en cours d'exécution
+if ! docker info > /dev/null 2>&1; then
+    log "ERREUR : Docker n'est pas en cours d'exécution"
+    send_notification "Docker n'est pas en cours d'exécution" "ERREUR"
+    exit 1
+fi
+
+# Se placer dans le répertoire Prolex
+cd "$PROLEX_DIR" || {
+    log "ERREUR : Impossible d'accéder à $PROLEX_DIR"
+    exit 1
+}
+
+# ───────────────────────────────────────────────────────────────────
+# 1. BACKUP POSTGRESQL
+# ───────────────────────────────────────────────────────────────────
+
+log "1/3 - Backup PostgreSQL..."
+
+POSTGRES_BACKUP_FILE="$BACKUP_DIR/postgres/backup_$DATE.sql"
+
+if docker compose exec -T postgres pg_dump -U prolex prolex_db > "$POSTGRES_BACKUP_FILE" 2>> "$LOG_FILE"; then
+    # Compresser le backup
+    gzip "$POSTGRES_BACKUP_FILE"
+    POSTGRES_SIZE=$(du -h "$POSTGRES_BACKUP_FILE.gz" | cut -f1)
+    log "✓ Backup PostgreSQL réussi : $POSTGRES_BACKUP_FILE.gz ($POSTGRES_SIZE)"
+else
+    log "✗ ERREUR : Échec du backup PostgreSQL"
+    send_notification "Échec du backup PostgreSQL" "ERREUR"
+fi
+
+# ───────────────────────────────────────────────────────────────────
+# 2. BACKUP N8N DATA
+# ───────────────────────────────────────────────────────────────────
+
+log "2/3 - Backup n8n data..."
+
+N8N_BACKUP_FILE="$BACKUP_DIR/n8n/n8n_data_$DATE.tar.gz"
+
+if tar -czf "$N8N_BACKUP_FILE" -C "$PROLEX_DIR" n8n/data 2>> "$LOG_FILE"; then
+    N8N_SIZE=$(du -h "$N8N_BACKUP_FILE" | cut -f1)
+    log "✓ Backup n8n data réussi : $N8N_BACKUP_FILE ($N8N_SIZE)"
+else
+    log "✗ ERREUR : Échec du backup n8n data"
+    send_notification "Échec du backup n8n data" "ERREUR"
+fi
+
+# ───────────────────────────────────────────────────────────────────
+# 3. BACKUP ANYTHINGLLM DATA
+# ───────────────────────────────────────────────────────────────────
+
+log "3/3 - Backup AnythingLLM data..."
+
+LLM_BACKUP_FILE="$BACKUP_DIR/anythingllm/llm_data_$DATE.tar.gz"
+
+if tar -czf "$LLM_BACKUP_FILE" -C "$PROLEX_DIR" anythingllm/data 2>> "$LOG_FILE"; then
+    LLM_SIZE=$(du -h "$LLM_BACKUP_FILE" | cut -f1)
+    log "✓ Backup AnythingLLM data réussi : $LLM_BACKUP_FILE ($LLM_SIZE)"
+else
+    log "✗ ERREUR : Échec du backup AnythingLLM data"
+    send_notification "Échec du backup AnythingLLM data" "ERREUR"
+fi
+
+# ───────────────────────────────────────────────────────────────────
+# 4. NETTOYAGE DES ANCIENS BACKUPS
+# ───────────────────────────────────────────────────────────────────
+
+log "Nettoyage des backups de plus de $RETENTION_DAYS jours..."
+
+# Nettoyer PostgreSQL backups
+POSTGRES_DELETED=$(find "$BACKUP_DIR/postgres" -name "backup_*.sql.gz" -mtime +$RETENTION_DAYS -delete -print | wc -l)
+log "  - PostgreSQL : $POSTGRES_DELETED fichier(s) supprimé(s)"
+
+# Nettoyer n8n backups
+N8N_DELETED=$(find "$BACKUP_DIR/n8n" -name "n8n_data_*.tar.gz" -mtime +$RETENTION_DAYS -delete -print | wc -l)
+log "  - n8n : $N8N_DELETED fichier(s) supprimé(s)"
+
+# Nettoyer AnythingLLM backups
+LLM_DELETED=$(find "$BACKUP_DIR/anythingllm" -name "llm_data_*.tar.gz" -mtime +$RETENTION_DAYS -delete -print | wc -l)
+log "  - AnythingLLM : $LLM_DELETED fichier(s) supprimé(s)"
+
+# ───────────────────────────────────────────────────────────────────
+# 5. RÉSUMÉ
+# ───────────────────────────────────────────────────────────────────
+
+log "═══════════════════════════════════════════════════════════════════"
+log "Backup terminé avec succès !"
+log "═══════════════════════════════════════════════════════════════════"
+
+# Afficher l'espace disque utilisé
+TOTAL_BACKUP_SIZE=$(du -sh "$BACKUP_DIR" | cut -f1)
+log "Espace total utilisé par les backups : $TOTAL_BACKUP_SIZE"
+
+# Afficher l'espace disque disponible
+DISK_USAGE=$(df -h "$PROLEX_DIR" | tail -1 | awk '{print $5}')
+log "Utilisation du disque : $DISK_USAGE"
+
+# Notification de succès (optionnel)
+send_notification "Backup terminé avec succès. Taille totale : $TOTAL_BACKUP_SIZE" "SUCCÈS"
+
+log "═══════════════════════════════════════════════════════════════════"
+log ""
+
+exit 0
+
+# ═══════════════════════════════════════════════════════════════════
+# NOTES
+# ═══════════════════════════════════════════════════════════════════
+#
+# Pour automatiser ce script avec cron :
+#
+# 1. Éditer la crontab de l'utilisateur :
+#    crontab -e
+#
+# 2. Ajouter une ligne pour exécuter le script quotidiennement à 2h :
+#    0 2 * * * /opt/prolex/scripts/backup-all.sh >> /var/log/prolex-backup.log 2>&1
+#
+# 3. Autres exemples de planification cron :
+#    - Tous les jours à 3h du matin : 0 3 * * *
+#    - Tous les dimanches à minuit : 0 0 * * 0
+#    - Toutes les 6 heures : 0 */6 * * *
+#    - Deux fois par jour (2h et 14h) : 0 2,14 * * *
+#
+# Pour tester le script manuellement :
+#    cd /opt/prolex/scripts
+#    ./backup-all.sh
+#
+# Pour voir les logs :
+#    tail -f /var/log/prolex-backup.log
+#
+# ═══════════════════════════════════════════════════════════════════
