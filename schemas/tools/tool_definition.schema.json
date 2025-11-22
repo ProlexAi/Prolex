@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/tool-definition.json",
+  "title": "ToolDefinition",
+  "description": "Définition d'un outil utilisable par Prolex",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "description",
+    "category",
+    "risk_level",
+    "auto_allowed_levels",
+    "target"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z_]+$",
+      "description": "Identifiant unique de l'outil (MAJUSCULES)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Nom lisible de l'outil"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Description détaillée de ce que fait l'outil"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "productivity",
+        "documentation",
+        "logging",
+        "search",
+        "devops",
+        "client",
+        "monitoring",
+        "backup",
+        "reporting",
+        "core",
+        "n8n_management"
+      ],
+      "description": "Catégorie de l'outil"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Niveau de risque de l'outil"
+    },
+    "auto_allowed_levels": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 3
+      },
+      "description": "Niveaux d'autonomie autorisés pour utilisation automatique"
+    },
+    "target": {
+      "type": "object",
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "webhook"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL du webhook n8n"
+            },
+            "method": {
+              "type": "string",
+              "enum": ["GET", "POST", "PUT", "DELETE"],
+              "default": "POST"
+            }
+          },
+          "required": ["type", "url"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "mcp_tool"
+            },
+            "mcp_server": {
+              "type": "string",
+              "description": "Nom du serveur MCP"
+            },
+            "tool_name": {
+              "type": "string",
+              "description": "Nom de l'outil MCP"
+            }
+          },
+          "required": ["type", "mcp_server", "tool_name"]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "internal"
+            },
+            "handler": {
+              "type": "string",
+              "description": "Nom du handler interne"
+            }
+          },
+          "required": ["type", "handler"]
+        }
+      ]
+    },
+    "payload_schema": {
+      "type": ["string", "null"],
+      "description": "Chemin vers le schéma JSON du payload (ex: 'schemas/payloads/task_create.schema.json')"
+    },
+    "response_schema": {
+      "type": ["string", "null"],
+      "description": "Chemin vers le schéma JSON de la réponse"
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "expected_result": {
+            "type": "object"
+          }
+        }
+      },
+      "description": "Exemples d'utilisation de l'outil"
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "requires_confirmation": {
+          "type": "boolean",
+          "description": "Si true, nécessite confirmation explicite même aux niveaux autorisés"
+        },
+        "max_executions_per_day": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Nombre maximum d'exécutions par jour"
+        },
+        "allowed_environments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["dev", "staging", "production"]
+          },
+          "description": "Environnements où l'outil peut être utilisé"
+        },
+        "requires_context": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Contextes requis dans le KimmyPayload (ex: ['client_name'])"
+        }
+      }
+    },
+    "documentation_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Lien vers documentation détaillée"
+    },
+    "deprecated": {
+      "type": "boolean",
+      "default": false,
+      "description": "Si true, l'outil est déprécié"
+    },
+    "replacement": {
+      "type": ["string", "null"],
+      "description": "ID de l'outil de remplacement si déprécié"
+    }
+  }
+}

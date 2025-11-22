@@ -1,0 +1,349 @@
+# CONFIGURATION SYSTÈME PROLEX v4
+# Ce fichier contient les variables système globales
+
+# ====================================================================
+# PROJET ACTIF
+# ====================================================================
+
+current_project: "Automatt.ai"
+current_environment: "development"  # development | staging | production
+
+# ====================================================================
+# SYSTEMJOURNAL
+# ====================================================================
+
+systemjournal:
+  # Google Sheet principal
+  sheet_name: "Automatt_Logs"
+  sheet_id: "1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk"
+
+  # Onglets
+  tabs:
+    main: "SystemJournal"           # Onglet principal pour tous les logs
+    costs: "API_Costs"              # Onglet coûts
+    errors: "Errors"                # Onglet erreurs
+    workflows: "Workflow_Executions" # Onglet exécutions workflows
+
+  # Rétention
+  retention_days: 90  # Logs gardés 90 jours
+
+# ====================================================================
+# KIMMY CONFIGURATION
+# ====================================================================
+
+kimmy:
+  mode: "quick_actions"  # safe | quick_actions
+  model: "gpt-4-turbo"   # ou "claude-haiku"
+  temperature: 0.3       # Faible = plus déterministe
+
+  # Seuils de décision
+  thresholds:
+    min_confidence_for_direct_action: 0.85
+    min_confidence_for_prolex_escalation: 0.00  # Toujours escalader si < 0.80
+
+  # Quick actions autorisées
+  allowed_quick_actions:
+    - TASK_CREATE
+    - DOC_CREATE_NOTE
+    - LOG_APPEND
+
+# ====================================================================
+# PROLEX CONFIGURATION
+# ====================================================================
+
+prolex:
+  model: "claude-3-5-sonnet-20250101"
+  temperature: 0.7   # Équilibre créativité/déterminisme
+  max_tokens: 4096
+
+  # Style de réponse
+  response_style: "Concise-Technical"  # ou "Detailed-Pedagogical"
+
+  # Comportement
+  agent_role: "Architecte & Stratège"
+  execution_mode: "Autonomous"  # ou "Supervised"
+  security_level: "High-Check"
+  memory_scope: "Project-Centric"
+  tool_usage: "Proxy-Only"
+
+  # Fallback
+  fallback_model: "claude-sonnet"
+
+# ====================================================================
+# INTENTS SENSIBLES
+# ====================================================================
+
+# Intents nécessitant TOUJOURS escalade vers Prolex
+sensitive_intents:
+  - question_systeme
+  - debug_infra
+  - client_workflow
+  - dev_workflow
+  - reporting
+  - config_change
+  - other
+
+# ====================================================================
+# OUTILS HIGH-RISK
+# ====================================================================
+
+# Outils nécessitant confirmation explicite (même au niveau 3)
+high_risk_tools:
+  - N8N_WORKFLOW_PROMOTE
+  - RESTORE_BACKUP
+  - GIT_CLONE  # Si repo non-test
+  - CLIENT_WORKFLOW_RUN  # Selon client
+
+# ====================================================================
+# LIMITES GLOBALES
+# ====================================================================
+
+limits:
+  # Coûts
+  max_cost_per_request_usd: 0.50   # Limite par défaut
+  max_cost_per_day_usd: 20.00      # Limite journalière totale
+  max_cost_per_month_usd: 500.00   # Limite mensuelle totale
+
+  # Temps
+  max_execution_time_minutes: 10   # Timeout global
+  max_plan_steps: 10               # Max étapes dans multi_tool_plan
+
+  # Rate limiting
+  max_requests_per_minute: 30
+  max_requests_per_hour: 500
+
+# ====================================================================
+# MOTS-CLÉS SENSIBLES
+# ====================================================================
+
+# Mots-clés déclenchant escalade automatique vers Prolex
+sensitive_keywords:
+  infrastructure:
+    - infra
+    - infrastructure
+    - serveur
+    - VPS
+    - Docker
+    - Traefik
+    - domaine
+
+  security:
+    - sécurité
+    - credential
+    - secret
+    - "API key"
+    - password
+    - token
+
+  finance:
+    - client
+    - argent
+    - facturation
+    - paiement
+    - tarif
+    - prix
+
+  architecture:
+    - architecture
+    - système
+    - configuration
+    - "plan complet"
+    - stratégie
+    - roadmap
+
+  critical_operations:
+    - backup
+    - restauration
+    - "disaster recovery"
+    - migration
+    - déploiement
+
+# ====================================================================
+# APIS EXTERNES
+# ====================================================================
+
+external_apis:
+  google_workspace:
+    enabled: true
+    services:
+      - Tasks
+      - Calendar
+      - Docs
+      - Sheets
+      - Drive
+    rate_limit_per_minute: 60
+
+  github:
+    enabled: true
+    rate_limit_per_hour: 5000  # GitHub API limit
+
+  n8n:
+    base_url: "https://n8n.automatt.ai"
+    api_version: "v1"
+    rate_limit_per_minute: 100
+
+  openai:
+    enabled: true
+    models:
+      - gpt-4-turbo
+      - gpt-3.5-turbo
+    max_tokens_per_request: 4096
+
+  anthropic:
+    enabled: true
+    models:
+      - claude-3-5-sonnet-20250101
+      - claude-3-haiku-20240307
+    max_tokens_per_request: 4096
+
+# ====================================================================
+# MONITORING & ALERTES
+# ====================================================================
+
+monitoring:
+  # Healthchecks
+  healthcheck_interval_minutes: 5
+  services_to_monitor:
+    - n8n
+    - anythingllm
+    - postgresql
+    - redis
+    - traefik
+
+  # Alertes
+  alerts:
+    email:
+      enabled: true
+      recipients:
+        - matthieu@automatt.ai
+      triggers:
+        - service_down
+        - error_rate_high
+        - cost_threshold_exceeded
+
+    slack:
+      enabled: false
+      webhook_url: ""
+      channel: "#prolex-alerts"
+
+  # Métriques
+  metrics:
+    track_costs: true
+    track_latency: true
+    track_success_rate: true
+    track_user_satisfaction: true
+
+# ====================================================================
+# BACKUP & SÉCURITÉ
+# ====================================================================
+
+backup:
+  enabled: true
+  frequency: "daily"  # daily | weekly
+  time: "02:00"       # UTC
+  destination: "Google Drive"
+  folder_id: "1a2b3c4d5e6f"
+  retention_days: 30
+
+  backup_items:
+    - n8n_workflows
+    - n8n_database
+    - prolex_rag
+    - github_repos_list
+    - systemjournal
+
+security:
+  # Encryption
+  encrypt_sensitive_data: true
+  encryption_algorithm: "AES-256-GCM"
+
+  # Audit
+  log_all_api_calls: true
+  log_sensitive_data: false  # Ne jamais logger credentials, tokens, etc.
+
+  # Session
+  session_timeout_minutes: 60
+
+# ====================================================================
+# URLS & WEBHOOKS
+# ====================================================================
+
+webhooks:
+  base_url: "https://n8n.automatt.ai"
+  paths:
+    kimmy_intake: "/webhook/kimmy-intake"
+    prolex_intake: "/webhook/prolex-intake"
+    proxy_exec: "/webhook/proxy-exec"
+    github_to_n8n: "/webhook/github-to-n8n"
+    prolex_git_pull: "/webhook/prolex-git-pull"
+
+# ====================================================================
+# RAG CONFIGURATION
+# ====================================================================
+
+rag:
+  # Dossiers
+  base_path: "/rag"
+  folders:
+    - tools
+    - rules
+    - examples
+    - context
+
+  # AnythingLLM
+  anythingllm_url: "https://anythingllm.automatt.ai"
+  workspace: "Prolex_v4"
+
+  # Mise à jour
+  auto_update_from_github: true
+  update_frequency: "daily"
+
+# ====================================================================
+# TAGS & LABELLING
+# ====================================================================
+
+# Tags standard pour workflows auto-générés
+workflow_tags:
+  auto_generated: "AUTO_PROLEX"
+  environments:
+    - sandbox
+    - staging
+    - production
+  categories:
+    - productivity
+    - devops
+    - client
+    - monitoring
+    - backup
+    - reporting
+
+# ====================================================================
+# FEATURE FLAGS
+# ====================================================================
+
+features:
+  enable_n8n_workflow_creation: true
+  enable_multi_tool_plans: true
+  enable_web_search: true
+  enable_client_workflows: true
+  enable_auto_backup: true
+  enable_cost_tracking: true
+
+  # Expérimental
+  experimental:
+    enable_a_b_testing: false
+    enable_auto_optimization: false
+    enable_voice_input: false
+
+# ====================================================================
+# CHANGELOG
+# ====================================================================
+
+changelog:
+  - date: "2025-11-22"
+    version: "4.0"
+    changes:
+      - "Configuration initiale v4"
+      - "Ajout Kimmy + Prolex + Opex"
+      - "Support workflows n8n auto-générés"
+    author: "Matthieu"

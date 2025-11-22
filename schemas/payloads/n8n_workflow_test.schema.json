@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/n8n_workflow_test.schema.json",
+  "title": "N8N Workflow Test Payload",
+  "description": "Payload pour tester un workflow n8n",
+  "type": "object",
+  "required": ["workflow_id"],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "ID du workflow à tester"
+    },
+    "test_data": {
+      "type": "object",
+      "description": "Données de test à injecter dans le workflow",
+      "additionalProperties": true
+    },
+    "test_scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "input"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nom du scénario de test"
+          },
+          "input": {
+            "type": "object",
+            "description": "Données d'entrée pour ce scénario"
+          },
+          "expected_output": {
+            "type": "object",
+            "description": "Sortie attendue (optionnel)"
+          }
+        }
+      },
+      "description": "Scénarios de test multiples"
+    },
+    "validate_output": {
+      "type": "boolean",
+      "default": false,
+      "description": "Valider la sortie contre expected_output"
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 60,
+      "description": "Timeout pour chaque test"
+    }
+  },
+  "additionalProperties": false
+}

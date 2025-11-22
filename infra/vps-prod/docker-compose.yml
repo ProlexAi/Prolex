@@ -1,3 +1,4 @@
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
 version: '3.8'
 
 ################################################################################
@@ -67,10 +68,103 @@ services:
   ############################################################################
   # N8N - Workflow Automation
   ############################################################################
+======
+# ═══════════════════════════════════════════════════════════════════
+# 🚀 PROLEX - Stack Docker Production VPS
+# ═══════════════════════════════════════════════════════════════════
+#
+# Architecture :
+#   - Traefik : Reverse proxy + SSL automatique (Let's Encrypt)
+#   - n8n : Orchestrateur de workflows
+#   - AnythingLLM : Plateforme d'agents IA
+#   - MCP n8n Server : Serveur MCP pour n8n
+#   - PostgreSQL : Base de données pour n8n
+#   - Redis : Cache et queues (optionnel, commenté par défaut)
+#
+# Réseau : prolex-net (réseau bridge isolé)
+# Domaine : iaproject.cloud
+#
+# ═══════════════════════════════════════════════════════════════════
+
+version: '3.9'
+
+# ───────────────────────────────────────────────────────────────────
+# 🔧 SERVICES
+# ───────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────
+  # 🌐 TRAEFIK - Reverse Proxy + SSL
+  # ─────────────────────────────────────────────────────────────────
+  # Point d'entrée unique pour toutes les requêtes HTTP/HTTPS.
+  # Génère automatiquement les certificats SSL via Let's Encrypt.
+  # Redirige HTTP → HTTPS automatiquement.
+  # ─────────────────────────────────────────────────────────────────
+
+  traefik:
+    image: traefik:v3.1
+    container_name: prolex-traefik
+    restart: unless-stopped
+
+    # Ports exposés sur le VPS
+    ports:
+      - "80:80"       # HTTP (redirigé vers HTTPS)
+      - "443:443"     # HTTPS (SSL/TLS)
+
+    # Volumes
+    volumes:
+      # Socket Docker pour détecter automatiquement les conteneurs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+      # Configuration statique de Traefik
+      - ./traefik/traefik.yml:/traefik.yml:ro
+
+      # Stockage des certificats SSL Let's Encrypt
+      - ./traefik/acme.json:/letsencrypt/acme.json
+
+      # Logs (optionnel)
+      - ./logs/traefik:/var/log/traefik
+
+    # Variables d'environnement
+    environment:
+      - TZ=Europe/Paris
+
+    # Labels Traefik (auto-configuration)
+    labels:
+      - "traefik.enable=true"
+
+      # Dashboard désactivé par défaut pour la sécurité
+      # Pour l'activer, décommenter les lignes ci-dessous et protéger avec BasicAuth
+      # - "traefik.http.routers.dashboard.rule=Host(`traefik.iaproject.cloud`)"
+      # - "traefik.http.routers.dashboard.service=api@internal"
+      # - "traefik.http.routers.dashboard.entrypoints=websecure"
+      # - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+
+    networks:
+      - prolex-net
+
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────────────────────────
+  # 🔄 N8N - Workflow Automation
+  # ─────────────────────────────────────────────────────────────────
+  # Orchestrateur de workflows pour automatiser les tâches.
+  # Utilise PostgreSQL comme base de données (recommandé en prod).
+  # Exposé sur https://n8n.iaproject.cloud
+  # ─────────────────────────────────────────────────────────────────
+
+>>>>>> main
   n8n:
     image: n8nio/n8n:latest
     container_name: prolex-n8n
     restart: unless-stopped
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
     networks:
       - traefik-public
       - prolex-backend
@@ -114,10 +208,97 @@ services:
   ############################################################################
   # ANYTHINGLLM - Gestion des LLMs et documents
   ############################################################################
+======
+
+    # Dépendances : attendre que Postgres soit prêt
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # Volumes
+    volumes:
+      # Données persistantes (workflows, credentials, settings)
+      - ./n8n/data:/home/node/.n8n
+
+      # Logs (optionnel)
+      - ./logs/n8n:/home/node/.n8n/logs
+
+    # Variables d'environnement (depuis .env)
+    environment:
+      # Configuration générale
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-https}
+      - WEBHOOK_URL=https://${N8N_HOST}/
+
+      # Clé de chiffrement (IMPORTANT : à générer avec openssl rand -base64 32)
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+
+      # Authentification basique (optionnel, pour sécuriser l'accès)
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-false}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+
+      # Configuration de la base de données PostgreSQL
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+
+      # Timezone
+      - GENERIC_TIMEZONE=Europe/Paris
+      - TZ=Europe/Paris
+
+      # Mode production
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+
+      # Exécution des workflows
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS=true
+
+    # Labels Traefik pour exposer n8n sur https://n8n.iaproject.cloud
+    labels:
+      - "traefik.enable=true"
+
+      # Router HTTP → HTTPS redirect
+      - "traefik.http.routers.n8n.rule=Host(`${N8N_HOST}`)"
+      - "traefik.http.routers.n8n.entrypoints=websecure"
+      - "traefik.http.routers.n8n.tls=true"
+      - "traefik.http.routers.n8n.tls.certresolver=letsencrypt"
+
+      # Service (port interne de n8n)
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+
+      # Middleware pour headers de sécurité
+      - "traefik.http.middlewares.n8n-headers.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow"
+
+    networks:
+      - prolex-net
+
+    # Healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────────────────────────
+  # 🤖 ANYTHINGLLM - Plateforme d'agents IA
+  # ─────────────────────────────────────────────────────────────────
+  # Interface pour gérer des agents IA, documents, embeddings.
+  # Exposé sur https://llm.iaproject.cloud
+  # ─────────────────────────────────────────────────────────────────
+
+>>>>>> main
   anythingllm:
     image: mintplexlabs/anythingllm:latest
     container_name: prolex-anythingllm
     restart: unless-stopped
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
     networks:
       - traefik-public
       - prolex-backend
@@ -174,3 +355,219 @@ services:
   #     - "traefik.http.routers.mcp.tls=true"
   #     - "traefik.http.routers.mcp.tls.certresolver=letsencrypt"
   #     - "traefik.http.services.mcp.loadbalancer.server.port=3000"
+======
+
+    # Volumes
+    volumes:
+      # Données persistantes (documents, embeddings, configs)
+      - ./anythingllm/data:/app/server/storage
+
+      # Logs (optionnel)
+      - ./logs/anythingllm:/app/server/storage/logs
+
+    # Variables d'environnement
+    environment:
+      # Provider LLM (openai, anthropic, ollama, etc.)
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+
+      # Clés API (selon le provider choisi)
+      - OPEN_AI_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+
+      # Configuration de l'app
+      - STORAGE_DIR=/app/server/storage
+      - SERVER_PORT=3001
+
+      # Sécurité : mot de passe pour accéder à l'interface
+      - AUTH_TOKEN=${ANYTHINGLLM_AUTH_TOKEN}
+
+      # Timezone
+      - TZ=Europe/Paris
+
+    # Labels Traefik pour exposer AnythingLLM sur https://llm.iaproject.cloud
+    labels:
+      - "traefik.enable=true"
+
+      # Router HTTPS
+      - "traefik.http.routers.anythingllm.rule=Host(`${ANYTHINGLLM_HOST}`)"
+      - "traefik.http.routers.anythingllm.entrypoints=websecure"
+      - "traefik.http.routers.anythingllm.tls=true"
+      - "traefik.http.routers.anythingllm.tls.certresolver=letsencrypt"
+
+      # Service (port interne d'AnythingLLM)
+      - "traefik.http.services.anythingllm.loadbalancer.server.port=3001"
+
+    networks:
+      - prolex-net
+
+    # Healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/api/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────────────────────────
+  # 🔌 MCP N8N SERVER - Serveur MCP pour n8n
+  # ─────────────────────────────────────────────────────────────────
+  # Serveur NodeJS qui implémente le protocole MCP pour n8n.
+  # Permet à n8n de communiquer avec des modèles IA via MCP.
+  # ─────────────────────────────────────────────────────────────────
+
+  mcp-n8n-server:
+    # Option 1 : Build depuis le code source local
+    build:
+      context: ./mcp/n8n-server
+      dockerfile: Dockerfile
+
+    # Option 2 : Utiliser une image pré-construite (décommenter si tu as une image)
+    # image: prolexai/mcp-n8n-server:latest
+
+    container_name: prolex-mcp-n8n
+    restart: unless-stopped
+
+    # Dépendances : attendre que n8n soit prêt
+    depends_on:
+      n8n:
+        condition: service_healthy
+
+    # Variables d'environnement
+    environment:
+      # Configuration de connexion à n8n
+      - N8N_API_BASE_URL=https://${N8N_HOST}
+      - N8N_API_KEY=${N8N_API_KEY}
+
+      # Port du serveur MCP
+      - MCP_SERVER_PORT=${MCP_SERVER_PORT:-3100}
+
+      # Timezone
+      - TZ=Europe/Paris
+
+      # Mode debug (optionnel)
+      - DEBUG=${MCP_DEBUG:-false}
+
+    # Volumes (si nécessaire pour des configs ou logs)
+    volumes:
+      - ./mcp/n8n-server/config:/app/config
+      - ./logs/mcp:/app/logs
+
+    # Pas d'exposition publique : service interne uniquement
+    # Le serveur MCP communique avec n8n via le réseau Docker
+
+    networks:
+      - prolex-net
+
+    # Healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${MCP_SERVER_PORT:-3100}/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─────────────────────────────────────────────────────────────────
+  # 🐘 POSTGRESQL - Base de données
+  # ─────────────────────────────────────────────────────────────────
+  # Base de données relationnelle pour n8n.
+  # Plus robuste que SQLite pour la production.
+  # ─────────────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: prolex-postgres
+    restart: unless-stopped
+
+    # Variables d'environnement
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - TZ=Europe/Paris
+
+    # Volumes
+    volumes:
+      # Données persistantes
+      - ./postgres/data:/var/lib/postgresql/data
+
+      # Script d'initialisation (optionnel)
+      # - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    # Pas d'exposition publique : service interne uniquement
+    # n8n se connecte via le réseau Docker
+
+    networks:
+      - prolex-net
+
+    # Healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────────────────────────
+  # 🔴 REDIS - Cache & Queues (OPTIONNEL, commenté par défaut)
+  # ─────────────────────────────────────────────────────────────────
+  # Service de cache et gestion des queues pour améliorer les perfs.
+  # À activer si tu as beaucoup de workflows simultanés.
+  # Pour l'activer : décommenter les lignes ci-dessous.
+  # ─────────────────────────────────────────────────────────────────
+
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: prolex-redis
+  #   restart: unless-stopped
+  #
+  #   # Variables d'environnement
+  #   environment:
+  #     - TZ=Europe/Paris
+  #
+  #   # Commande pour activer la persistance
+  #   command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+  #
+  #   # Volumes
+  #   volumes:
+  #     # Données persistantes
+  #     - ./redis/data:/data
+  #
+  #   # Pas d'exposition publique : service interne uniquement
+  #
+  #   networks:
+  #     - prolex-net
+  #
+  #   # Healthcheck
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+# ───────────────────────────────────────────────────────────────────
+# 🌐 RÉSEAUX
+# ───────────────────────────────────────────────────────────────────
+# Réseau bridge isolé pour tous les services Prolex.
+# Les services peuvent communiquer entre eux via leurs noms de conteneurs.
+# ───────────────────────────────────────────────────────────────────
+
+networks:
+  prolex-net:
+    driver: bridge
+    name: prolex-network
+
+# ───────────────────────────────────────────────────────────────────
+# 💾 VOLUMES (optionnel, si tu préfères des volumes Docker nommés)
+# ───────────────────────────────────────────────────────────────────
+# Par défaut, on utilise des bind mounts (./n8n/data, etc.).
+# Si tu préfères des volumes Docker nommés, décommenter ci-dessous :
+# ───────────────────────────────────────────────────────────────────
+
+# volumes:
+#   n8n_data:
+#     name: prolex-n8n-data
+#   anythingllm_data:
+#     name: prolex-anythingllm-data
+#   postgres_data:
+#     name: prolex-postgres-data
+#   redis_data:
+#     name: prolex-redis-data
+>>>>>> main

@@ -1,21 +1,340 @@
+<<<<<< claude/n8n-mcp-server-01Rq2sQFqRYYFXx2RPEigtpH
 # Prolex
+Projet Multi-task AAI
 
-Prolex est le **cerveau IA orchestrateur** de l’entreprise Automatt.ai.
+## Serveurs MCP
 
-Son rôle :
+Ce depot contient des serveurs MCP (Model Context Protocol) pour etendre les capacites de Claude Desktop.
 
-- Comprendre les demandes en langage naturel.
-- Décider quoi faire : répondre, lancer des automatisations, créer/modifier des workflows.
-- Piloter des outils externes (n8n, GitHub, Google, etc.) via des serveurs MCP.
-- Garder une trace claire de ce qui est déployé (logs dans Google Sheets).
+### n8n MCP Server
+
+Serveur MCP pour piloter votre instance n8n depuis Claude.
+
+**Emplacement** : `mcp/n8n-server/`
+
+**Fonctionnalites** :
+- Liste tous vos workflows n8n
+- Declenche l'execution de workflows avec payload personnalise
+
+**Documentation complete** : [mcp/n8n-server/README.md](./mcp/n8n-server/README.md)
+
+**Demarrage rapide** :
+```bash
+cd mcp/n8n-server
+npm install
+cp .env.example .env
+# Editez .env avec vos credentials n8n
+npm run dev
+```
+======
+# Prolex v4 🧠
+
+> **Cerveau IA orchestrateur** d'Automatt.ai avec autonomie étendue et gestion de workflows n8n
+
+Prolex est le **cerveau IA orchestrateur** de l'entreprise Automatt.ai.
+
+## 🎯 Nouveautés v4+
+
+✨ **Architecture complète Kimmy + Prolex + Opex**
+✨ **Prolex peut designer, créer et modifier des workflows n8n** de manière autonome
+✨ **4 niveaux d'autonomie** (0-3) pour contrôle fin des permissions
+✨ **30+ outils** disponibles (productivité, DevOps, clients, monitoring, etc.)
+✨ **Traçabilité complète** via SystemJournal (Google Sheets)
+
+---
+
+## 📚 Documentation v4
+
+### 🚀 Démarrage rapide
+1. **[INDEX_PROLEX.md](INDEX_PROLEX.md)** → Point d'entrée central (COMMENCEZ ICI)
+2. **[Architecture v4+](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)** → Document maître complet
+3. **[Analyse Critique](docs/guides/ANALYSE_CRITIQUE_V4.md)** → Forces, faiblesses, recommandations
+
+### 📋 Spécifications techniques
+- **[SPEC_KIMMY_V4.md](docs/specifications/SPEC_KIMMY_V4.md)** → Filtre d'entrée intelligent
+- **[SPEC_PROLEX_V4.md](docs/specifications/SPEC_PROLEX_V4.md)** → Cerveau orchestrateur
+- **[SPEC_OPEX_V4.md](docs/specifications/SPEC_OPEX_V4.md)** → Workflows n8n + Proxy Master
+
+### ⚙️ Configuration
+- **[config/autonomy.yml](config/autonomy.yml)** → Niveaux d'autonomie
+- **[config/system.yml](config/system.yml)** → Configuration système
+- **[rag/tools/tools.yml](rag/tools/tools.yml)** → Catalogue d'outils (30+)
+
+### 📊 Schémas JSON
+- **[KimmyPayload](schemas/payloads/kimmy_payload.schema.json)** → Format Kimmy → Prolex
+- **[ProlexOutput](schemas/payloads/prolex_output.schema.json)** → Format Prolex → Opex
+- **[SystemJournal](schemas/logs/systemjournal_entry.schema.json)** → Format logs
+
+### 🎁 Pour clients
+- **[GUIDE_CLIENTS.md](docs/guides/GUIDE_CLIENTS.md)** → Documentation futurs clients
+
+---
+
+## 🏗️ Architecture v4 (résumé)
+
+```
+┌──────────────────────────────────┐
+│ KIMMY                            │  ← Filtre d'entrée
+│ (LLM + n8n)                      │     - Classifie intention
+│ - Français toujours              │     - Évalue complexité
+└──────────┬───────────────────────┘     - Produit KimmyPayload
+           ↓ KimmyPayload (JSON)
+┌──────────────────────────────────┐
+│ PROLEX                           │  ← Cerveau orchestrateur
+│ (Claude 3.5 Sonnet + RAG)        │     - Raisonne
+│ - Autonomie niveaux 0-3          │     - Planifie
+└──────────┬───────────────────────┘     - Produit ProlexOutput
+           ↓ ProlexOutput (JSON)
+┌──────────────────────────────────┐
+│ OPEX                             │  ← Bras exécutif
+│ (n8n workflows + Proxy Master)   │     - Valide (Proxy)
+│ - 30+ outils disponibles         │     - Exécute (n8n)
+└──────────────────────────────────┘     - Logue (SystemJournal)
+```
+
+### Composants clés
+| Composant | Rôle | Technologie |
+|-----------|------|-------------|
+| **Kimmy** | Filtre d'entrée | GPT-4 Turbo / Claude Haiku + n8n |
+| **Prolex** | Cerveau orchestrateur | Claude 3.5 Sonnet + AnythingLLM |
+| **Opex** | Bras exécutif | n8n workflows + Proxy Master |
+| **SystemJournal** | Mémoire d'exécution | Google Sheets |
+| **RAG** | Base de connaissance | Google Drive + docs structurés |
+
+---
+
+## 📂 Structure du repository v4
+
+```
+Prolex/
+├── README.md                               # Ce fichier
+├── INDEX_PROLEX.md                         # 📘 Index central (COMMENCEZ ICI)
+│
+├── docs/                                   # Documentation
+│   ├── architecture/
+│   │   └── ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md  # Document maître
+│   ├── specifications/
+│   │   ├── SPEC_KIMMY_V4.md
+│   │   ├── SPEC_PROLEX_V4.md
+│   │   └── SPEC_OPEX_V4.md
+│   └── guides/
+│       ├── ANALYSE_CRITIQUE_V4.md
+│       └── GUIDE_CLIENTS.md
+│
+├── schemas/                                # Schémas JSON (JSON Schema Draft 07)
+│   ├── payloads/
+│   ├── logs/
+│   └── tools/
+│
+├── rag/                                    # Base de connaissance Prolex
+│   ├── tools/tools.yml                     # Catalogue d'outils
+│   ├── rules/
+│   ├── examples/
+│   └── context/
+│
+├── config/                                 # Configuration système
+│   ├── autonomy.yml                        # Niveaux d'autonomie
+│   └── system.yml                          # Config globale
+│
+├── n8n-workflows/                          # Workflows n8n (source de vérité)
+│   ├── 010_sync-github-to-n8n.json
+│   ├── 020_example-hello-world.json
+│   └── 030_github-dev-log-to-sheets.json
+│
+├── mcp/                                    # Serveurs MCP
+│   └── n8n-server/                         # MCP pour piloter n8n
+│
+├── infra/                                  # Infrastructure (VPS à déployer)
+│   └── vps-prod/
+│
+└── cli/                                    # CLI (futur)
+    └── prolexctl/
+```
+
+---
+
+## 📊 Catalogue Opex (workflows n8n / Prolex)
+
+### Vue d'ensemble
+
+Le fichier **`config/opex_workflows.yml`** est la **source de vérité** pour tous les workflows Opex (workflows n8n pilotés par Prolex). Il offre deux vues complémentaires sur les workflows :
+
+- **Vue technique** (`categories`) : Organisation système par domaine fonctionnel (core, productivity, dev, clients, monitoring, reporting, n8n_admin, examples)
+- **Vue métier** (`biz_areas`) : Pilotage business par domaine d'activité (GE, PROD, MKT, GP, SYS, MULTI)
+
+### Structure du catalogue
+
+Le fichier `config/opex_workflows.yml` contient :
+
+1. **Header** : Version, date de mise à jour, mainteneur, contact
+2. **Categories** (vue technique) : Plages d'IDs et labels pour organiser les workflows par domaine fonctionnel
+3. **Biz_areas** (vue métier) : Codes et descriptions des domaines métier
+4. **Workflows** : Liste exhaustive avec métadonnées complètes pour chaque workflow
+
+#### Catégories techniques (categories)
+
+Les workflows sont organisés par **plages d'IDs** selon leur domaine fonctionnel :
+
+| Plage | Category | Description |
+|-------|----------|-------------|
+| 000-099 | `core` | Workflows fondamentaux, points d'entrée système, proxy master |
+| 100-199 | `productivity` | Gestion de tâches, calendrier, productivité personnelle |
+| 200-299 | `dev` | Développement, contrôle de version, intégration continue |
+| 300-399 | `clients` | Gestion des clients, projets clients, onboarding |
+| 400-499 | `monitoring` | Surveillance système, sauvegardes, alertes |
+| 500-599 | `reporting` | Tableaux de bord, rapports, KPIs, analytics |
+| 600-699 | `n8n_admin` | Workflows de gestion de n8n lui-même, méta-orchestration |
+| 900-999 | `examples` | Workflows de test, prototypes, exemples pédagogiques |
+
+#### Domaines métier (biz_areas)
+
+Classification métier pour pilotage business des workflows :
+
+| Code | Domaine | Description |
+|------|---------|-------------|
+| **GE** | Gestion Entreprise | Pilotage global, finances, reporting stratégique, décisions business |
+| **PROD** | Production / Opérations | Livraison clients, exécution des services, opérations quotidiennes |
+| **MKT** | Marketing / Acquisition | Prospects, communication, contenus, génération de leads |
+| **GP** | Gestion Personnelle | Organisation personnelle de Matthieu, tâches perso, productivité individuelle |
+| **SYS** | Système / Infrastructure | Maintenance technique, sécurité, déploiement, infrastructure |
+| **MULTI** | Multi-domaines | Workflows hybrides touchant plusieurs domaines (à utiliser rarement) |
+
+**Note** : Le code `MULTI` doit être utilisé rarement et uniquement pour les workflows vraiment hybrides. Quand utilisé, préciser les domaines concernés dans le champ `notes`.
+
+### Outil de filtrage : `tools/filter_workflows.py`
+
+Un script Python permet de filtrer et trier les workflows selon différents critères.
+
+#### Installation
+
+```bash
+# Installer la dépendance PyYAML
+pip install pyyaml
+```
+
+#### Utilisation
+
+```bash
+# Lister tous les workflows
+python tools/filter_workflows.py
+
+# Voir les workflows de production (PROD) en status MVP
+python tools/filter_workflows.py --biz_area=PROD --status=mvp
+
+# Voir les workflows de monitoring système
+python tools/filter_workflows.py --category=monitoring --biz_area=SYS
+
+# Trier par priorité (importance / usage estimé)
+python tools/filter_workflows.py --sort=priority
+
+# Workflows clients en production
+python tools/filter_workflows.py --category=clients --status=prod
+
+# Workflows en statut "planned" (planifiés)
+python tools/filter_workflows.py --status=planned
+
+# Workflows internes seulement
+python tools/filter_workflows.py --scope=internal
+```
+
+#### Options de filtrage
+
+- `--biz_area` : Filtrer par domaine métier (GE, PROD, MKT, GP, SYS, MULTI)
+- `--category` : Filtrer par catégorie technique (core, productivity, dev, clients, monitoring, reporting, n8n_admin, examples)
+- `--status` : Filtrer par statut (planned, mvp, prod, deprecated)
+- `--scope` : Filtrer par portée (internal, client)
+
+#### Options de tri
+
+- `--sort=id` (défaut) : Tri par ID croissant
+- `--sort=priority` : Tri par priorité décroissante (workflows sans priority en dernier)
+- `--sort=calls_7d` : Tri par fréquence d'utilisation (7 derniers jours) - **futur**
+- `--sort=calls_30d` : Tri par fréquence d'utilisation (30 derniers jours) - **futur**
+
+#### Format de sortie
+
+Le script affiche chaque workflow sur une ligne avec :
+
+```
+ID: 310 | Name: Client Onboarding | Cat: clients | Biz: PROD | Status: planned | Scope: client | Priority: 4
+```
+
+Les champs manquants affichent `N/A`. Le script génère des warnings pour les `biz_area` inconnus.
+
+### Vision future : Métriques d'utilisation
+
+À l'avenir, un fichier `config/opex_usage_cache.yml` sera alimenté automatiquement par les logs / SystemJournal pour fournir des **métriques réelles d'utilisation** :
+
+```yaml
+usage_stats:
+  "10":
+    total_calls: 132
+    calls_last_7d: 18
+    calls_last_30d: 64
+  "100":
+    total_calls: 45
+    calls_last_7d: 5
+    calls_last_30d: 22
+```
+
+Ces métriques permettront de trier les workflows par **fréquence d'utilisation réelle** plutôt que par priorité estimée, offrant ainsi une vision data-driven de l'importance des workflows.
+
+---
+
+## 🚀 Démarrage rapide v4
+
+### Pour comprendre le système
+1. Lire **[INDEX_PROLEX.md](INDEX_PROLEX.md)**
+2. Consulter **[Architecture v4+](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)**
+
+### Pour développer
+1. Vérifier **[SPEC_KIMMY_V4](docs/specifications/SPEC_KIMMY_V4.md)**, **[SPEC_PROLEX_V4](docs/specifications/SPEC_PROLEX_V4.md)**, **[SPEC_OPEX_V4](docs/specifications/SPEC_OPEX_V4.md)**
+2. Consulter **[Catalogue d'outils](rag/tools/tools.yml)**
+3. Configurer **[config/autonomy.yml](config/autonomy.yml)** et **[config/system.yml](config/system.yml)**
+
+### Pour déployer
+1. (À venir) Suivre guide de déploiement VPS
+2. Vérifier checklist pré-déploiement dans INDEX_PROLEX.md
+
+---
+
+## 💡 Exemples d'utilisation
+
+### Exemple 1 : Créer une tâche
+**Entrée utilisateur** : "Créer une tâche pour réviser l'architecture Prolex avant vendredi"
+
+**Pipeline** :
+1. **Kimmy** → Classifie `intent: task_create`, `complexity: simple`
+2. **Prolex** → Génère `tool_call: TASK_CREATE` avec payload
+3. **Opex** → Exécute workflow n8n `task_create`
+4. **Résultat** : Tâche créée dans Google Tasks
+
+### Exemple 2 : Designer un workflow n8n
+**Entrée utilisateur** : "Crée un workflow qui envoie un email quand une PR est mergée"
+
+**Pipeline** :
+1. **Kimmy** → Classifie `intent: dev_workflow`, `complexity: complex`
+2. **Prolex** → Génère `multi_tool_plan` :
+   - Step 1: `N8N_WORKFLOW_DESIGN`
+   - Step 2: `N8N_WORKFLOW_UPSERT` (sandbox)
+   - Step 3: `N8N_WORKFLOW_TEST`
+3. **Opex** → Exécute séquentiellement
+4. **Résultat** : Workflow créé et testé en sandbox, prêt pour review
+
+---
 
 Ce dépôt GitHub est la **source de vérité technique** pour :
 
-- le serveur MCP connecté à n8n ;
-- la définition versionnée des workflows n8n (`n8n-workflows/*.json`) ;
-- l’architecture de l’orchestrateur Prolex.
+- l'architecture complète Kimmy + Prolex + Opex (v4+)
+- le serveur MCP connecté à n8n
+- la définition versionnée des workflows n8n (`n8n-workflows/*.json`)
+- la configuration système (autonomie, outils, règles)
 
 ---
+
+# Architecture héritée (pré-v4)
+
+> **Note** : Section conservée pour historique. Voir documentation v4 ci-dessus pour architecture actuelle.
 
 ## 1. Architecture globale (vue simple)
 
@@ -149,7 +468,7 @@ GitHub to n8n Sync
 
 Fonctionnement :
 
-GitHub envoie un webhook push vers n8n (/webhook/github-sync).
+GitHub envoie un webhook push vers n8n (/webhook/github-to-n8n).
 
 Le workflow GitHub to n8n Sync :
 
@@ -341,3 +660,4 @@ Prolex/
 
 
 
+>>>>>> main

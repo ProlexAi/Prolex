@@ -1,3 +1,4 @@
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
 ################################################################################
 # Configuration Traefik v3 - Prolex Production
 # Reverse proxy avec génération automatique de certificats SSL
@@ -20,6 +21,32 @@ entryPoints:
   web:
     address: ":80"
     # Redirection automatique HTTP -> HTTPS (optionnel, peut aussi être fait par les labels)
+======
+# ═══════════════════════════════════════════════════════════════════
+# 🌐 TRAEFIK - Configuration statique
+# ═══════════════════════════════════════════════════════════════════
+#
+# Ce fichier configure Traefik en tant que reverse proxy avec :
+#   - Détection automatique des conteneurs Docker
+#   - Génération automatique des certificats SSL via Let's Encrypt
+#   - Redirection HTTP → HTTPS
+#
+# Documentation : https://doc.traefik.io/traefik/
+#
+# ═══════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────
+# 🚪 ENTRY POINTS - Points d'entrée réseau
+# ───────────────────────────────────────────────────────────────────
+# Définit les ports sur lesquels Traefik écoute.
+# ───────────────────────────────────────────────────────────────────
+
+entryPoints:
+  # Port 80 - HTTP
+  web:
+    address: ":80"
+    # Redirection automatique HTTP → HTTPS
+>>>>>> main
     http:
       redirections:
         entryPoint:
@@ -27,11 +54,16 @@ entryPoints:
           scheme: https
           permanent: true
 
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
   # Point d'entrée HTTPS (port 443)
+======
+  # Port 443 - HTTPS
+>>>>>> main
   websecure:
     address: ":443"
     http:
       tls:
+<<<<<< claude/setup-devops-infrastructure-011L1XNFBgxcqdLGbXCim1bi
         certResolver: letsencrypt
 
 ################################################################################
@@ -110,3 +142,134 @@ global:
 ################################################################################
 ping:
   entryPoint: "web"
+=======
+        # Activation du TLS (SSL)
+        certResolver: letsencrypt
+
+# ───────────────────────────────────────────────────────────────────
+# 🔌 PROVIDERS - Sources de configuration dynamique
+# ───────────────────────────────────────────────────────────────────
+# Traefik détecte automatiquement les conteneurs Docker via labels.
+# ───────────────────────────────────────────────────────────────────
+
+providers:
+  docker:
+    # Activer le provider Docker
+    endpoint: "unix:///var/run/docker.sock"
+
+    # Exposer les conteneurs uniquement si le label traefik.enable=true est présent
+    exposedByDefault: false
+
+    # Réseau Docker à utiliser (doit correspondre au réseau dans docker-compose.yml)
+    network: prolex-network
+
+    # Surveiller les changements en temps réel
+    watch: true
+
+  # Configuration depuis des fichiers (optionnel, pour config avancée)
+  # file:
+  #   directory: "/etc/traefik/dynamic"
+  #   watch: true
+
+# ───────────────────────────────────────────────────────────────────
+# 🔐 CERTIFICATS SSL - Let's Encrypt (ACME)
+# ───────────────────────────────────────────────────────────────────
+# Génération et renouvellement automatique des certificats SSL.
+# ───────────────────────────────────────────────────────────────────
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      # Email pour les notifications Let's Encrypt (expirations, problèmes)
+      # ⚠️ IMPORTANT : Remplacer par un email valide
+      email: "mon-email@exemple.com"
+
+      # Fichier de stockage des certificats
+      storage: "/letsencrypt/acme.json"
+
+      # Challenge HTTP (via port 80)
+      # Alternative : tlsChallenge (via port 443) ou dnsChallenge (via DNS)
+      httpChallenge:
+        entryPoint: web
+
+      # ENVIRONNEMENT DE TEST (décommenter pour tester sans limites de rate)
+      # ⚠️ Les certificats générés en staging ne sont pas valides !
+      # Utile pour tester la config avant de passer en production.
+      # caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+# ───────────────────────────────────────────────────────────────────
+# 📊 API & DASHBOARD - Interface d'administration (DÉSACTIVÉ)
+# ───────────────────────────────────────────────────────────────────
+# Le dashboard est désactivé par défaut pour des raisons de sécurité.
+# Pour l'activer, décommenter les lignes ci-dessous ET ajouter une
+# authentification (BasicAuth recommandé).
+# ───────────────────────────────────────────────────────────────────
+
+api:
+  # Dashboard désactivé par défaut
+  dashboard: false
+
+  # API interne désactivée
+  insecure: false
+
+# Pour activer le dashboard de manière sécurisée :
+# 1. Décommenter ci-dessous
+# 2. Ajouter les labels dans docker-compose.yml (voir commentaires)
+# 3. Générer un mot de passe BasicAuth :
+#    htpasswd -nb admin votre_mot_de_passe
+#
+# api:
+#   dashboard: true
+#   insecure: false
+
+# ───────────────────────────────────────────────────────────────────
+# 📝 LOGS - Journalisation
+# ───────────────────────────────────────────────────────────────────
+
+log:
+  # Niveau de log : DEBUG, INFO, WARN, ERROR
+  level: INFO
+
+  # Fichier de log (optionnel, sinon stdout)
+  # filePath: "/var/log/traefik/traefik.log"
+
+  # Format : json ou common
+  format: json
+
+# Logs d'accès (optionnel, pour voir toutes les requêtes)
+accessLog:
+  # Activer les logs d'accès
+  # filePath: "/var/log/traefik/access.log"
+  format: json
+
+  # Filtres pour ne logger que certaines requêtes (optionnel)
+  # filters:
+  #   statusCodes:
+  #     - "400-499"
+  #     - "500-599"
+
+# ───────────────────────────────────────────────────────────────────
+# 🔒 SÉCURITÉ - Options globales
+# ───────────────────────────────────────────────────────────────────
+
+# Options TLS globales (optionnel, pour renforcer la sécurité)
+# tls:
+#   options:
+#     default:
+#       minVersion: VersionTLS12
+#       cipherSuites:
+#         - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+#         - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+#         - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+
+# ───────────────────────────────────────────────────────────────────
+# 🔧 OPTIONS GLOBALES
+# ───────────────────────────────────────────────────────────────────
+
+global:
+  # Désactiver la vérification des mises à jour (optionnel)
+  checkNewVersion: false
+
+  # Désactiver l'envoi de statistiques anonymes à Traefik Labs
+  sendAnonymousUsage: false
+>>>>>> main

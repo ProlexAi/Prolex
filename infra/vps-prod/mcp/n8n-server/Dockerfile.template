@@ -1,0 +1,100 @@
+# ═══════════════════════════════════════════════════════════════════
+# Dockerfile - Serveur MCP pour n8n
+# ═══════════════════════════════════════════════════════════════════
+#
+# Ce fichier est un TEMPLATE pour construire l'image Docker du serveur MCP.
+# À adapter selon la structure réelle de ton projet MCP.
+#
+# ═══════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────
+# STAGE 1 : Build (TypeScript → JavaScript)
+# ───────────────────────────────────────────────────────────────────
+
+FROM node:20-alpine AS builder
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+
+# Installer les dépendances (y compris devDependencies pour le build)
+RUN npm ci
+
+# Copier le code source
+COPY . .
+
+# Compiler TypeScript → JavaScript (si applicable)
+# Si ton projet n'utilise pas TypeScript, supprimer cette ligne
+RUN npm run build
+
+# ───────────────────────────────────────────────────────────────────
+# STAGE 2 : Production
+# ───────────────────────────────────────────────────────────────────
+
+FROM node:20-alpine
+
+# Métadonnées
+LABEL maintainer="Matthieu - Prolex/Automatt"
+LABEL description="Serveur MCP pour n8n"
+
+# Créer un utilisateur non-root pour la sécurité
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier les fichiers nécessaires depuis le stage builder
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+
+# Si tu as compilé TypeScript, copier le dossier dist/
+# Sinon, copier le code source directement
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+
+# OU si pas de compilation TypeScript :
+# COPY --from=builder --chown=nodejs:nodejs /app/src ./src
+
+# Copier les fichiers de configuration (si nécessaire)
+COPY --chown=nodejs:nodejs config/ ./config/
+
+# Installer uniquement les dépendances de production
+RUN npm ci --only=production && npm cache clean --force
+
+# Changer d'utilisateur (sécurité : ne pas run en root)
+USER nodejs
+
+# Exposer le port du serveur MCP
+EXPOSE 3100
+
+# Healthcheck pour vérifier que le serveur répond
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3100/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Commande de démarrage
+# À adapter selon ton projet (ex: "node dist/index.js" ou "npm start")
+CMD ["node", "dist/index.js"]
+
+# ═══════════════════════════════════════════════════════════════════
+# INSTRUCTIONS D'UTILISATION
+# ═══════════════════════════════════════════════════════════════════
+#
+# 1. Renommer ce fichier en "Dockerfile" :
+#    mv Dockerfile.template Dockerfile
+#
+# 2. Adapter la commande CMD selon ton projet :
+#    - Si TypeScript compilé : CMD ["node", "dist/index.js"]
+#    - Si JavaScript direct : CMD ["node", "src/index.js"]
+#    - Si script npm : CMD ["npm", "start"]
+#
+# 3. Construire l'image localement (optionnel) :
+#    docker build -t prolex-mcp-n8n:latest .
+#
+# 4. Tester localement (optionnel) :
+#    docker run -p 3100:3100 --env-file .env prolex-mcp-n8n:latest
+#
+# 5. Le docker-compose.yml construira automatiquement l'image lors du
+#    premier "docker compose up".
+#
+# ═══════════════════════════════════════════════════════════════════
