@@ -99,92 +99,42 @@ Si Prolex est le **cerveau**, Opex est le **corps** :
 
 ## 3. Catalogue de workflows v4
 
-### 3.1 Structure de fichier
+### 3.1 Référence complète
+
+**Fichier central** : [config/opex_workflows.yml](../../config/opex_workflows.yml)
+
+Le catalogue Opex v4 contient **25 workflows** organisés en 8 catégories :
+
+| Catégorie | Plage | Workflows | Description |
+|-----------|-------|-----------|-------------|
+| **Core / Proxy** | 000-099 | 3 | Workflows système (Proxy Master, Kimmy, sync GitHub) |
+| **Productivité** | 100-199 | 5 | Google Tasks, Calendar, Docs |
+| **Dev / GitHub** | 200-299 | 4 | Git clone, sync, PR, list repos |
+| **Client workflows** | 300-399 | 5 | Onboarding, rapports, packs automatisation |
+| **Monitoring / Backup** | 400-499 | 5 | Healthchecks, alertes, backups |
+| **Reporting** | 500-599 | 4 | Logs, coûts, résumés |
+| **N8N Management** | 600-699 | 5 | Design, upsert, test, promote workflows (v4+) |
+| **Exemples / Tests** | 900-999 | 2 | Tests et démos |
+
+### 3.2 Configuration MVP
+
+**MVP Prolex v4** :
+- **Autonomie max** : Niveau 2
+- **Workflows core** : 4 workflows essentiels
+  - `020_proxy_master_exec.json` (Proxy Master)
+  - `030_kimmy_master.json` (Kimmy)
+  - `100_task_create.json` (Tasks)
+  - `500_systemjournal_entry.json` (Logging)
+
+### 3.3 Structure de fichier
 
 Chaque workflow est un fichier JSON dans `n8n-workflows/` avec :
 - **Nom** : `<numéro>_<nom-descriptif>.json`
-- **Numérotation** :
-  - `000-099` : Core / Proxy
-  - `100-199` : Productivité
-  - `200-299` : Dev / GitHub
-  - `300-399` : Client workflows
-  - `400-499` : Monitoring / Backup
-  - `500-599` : Reporting
-  - `600-699` : Gestion n8n (v4+)
-  - `900-999` : Exemples / Tests
+- **Numérotation** : voir tableau ci-dessus
+- **Métadonnées** : définies dans `config/opex_workflows.yml`
 
-### 3.2 Workflows Core / Proxy (000-099)
-
-| Fichier | Nom | Rôle | Webhook |
-|---------|-----|------|---------|
-| `010_sync-github-to-n8n.json` | GitHub to n8n Sync | Synchro workflows depuis GitHub | `/webhook/github-sync` |
-| `020_proxy_master_exec.json` | Proxy Master | Point d'entrée Prolex | `/webhook/proxy-exec` |
-| `030_kimmy_master.json` | Kimmy Master | Filtre d'entrée | `/webhook/kimmy-intake` |
-
-### 3.3 Workflows Productivité (100-199)
-
-| Fichier | Nom | Outil ID | Rôle |
-|---------|-----|----------|------|
-| `100_task_create.json` | Task Create | `TASK_CREATE` | Créer tâche Google Tasks |
-| `101_task_update.json` | Task Update | `TASK_UPDATE` | Modifier tâche |
-| `110_calendar_event_create.json` | Calendar Event Create | `CAL_EVENT_CREATE` | Créer événement Google Calendar |
-| `120_doc_create_note.json` | Doc Create Note | `DOC_CREATE_NOTE` | Créer note Google Docs |
-| `121_doc_update.json` | Doc Update | `DOC_UPDATE` | Mettre à jour un doc |
-
-### 3.4 Workflows Dev / GitHub (200-299)
-
-| Fichier | Nom | Outil ID | Rôle |
-|---------|-----|----------|------|
-| `200_git_clone.json` | Git Clone | `GIT_CLONE` | Cloner un repo GitHub |
-| `201_git_sync.json` | Git Sync | `GIT_SYNC` | Pull sur repo existant |
-| `210_github_open_pr.json` | GitHub Open PR | `GITHUB_OPEN_PR` | Créer une PR |
-| `220_github_list_repos.json` | GitHub List Repos | `GITHUB_LIST_REPOS` | Lister repos d'un compte/org |
-
-### 3.5 Workflows Clients (300-399)
-
-| Fichier | Nom | Outil ID | Rôle |
-|---------|-----|----------|------|
-| `300_client_workflow_run.json` | Client Workflow Run | `CLIENT_WORKFLOW_RUN` | Exécuter workflow client générique |
-| `310_client_onboarding_standard.json` | Client Onboarding | - | Onboarding standard nouveau client |
-| `320_client_monthly_report.json` | Client Monthly Report | - | Rapport mensuel client |
-| `330_client_automation_pack_basic.json` | Pack Basic | - | Pack automatisations basique |
-| `331_client_automation_pack_pro.json` | Pack Pro | - | Pack automatisations pro |
-
-### 3.6 Workflows Monitoring / Backup (400-499)
-
-| Fichier | Nom | Outil ID | Rôle |
-|---------|-----|----------|------|
-| `400_healthcheck_services.json` | Healthcheck Services | `HEALTHCHECK_RUN` | Vérifier état services (n8n, AnythingLLM, etc.) |
-| `410_global_error_alert.json` | Global Error Alert | - | Alerte sur erreurs critiques |
-| `420_security_alerts.json` | Security Alerts | - | Alertes sécurité |
-| `450_backup_all_to_drive.json` | Backup All | `BACKUP_RUN` | Backup complet vers Google Drive |
-| `451_restore_from_backup.json` | Restore Backup | - | Restauration depuis backup |
-
-### 3.7 Workflows Reporting (500-599)
-
-| Fichier | Nom | Outil ID | Rôle |
-|---------|-----|----------|------|
-| `500_systemjournal_entry.json` | SystemJournal Entry | `LOG_APPEND` | Ajouter entrée dans SystemJournal |
-| `510_api_cost_tracker.json` | API Cost Tracker | `COST_REPORT_RUN` | Tracker coûts APIs |
-| `520_weekly_summary_to_sheet.json` | Weekly Summary | - | Résumé hebdomadaire |
-| `530_web_search.json` | Web Search | `WEB_SEARCH` | Recherche web technique |
-
-### 3.8 Workflows Gestion n8n (600-699) – Nouveauté v4+
-
-| Fichier | Nom | Outil ID | Rôle |
-|---------|-----|----------|------|
-| `600_n8n_workflow_design.json` | N8N Workflow Design | `N8N_WORKFLOW_DESIGN` | Concevoir un workflow |
-| `601_n8n_workflow_upsert.json` | N8N Workflow Upsert | `N8N_WORKFLOW_UPSERT` | Créer/modifier workflow |
-| `602_n8n_workflow_test.json` | N8N Workflow Test | `N8N_WORKFLOW_TEST` | Tester workflow |
-| `603_n8n_workflow_promote.json` | N8N Workflow Promote | `N8N_WORKFLOW_PROMOTE` | Promouvoir sandbox → prod |
-| `610_n8n_list_workflows.json` | N8N List Workflows | `N8N_LIST_WORKFLOWS` | Lister tous les workflows |
-
-### 3.9 Workflows Exemples / Tests (900-999)
-
-| Fichier | Nom | Rôle |
-|---------|-----|------|
-| `900_example_hello_world.json` | Hello World | Workflow de test basique |
-| `910_test_systemjournal.json` | Test SystemJournal | Tester log SystemJournal |
+Pour la liste exhaustive avec détails (tool_id, autonomy_levels, webhooks), consulter :
+👉 [config/opex_workflows.yml](../../config/opex_workflows.yml)
 
 ---
 

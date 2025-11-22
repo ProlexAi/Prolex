@@ -7,6 +7,32 @@
 
 ---
 
+## 🚀 Statut v4 : MVP + Extensions
+
+### Configuration actuelle
+
+**Mode** : MVP (Minimum Viable Product)
+
+| Aspect | Statut |
+|--------|--------|
+| **Autonomie max** | Niveau 2 |
+| **Workflows core** | 4 workflows (Proxy, Kimmy, Tasks, Logging) |
+| **Outils disponibles** | 15 outils low-risk |
+| **Environnement** | Production (VPS Traefik + n8n + AnythingLLM) |
+| **Gestion workflows n8n** | ⚠️ Niveau 3 requis (non MVP) |
+
+### Évolution prévue
+
+**Post-MVP (Niveau 3)** :
+- 🔓 Déverrouillage autonomie niveau 3
+- ✅ Activation outils avancés (30+ outils)
+- 🎨 Capacité création workflows n8n automatiques
+- 📊 Workflows clients actifs
+
+**Roadmap** : voir [ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md](../architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)
+
+---
+
 ## 1. Identité & mission
 
 ### 1.1 Carte d'identité
