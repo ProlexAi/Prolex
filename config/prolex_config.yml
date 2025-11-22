@@ -34,7 +34,7 @@ prolex_security_level: high_check
 # 1 : + logs automatiques (LOG_APPEND, DOC_CREATE_NOTE)
 # 2 : + tâches perso et outils low-risk
 # 3 : + workflows client packagés / Git safe
-prolex_current_autonomy_level: 2
+# Note: La valeur effective est définie dans config/autonomy.yml (source unique de vérité)
 
 # Définition des niveaux d'autonomie
 prolex_autonomy_levels:
@@ -140,10 +140,12 @@ prolex_allow_web_by_default: true  # Le web est autorisé par défaut si non pr�
 
 # Documentation & RAG (chemins indicatifs, à adapter à la structure réelle du repo)
 prolex_rag_docs:
-  architecture_main: "docs/01_ARCHITECTURE_SYSTEME_V4.md"
-  variables_context: "docs/02_VARIABLES_ET_CONTEXTE.md"
-  decisions_adr: "docs/03_DECISIONS_CLEF_PROJET.md"
-  kimmy_prolex_spec: "docs/05_KIMMY_PROLEX_SPEC_V4.md"
+  architecture_main: "docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md"
+  variables_context: "rag/context/02_VARIABLES_ET_CONTEXTE.md"
+  integration_kimmy_prolex: "docs/00_INTEGRATION_V4_KIMMY_PROLEX.md"
+  spec_kimmy: "docs/specifications/SPEC_KIMMY_V4.md"
+  spec_prolex: "docs/specifications/SPEC_PROLEX_V4.md"
+  spec_opex: "docs/specifications/SPEC_OPEX_V4.md"
 
 # Intents considérés comme toujours sensibles côté Prolex (prudence renforcée)
 prolex_sensitive_intents:

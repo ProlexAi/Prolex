@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/web_search.schema.json",
+  "title": "Web Search Payload",
+  "description": "Payload pour effectuer une recherche web",
+  "type": "object",
+  "required": ["query"],
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "Requête de recherche",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "num_results": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "default": 5,
+      "description": "Nombre de résultats à retourner"
+    },
+    "language": {
+      "type": "string",
+      "default": "fr",
+      "description": "Langue des résultats (code ISO 639-1)"
+    },
+    "safe_search": {
+      "type": "boolean",
+      "default": true,
+      "description": "Activer le filtre de contenu inapproprié"
+    }
+  },
+  "additionalProperties": false
+}

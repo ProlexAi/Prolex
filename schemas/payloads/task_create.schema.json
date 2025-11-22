@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/task_create.schema.json",
+  "title": "Task Create Payload",
+  "description": "Payload pour créer une tâche dans Google Tasks",
+  "type": "object",
+  "required": ["title"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Titre de la tâche",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "notes": {
+      "type": "string",
+      "description": "Description détaillée de la tâche"
+    },
+    "due": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date d'échéance au format ISO 8601"
+    },
+    "list_id": {
+      "type": "string",
+      "description": "ID de la liste de tâches (optionnel, utilise la liste par défaut si non spécifié)"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "default": "medium",
+      "description": "Niveau de priorité de la tâche"
+    }
+  },
+  "additionalProperties": false
+}

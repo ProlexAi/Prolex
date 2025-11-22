@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/n8n_workflow_promote.schema.json",
+  "title": "N8N Workflow Promote Payload",
+  "description": "Payload pour promouvoir un workflow de sandbox vers production",
+  "type": "object",
+  "required": ["workflow_id"],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "ID du workflow dans l'environnement sandbox"
+    },
+    "workflow_name": {
+      "type": "string",
+      "description": "Nom du workflow en production (peut différer du sandbox)"
+    },
+    "activate_immediately": {
+      "type": "boolean",
+      "default": false,
+      "description": "Activer le workflow immédiatement après promotion"
+    },
+    "backup_existing": {
+      "type": "boolean",
+      "default": true,
+      "description": "Sauvegarder la version production existante avant promotion"
+    },
+    "run_tests": {
+      "type": "boolean",
+      "default": true,
+      "description": "Exécuter les tests avant promotion"
+    },
+    "approval_required": {
+      "type": "boolean",
+      "default": true,
+      "description": "Nécessite une approbation manuelle avant promotion"
+    },
+    "rollback_on_error": {
+      "type": "boolean",
+      "default": true,
+      "description": "Revenir automatiquement à la version précédente en cas d'erreur"
+    },
+    "notification_channels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["email", "slack"]
+      },
+      "default": ["email"],
+      "description": "Canaux de notification pour la promotion"
+    }
+  },
+  "additionalProperties": false
+}
