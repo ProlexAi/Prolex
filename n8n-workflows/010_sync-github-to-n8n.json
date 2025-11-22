@@ -1,0 +1,516 @@
+{
+  "name": "GitHub to n8n Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-sync",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-github-push",
+      "name": "GitHub Push Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "github-sync"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire tous les fichiers modifiés dans n8n-workflows/\nconst payload = $input.item.json;\nconst repo = payload.repository?.full_name || 'unknown';\nconst ref = payload.ref || '';\nconst branch = ref.replace('refs/heads/', '');\nconst pusher = payload.pusher?.name || payload.sender?.login || 'unknown';\nconst commits = payload.commits || [];\n\n// Collecter tous les fichiers modifiés\nconst filesChanged = [];\nconst seenFiles = new Set();\n\nfor (const commit of commits) {\n  const commitSha = commit.id;\n  \n  // Fichiers ajoutés\n  for (const file of (commit.added || [])) {\n    if (file.startsWith('n8n-workflows/') && file.endsWith('.json') && !seenFiles.has(file)) {\n      filesChanged.push({\n        file_path: file,\n        change_type: 'added',\n        repo: repo,\n        branch: branch,\n        commit_sha: commitSha,\n        actor: commit.author?.username || pusher\n      });\n      seenFiles.add(file);\n    }\n  }\n  \n  // Fichiers modifiés\n  for (const file of (commit.modified || [])) {\n    if (file.startsWith('n8n-workflows/') && file.endsWith('.json') && !seenFiles.has(file)) {\n      filesChanged.push({\n        file_path: file,\n        change_type: 'modified',\n        repo: repo,\n        branch: branch,\n        commit_sha: commitSha,\n        actor: commit.author?.username || pusher\n      });\n      seenFiles.add(file);\n    }\n  }\n  \n  // Fichiers supprimés\n  for (const file of (commit.removed || [])) {\n    if (file.startsWith('n8n-workflows/') && file.endsWith('.json') && !seenFiles.has(file)) {\n      filesChanged.push({\n        file_path: file,\n        change_type: 'removed',\n        repo: repo,\n        branch: branch,\n        commit_sha: commitSha,\n        actor: commit.author?.username || pusher\n      });\n      seenFiles.add(file);\n    }\n  }\n}\n\nif (filesChanged.length === 0) {\n  return [{\n    json: {\n      file_path: 'none',\n      change_type: 'none',\n      repo: repo,\n      branch: branch,\n      commit_sha: commits[commits.length - 1]?.id || 'unknown',\n      actor: pusher,\n      skip: true\n    }\n  }];\n}\n\nreturn filesChanged.map(f => ({ json: f }));"
+      },
+      "id": "extract-files",
+      "name": "Extract Changed Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.change_type }}",
+                    "rightValue": "removed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "removed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.change_type }}",
+                    "rightValue": "none",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "skip"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "route-change-type",
+      "name": "Route by Change Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $json.repo }}/contents/{{ $json.file_path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ref",
+              "value": "={{ $json.branch }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-file-github",
+      "name": "Get File from GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 180],
+      "credentials": {
+        "githubApi": {
+          "id": "github-creds",
+          "name": "GitHub API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Décoder le contenu base64 et parser le JSON du workflow\nconst item = $input.item.json;\nconst fileData = item.content;\nconst encoding = item.encoding;\n\nif (encoding !== 'base64') {\n  return {\n    json: {\n      ...item,\n      error: true,\n      error_message: 'Encoding not base64',\n      workflow_json: null\n    }\n  };\n}\n\ntry {\n  // Décoder base64\n  const decoded = Buffer.from(fileData, 'base64').toString('utf-8');\n  \n  // Parser JSON\n  const workflowJson = JSON.parse(decoded);\n  \n  // Valider\n  if (!workflowJson.name) {\n    return {\n      json: {\n        ...item,\n        error: true,\n        error_message: 'Workflow JSON missing required field: name',\n        workflow_json: null\n      }\n    };\n  }\n  \n  if (!workflowJson.nodes) {\n    return {\n      json: {\n        ...item,\n        error: true,\n        error_message: 'Workflow JSON missing required field: nodes',\n        workflow_json: null\n      }\n    };\n  }\n  \n  // Récupérer les métadonnées du fichier depuis le contexte précédent\n  const fileInfo = $('Split In Batches').item.json;\n  \n  return {\n    json: {\n      ...fileInfo,\n      workflow_json: workflowJson,\n      workflow_name: workflowJson.name,\n      error: false,\n      error_message: ''\n    }\n  };\n  \n} catch (error) {\n  const fileInfo = $('Split In Batches').item.json;\n  return {\n    json: {\n      ...fileInfo,\n      error: true,\n      error_message: `Failed to parse workflow JSON: ${error.message}`,\n      workflow_json: null\n    }\n  };\n}"
+      },
+      "id": "parse-workflow-json",
+      "name": "Parse Workflow JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Créer ou mettre à jour le workflow dans n8n\nconst item = $input.item.json;\n\nif (item.error) {\n  return {\n    json: {\n      ...item,\n      action_taken: 'skip',\n      status: 'failed',\n      workflow_id: '',\n      trigger_origin: 'github_webhook'\n    }\n  };\n}\n\nconst workflowJson = item.workflow_json;\nconst workflowName = item.workflow_name;\nconst n8nBaseUrl = $env.N8N_BASE_URL || 'http://localhost:5678';\nconst n8nApiKey = $env.N8N_API_KEY;\n\nif (!n8nApiKey) {\n  return {\n    json: {\n      ...item,\n      action_taken: 'skip',\n      status: 'failed',\n      error_message: 'N8N_API_KEY not configured',\n      workflow_id: '',\n      trigger_origin: 'github_webhook'\n    }\n  };\n}\n\ntry {\n  // 1. Chercher si le workflow existe déjà\n  const searchUrl = `${n8nBaseUrl}/api/v1/workflows`;\n  const searchResponse = await fetch(searchUrl, {\n    method: 'GET',\n    headers: {\n      'X-N8N-API-KEY': n8nApiKey,\n      'Content-Type': 'application/json'\n    }\n  });\n  \n  if (!searchResponse.ok) {\n    throw new Error(`Failed to search workflows: ${searchResponse.statusText}`);\n  }\n  \n  const allWorkflows = await searchResponse.json();\n  const existingWorkflow = allWorkflows.data?.find(w => w.name === workflowName);\n  \n  let result;\n  let actionTaken;\n  \n  if (existingWorkflow) {\n    // 2a. Update existing workflow\n    const updateUrl = `${n8nBaseUrl}/api/v1/workflows/${existingWorkflow.id}`;\n    const updateBody = {\n      ...workflowJson,\n      id: existingWorkflow.id\n    };\n    \n    const updateResponse = await fetch(updateUrl, {\n      method: 'PUT',\n      headers: {\n        'X-N8N-API-KEY': n8nApiKey,\n        'Content-Type': 'application/json'\n      },\n      body: JSON.stringify(updateBody)\n    });\n    \n    if (!updateResponse.ok) {\n      const errorText = await updateResponse.text();\n      throw new Error(`Failed to update workflow: ${updateResponse.statusText} - ${errorText}`);\n    }\n    \n    result = await updateResponse.json();\n    actionTaken = 'update';\n    \n  } else {\n    // 2b. Create new workflow\n    const createUrl = `${n8nBaseUrl}/api/v1/workflows`;\n    const createBody = {\n      ...workflowJson\n    };\n    delete createBody.id; // Remove id if present\n    \n    const createResponse = await fetch(createUrl, {\n      method: 'POST',\n      headers: {\n        'X-N8N-API-KEY': n8nApiKey,\n        'Content-Type': 'application/json'\n      },\n      body: JSON.stringify(createBody)\n    });\n    \n    if (!createResponse.ok) {\n      const errorText = await createResponse.text();\n      throw new Error(`Failed to create workflow: ${createResponse.statusText} - ${errorText}`);\n    }\n    \n    result = await createResponse.json();\n    actionTaken = 'create';\n  }\n  \n  return {\n    json: {\n      ...item,\n      action_taken: actionTaken,\n      status: 'success',\n      workflow_id: result.data?.id || result.id || '',\n      workflow_name: workflowName,\n      trigger_origin: 'github_webhook',\n      error_message: ''\n    }\n  };\n  \n} catch (error) {\n  return {\n    json: {\n      ...item,\n      action_taken: 'skip',\n      status: 'failed',\n      error_message: error.message,\n      workflow_id: '',\n      trigger_origin: 'github_webhook'\n    }\n  };\n}"
+      },
+      "id": "create-update-workflow",
+      "name": "Create or Update Workflow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire le nom du workflow depuis le chemin du fichier\nconst item = $input.item.json;\nconst filePath = item.file_path;\n\n// Ex: n8n-workflows/010_sync-github-to-n8n.json -> 010_sync-github-to-n8n\nconst fileName = filePath.split('/').pop().replace('.json', '');\n\n// Essayer de deviner le nom du workflow\n// Option 1: utiliser le nom de fichier directement\nconst guessedName = fileName.replace(/_/g, ' ').replace(/-/g, ' ');\n\nreturn {\n  json: {\n    ...item,\n    workflow_name_guess: guessedName,\n    file_name: fileName\n  }\n};"
+      },
+      "id": "extract-workflow-name",
+      "name": "Extract Workflow Name",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Désactiver le workflow dans n8n\nconst item = $input.item.json;\nconst workflowNameGuess = item.workflow_name_guess;\nconst n8nBaseUrl = $env.N8N_BASE_URL || 'http://localhost:5678';\nconst n8nApiKey = $env.N8N_API_KEY;\n\nif (!n8nApiKey) {\n  return {\n    json: {\n      ...item,\n      action_taken: 'skip',\n      status: 'failed',\n      error_message: 'N8N_API_KEY not configured',\n      workflow_id: '',\n      workflow_name: workflowNameGuess,\n      trigger_origin: 'github_webhook'\n    }\n  };\n}\n\ntry {\n  // 1. Chercher le workflow par nom\n  const searchUrl = `${n8nBaseUrl}/api/v1/workflows`;\n  const searchResponse = await fetch(searchUrl, {\n    method: 'GET',\n    headers: {\n      'X-N8N-API-KEY': n8nApiKey,\n      'Content-Type': 'application/json'\n    }\n  });\n  \n  if (!searchResponse.ok) {\n    throw new Error(`Failed to search workflows: ${searchResponse.statusText}`);\n  }\n  \n  const allWorkflows = await searchResponse.json();\n  \n  // Chercher par nom exact ou par correspondance partielle\n  const existingWorkflow = allWorkflows.data?.find(w => \n    w.name === workflowNameGuess || \n    w.name.toLowerCase().includes(workflowNameGuess.toLowerCase())\n  );\n  \n  if (!existingWorkflow) {\n    return {\n      json: {\n        ...item,\n        action_taken: 'skip',\n        status: 'success',\n        error_message: 'Workflow not found in n8n (already deleted or never existed)',\n        workflow_id: '',\n        workflow_name: workflowNameGuess,\n        trigger_origin: 'github_webhook'\n      }\n    };\n  }\n  \n  // 2. Désactiver le workflow\n  const updateUrl = `${n8nBaseUrl}/api/v1/workflows/${existingWorkflow.id}`;\n  const updateBody = {\n    ...existingWorkflow,\n    active: false\n  };\n  \n  const updateResponse = await fetch(updateUrl, {\n    method: 'PUT',\n    headers: {\n      'X-N8N-API-KEY': n8nApiKey,\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify(updateBody)\n  });\n  \n  if (!updateResponse.ok) {\n    const errorText = await updateResponse.text();\n    throw new Error(`Failed to disable workflow: ${updateResponse.statusText} - ${errorText}`);\n  }\n  \n  return {\n    json: {\n      ...item,\n      action_taken: 'disable',\n      status: 'success',\n      workflow_id: existingWorkflow.id,\n      workflow_name: existingWorkflow.name,\n      trigger_origin: 'github_webhook',\n      error_message: ''\n    }\n  };\n  \n} catch (error) {\n  return {\n    json: {\n      ...item,\n      action_taken: 'skip',\n      status: 'failed',\n      error_message: error.message,\n      workflow_id: '',\n      workflow_name: workflowNameGuess,\n      trigger_origin: 'github_webhook'\n    }\n  };\n}"
+      },
+      "id": "disable-workflow",
+      "name": "Disable Workflow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Préparer les données pour le log Google Sheets\nconst item = $input.item.json;\n\nconst timestamp = new Date().toISOString();\n\nreturn {\n  json: {\n    timestamp_utc: timestamp,\n    repo: item.repo || '',\n    branch: item.branch || '',\n    commit_sha: item.commit_sha || '',\n    actor: item.actor || '',\n    file_path: item.file_path || '',\n    change_type: item.change_type || '',\n    action_taken: item.action_taken || '',\n    workflow_id: item.workflow_id || '',\n    workflow_name: item.workflow_name || '',\n    trigger_origin: item.trigger_origin || 'github_webhook',\n    status: item.status || 'unknown',\n    error_message: item.error_message || '',\n    source_file_version: item.source_file_version || ''\n  }\n};"
+      },
+      "id": "prepare-log-entry",
+      "name": "Prepare Log Entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "events",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp_utc": "={{ $json.timestamp_utc }}",
+            "repo": "={{ $json.repo }}",
+            "branch": "={{ $json.branch }}",
+            "commit_sha": "={{ $json.commit_sha }}",
+            "actor": "={{ $json.actor }}",
+            "file_path": "={{ $json.file_path }}",
+            "change_type": "={{ $json.change_type }}",
+            "action_taken": "={{ $json.action_taken }}",
+            "workflow_id": "={{ $json.workflow_id }}",
+            "workflow_name": "={{ $json.workflow_name }}",
+            "trigger_origin": "={{ $json.trigger_origin }}",
+            "status": "={{ $json.status }}",
+            "error_message": "={{ $json.error_message }}",
+            "source_file_version": "={{ $json.source_file_version }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp_utc",
+              "displayName": "timestamp_utc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "repo",
+              "displayName": "repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "branch",
+              "displayName": "branch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "commit_sha",
+              "displayName": "commit_sha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actor",
+              "displayName": "actor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "file_path",
+              "displayName": "file_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "change_type",
+              "displayName": "change_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "action_taken",
+              "displayName": "action_taken",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow_id",
+              "displayName": "workflow_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "trigger_origin",
+              "displayName": "trigger_origin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_file_version",
+              "displayName": "source_file_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "append-google-sheets",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2000, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "no-op-skip",
+      "name": "No Op (Skip)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1120, 540]
+    }
+  ],
+  "connections": {
+    "GitHub Push Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Changed Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Changed Files": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Route by Change Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Change Type": {
+      "main": [
+        [
+          {
+            "node": "Get File from GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Workflow Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Op (Skip)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File from GitHub": {
+      "main": [
+        [
+          {
+            "node": "Parse Workflow JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Workflow JSON": {
+      "main": [
+        [
+          {
+            "node": "Create or Update Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or Update Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Workflow Name": {
+      "main": [
+        [
+          {
+            "node": "Disable Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disable Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prepare Log Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log Entry": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Op (Skip)": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-21T00:00:00.000Z",
+  "versionId": "1"
+}

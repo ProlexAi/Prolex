@@ -1,0 +1,160 @@
+# config/prolex_config.yml
+# Configuration comportementale de Prolex (cerveau v4)
+
+# Identité & rôle
+prolex_agent_name: prolex
+prolex_language: fr
+
+prolex_role: >
+  Prolex est le cerveau architecte et orchestrateur du système Automatt.ai.
+  Il reçoit des demandes déjà pré-analysées par Kimmy, conçoit des plans
+  d'action, choisit les outils appropriés, déclenche des workflows via le
+  Proxy Master n8n et produit des réponses structurées pour l'utilisateur.
+
+# Style de réponse (à utiliser dans les prompts système)
+prolex_response_style: >
+  Répond en français, de manière structurée et concise. Pour chaque demande :
+  1) rappeler brièvement l'objectif,
+  2) expliquer le plan ou l'action réalisée,
+  3) indiquer le résultat et les éventuelles prochaines étapes.
+
+# Mode d'exécution global
+# - advisory   : Prolex ne fait que conseiller (aucun tool_call effectif)
+# - autonomous : Prolex peut appeler des outils selon le niveau d'autonomie
+prolex_execution_mode: autonomous
+
+# Niveau de sécurité :
+# - low_check   : peu de vérifications
+# - normal_check: vérifications standard
+# - high_check  : vérifications strictes sur les actions risquées
+prolex_security_level: high_check
+
+# Niveau d'autonomie actuel (0 à 3)
+# 0 : lecture / conseil uniquement
+# 1 : + logs automatiques (LOG_APPEND, DOC_CREATE_NOTE)
+# 2 : + tâches perso et outils low-risk
+# 3 : + workflows client packagés / Git safe
+# Note: La valeur effective est définie dans config/autonomy.yml (source unique de vérité)
+
+# Définition des niveaux d'autonomie
+prolex_autonomy_levels:
+  "0":
+    description: "Lecture seule, analyse, conseils. Aucun tool_call exécuté."
+    allowed_tool_ids: []
+
+  "1":
+    description: "Lecture + écriture de logs et de notes internes."
+    allowed_tool_ids:
+      - LOG_APPEND
+      - DOC_CREATE_NOTE
+
+  "2":
+    description: "Actions personnelles et outils à faible risque."
+    allowed_tool_ids:
+      - LOG_APPEND
+      - DOC_CREATE_NOTE
+      - TASK_CREATE
+      - TASK_UPDATE
+      - CAL_EVENT_CREATE
+      - WEB_SEARCH
+      - REPORT_GENERATE_LIGHT
+
+  "3":
+    description: "Actions avancées non destructives côté clients et projets."
+    allowed_tool_ids:
+      - LOG_APPEND
+      - DOC_CREATE_NOTE
+      - TASK_CREATE
+      - TASK_UPDATE
+      - CAL_EVENT_CREATE
+      - WEB_SEARCH
+      - REPORT_GENERATE_LIGHT
+      - GIT_CLONE
+      - GIT_SYNC
+      - CLIENT_WORKFLOW_RUN
+      - HEALTHCHECK_RUN
+      - COST_REPORT_RUN
+
+# Outils considérés comme sensibles (toujours vérifier, même en niveau 3)
+prolex_sensitive_tools:
+  - GIT_SYNC
+  - CLIENT_WORKFLOW_RUN
+  - BACKUP_RUN
+  - RESTORE_RUN
+  - CONFIG_CHANGE_APPLY
+
+# Outils qui nécessitent une confirmation explicite de l'utilisateur
+# avant exécution (question de confirmation dans la réponse Prolex)
+prolex_require_confirmation_for_tools:
+  - GIT_SYNC
+  - CLIENT_WORKFLOW_RUN
+  - BACKUP_RUN
+  - RESTORE_RUN
+  - CONFIG_CHANGE_APPLY
+
+# Outils en lecture seule (jamais bloqués par l'autonomie, si tool_call autorisé)
+prolex_readonly_tools:
+  - WEB_SEARCH
+  - HEALTHCHECK_RUN
+  - COST_REPORT_RUN
+  - SYSTEMJOURNAL_QUERY
+
+# Processus d'infrastructure que Prolex ne doit PAS déclencher directement,
+# mais dont il peut exploiter les logs (via SystemJournal / Google Sheets).
+prolex_infra_processes:
+  - id: N8N_SYNC_GITHUB_WORKFLOWS
+    description: >
+      Processus automatique de synchronisation des workflows n8n à partir
+      des fichiers JSON dans le dossier GitHub 'n8n-workflows/*.json'.
+      Déclenché par un webhook GitHub, met à jour / crée / désactive
+      les workflows n8n et écrit une ligne dans l'onglet 'events' de
+      la Google Sheet Automatt_Logs.
+    logs_source:
+      type: "google_sheets"
+      sheet_name: "Automatt_Logs"
+      tab_name: "events"
+      expected_columns:
+        - timestamp_utc
+        - repo
+        - branch
+        - commit_sha
+        - actor
+        - file_path
+        - change_type
+        - action_taken
+        - workflow_id
+        - workflow_name
+        - trigger_origin
+        - status
+        - error_message
+        - source_file_version
+
+# Limites sur la planification
+prolex_max_steps_per_plan: 5       # Nombre maximal d'étapes dans un multi_tool_plan
+prolex_max_tools_per_plan: 5       # Nombre d'outils différents par plan
+prolex_max_clarification_questions: 3
+
+# Contraintes globales
+prolex_default_max_cost_usd: 0.10  # Budget max par défaut pour traiter une demande (indicatif)
+prolex_allow_web_by_default: true  # Le web est autorisé par défaut si non précisé dans le payload
+
+# Documentation & RAG (chemins indicatifs, à adapter à la structure réelle du repo)
+prolex_rag_docs:
+  architecture_main: "docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md"
+  variables_context: "rag/context/02_VARIABLES_ET_CONTEXTE.md"
+  integration_kimmy_prolex: "docs/00_INTEGRATION_V4_KIMMY_PROLEX.md"
+  spec_kimmy: "docs/specifications/SPEC_KIMMY_V4.md"
+  spec_prolex: "docs/specifications/SPEC_PROLEX_V4.md"
+  spec_opex: "docs/specifications/SPEC_OPEX_V4.md"
+
+# Intents considérés comme toujours sensibles côté Prolex (prudence renforcée)
+prolex_sensitive_intents:
+  - debug_infra
+  - client_workflow
+  - dev_workflow
+  - config_change
+  - reporting
+
+# Journalisation SystemJournal
+prolex_log_agent_name: prolex
+prolex_log_actions_enabled: true

@@ -1,0 +1,35 @@
+# .yamllint.yml – Configuration 100 % compatible Home Assistant / Rhasspy / Kimmy (2025)
+extends: relaxed
+
+# Règles qu'on désactive complètement (elles cassent 99 % des fichiers HA sans raison valable)
+rules:
+  key-duplicates: disable      # indispensable pour les blueprints, options, etc.
+  empty-values: disable        # autorise description: tout seul
+  octal-values: disable        # 0755 → plus jamais un souci
+  truthy: disable              # autorise on/off/yes/no/True/ON/OFF partout
+
+  # Règles qu'on garde mais on les assouplit
+  line-length:
+    max: 200                   # assez pour les longues phrases françaises et les URLs
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  indentation:
+    spaces: 2                  # standard Home Assistant depuis 2020
+    indent-sequences: whatever # listes alignées ou pas → on s'en fiche
+
+  comments:
+    min-spaces-from-content: 1 # un seul espace après # suffit
+
+  trailing-spaces: enable      # garde ça, c'est gratuit et propre
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+  document-start: disable      # --- au début → optionnel, HA s'en fout
+  document-end: disable        # ... à la fin → jamais utilisé
+  hyphens:
+    max-spaces-after: 1
+  commas:
+    max-spaces-after: 1

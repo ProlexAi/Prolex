@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+<<<<<< claude/fix-json-schema-validation-015bQveWcNSNed8DmfLdnTXU
+  "$id": "https://prolex.ai/schemas/kimmy_payload.schema.json",
+======
+  "$id": "https://automatt.ai/schemas/kimmy-payload.json",
+>>>>>> main
+  "title": "KimmyPayload",
+  "description": "Payload structuré produit par Kimmy pour Prolex",
+  "type": "object",
+  "required": [
+    "request_id",
+    "source",
+    "raw_input",
+    "language",
+    "kimmy_summary",
+    "intent",
+    "complexity",
+    "confidence",
+    "requires_prolex"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identifiant unique de la requête (UUID v4)"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["chat", "whatsapp", "telegram", "email", "api", "other"],
+      "description": "Canal d'origine de la demande"
+    },
+    "raw_input": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Texte original de l'utilisateur, non modifié"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}$",
+      "description": "Code langue ISO 639-1 (ex: 'fr', 'en')"
+    },
+    "kimmy_summary": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 500,
+      "description": "Résumé concis en 1-2 phrases de la demande"
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "task_create",
+        "task_update",
+        "calendar_event",
+        "doc_note",
+        "doc_structuring",
+        "question_simple",
+        "question_systeme",
+        "debug_infra",
+        "client_workflow",
+        "dev_workflow",
+        "reporting",
+        "config_change",
+        "other"
+      ],
+      "description": "Intention classifiée de la demande"
+    },
+    "complexity": {
+      "type": "string",
+      "enum": ["simple", "complex", "unclear"],
+      "description": "Niveau de complexité évalué par Kimmy"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Niveau de confiance de Kimmy dans sa classification (0-1)"
+    },
+    "requires_prolex": {
+      "type": "boolean",
+      "description": "Si true, Prolex doit traiter la demande; si false, Kimmy peut gérer"
+    },
+    "suggested_tools": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z_]+$"
+      },
+      "description": "Liste d'outils suggérés (IDs en MAJUSCULES)"
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Paramètres extraits de la demande",
+      "properties": {
+        "title": {
+          "type": ["string", "null"],
+          "description": "Titre de la tâche/note/événement"
+        },
+        "description": {
+          "type": ["string", "null"],
+          "description": "Description détaillée"
+        },
+        "due_date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Date d'échéance (format ISO 8601: YYYY-MM-DD)"
+        },
+        "client_name": {
+          "type": ["string", "null"],
+          "description": "Nom du client concerné"
+        },
+        "priority": {
+          "type": ["string", "null"],
+          "enum": ["low", "medium", "high", "urgent", null],
+          "description": "Niveau de priorité"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Tags/labels associés"
+        }
+      },
+      "additionalProperties": true
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Contraintes d'exécution",
+      "properties": {
+        "max_cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Coût maximum autorisé en USD"
+        },
+        "can_use_web": {
+          "type": "boolean",
+          "description": "Autorisation d'utiliser des recherches web"
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Niveau de sensibilité des données"
+        }
+      }
+    },
+    "history_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Références à des requêtes ou actions précédentes"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/calendar_event_create.schema.json",
+  "title": "Calendar Event Create Payload",
+  "description": "Payload pour créer un événement dans Google Calendar",
+  "type": "object",
+  "required": ["summary", "start", "end"],
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "Titre de l'événement",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "description": {
+      "type": "string",
+      "description": "Description détaillée de l'événement"
+    },
+    "start": {
+      "type": "object",
+      "required": ["dateTime"],
+      "properties": {
+        "dateTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date et heure de début au format ISO 8601"
+        },
+        "timeZone": {
+          "type": "string",
+          "default": "Europe/Paris",
+          "description": "Fuseau horaire"
+        }
+      }
+    },
+    "end": {
+      "type": "object",
+      "required": ["dateTime"],
+      "properties": {
+        "dateTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date et heure de fin au format ISO 8601"
+        },
+        "timeZone": {
+          "type": "string",
+          "default": "Europe/Paris",
+          "description": "Fuseau horaire"
+        }
+      }
+    },
+    "location": {
+      "type": "string",
+      "description": "Lieu de l'événement"
+    },
+    "attendees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Liste des participants"
+    },
+    "reminders": {
+      "type": "object",
+      "properties": {
+        "useDefault": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

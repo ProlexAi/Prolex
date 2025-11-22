@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/github_open_pr.schema.json",
+  "title": "GitHub Open Pull Request Payload",
+  "description": "Payload pour ouvrir une Pull Request sur GitHub",
+  "type": "object",
+  "required": ["repo", "title", "head", "base"],
+  "properties": {
+    "repo": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$",
+      "description": "Repository au format owner/repo"
+    },
+    "title": {
+      "type": "string",
+      "description": "Titre de la Pull Request",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "body": {
+      "type": "string",
+      "description": "Description détaillée de la PR (supporte Markdown)"
+    },
+    "head": {
+      "type": "string",
+      "description": "Branche source (branche avec les changements)"
+    },
+    "base": {
+      "type": "string",
+      "description": "Branche cible (branche de destination, ex: main)"
+    },
+    "draft": {
+      "type": "boolean",
+      "default": false,
+      "description": "Créer la PR en mode brouillon"
+    },
+    "reviewers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Liste des reviewers à assigner"
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Labels à ajouter à la PR"
+    }
+  },
+  "additionalProperties": false
+}

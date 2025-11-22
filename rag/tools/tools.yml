@@ -1,0 +1,414 @@
+# CATALOGUE D'OUTILS PROLEX v4
+# Ce fichier définit tous les outils disponibles pour Prolex
+# Chaque outil a un niveau de risque et des niveaux d'autonomie autorisés
+
+# ====================================================================
+# PRODUCTIVITÉ
+# ====================================================================
+
+- id: TASK_CREATE
+  name: "Créer une tâche"
+  description: "Créer une tâche dans Google Tasks (personnelle ou interne)"
+  category: productivity
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/task-create"
+    method: POST
+  payload_schema: "schemas/payloads/task_create.schema.json"
+  response_schema: "schemas/responses/task_create.response.json"
+  examples:
+    - description: "Créer une tâche simple"
+      payload:
+        title: "Réviser l'architecture Prolex"
+        description: "Mettre à jour le RAG et valider les workflows n8n"
+        due_date: "2025-11-25"
+        priority: "high"
+        tags: ["architecture", "prolex"]
+      expected_result:
+        task_id: "abc123"
+        task_url: "https://tasks.google.com/..."
+
+- id: TASK_UPDATE
+  name: "Mettre à jour une tâche"
+  description: "Modifier une tâche existante dans Google Tasks"
+  category: productivity
+  risk_level: low
+  auto_allowed_levels: [2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/task-update"
+    method: POST
+  payload_schema: "schemas/payloads/task_update.schema.json"
+
+- id: CAL_EVENT_CREATE
+  name: "Créer un événement calendrier"
+  description: "Créer un événement dans Google Calendar"
+  category: productivity
+  risk_level: low
+  auto_allowed_levels: [2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/calendar-event-create"
+    method: POST
+  payload_schema: "schemas/payloads/calendar_event_create.schema.json"
+
+# ====================================================================
+# DOCUMENTATION
+# ====================================================================
+
+- id: DOC_CREATE_NOTE
+  name: "Créer une note"
+  description: "Créer une note/mémo dans Google Docs"
+  category: documentation
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/doc-create-note"
+    method: POST
+  payload_schema: "schemas/payloads/doc_create_note.schema.json"
+
+- id: DOC_UPDATE
+  name: "Mettre à jour un document"
+  description: "Modifier ou restructurer un document Google Docs"
+  category: documentation
+  risk_level: medium
+  auto_allowed_levels: [2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/doc-update"
+    method: POST
+  payload_schema: "schemas/payloads/doc_update.schema.json"
+
+# ====================================================================
+# LOGGING
+# ====================================================================
+
+- id: LOG_APPEND
+  name: "Ajouter entrée log"
+  description: "Ajouter une entrée dans SystemJournal (Google Sheets)"
+  category: logging
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/systemjournal-entry"
+    method: POST
+  payload_schema: "schemas/logs/systemjournal_entry.schema.json"
+
+# ====================================================================
+# RECHERCHE
+# ====================================================================
+
+- id: WEB_SEARCH
+  name: "Recherche web"
+  description: "Effectuer une recherche web technique ou business"
+  category: search
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/web-search"
+    method: POST
+  payload_schema: "schemas/payloads/web_search.schema.json"
+  constraints:
+    max_executions_per_day: 100
+
+# ====================================================================
+# DEVOPS / GITHUB
+# ====================================================================
+
+- id: GIT_CLONE
+  name: "Cloner un repo GitHub"
+  description: "Cloner un repository GitHub dans un volume partagé"
+  category: devops
+  risk_level: medium
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/git-clone"
+    method: POST
+  payload_schema: "schemas/payloads/git_clone.schema.json"
+  constraints:
+    requires_context: ["repo_url"]
+    allowed_environments: ["dev", "staging"]
+
+- id: GIT_SYNC
+  name: "Synchroniser un repo"
+  description: "Pull sur un repo GitHub existant"
+  category: devops
+  risk_level: medium
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/git-sync"
+    method: POST
+  payload_schema: "schemas/payloads/git_sync.schema.json"
+
+- id: GITHUB_OPEN_PR
+  name: "Créer une Pull Request"
+  description: "Ouvrir une PR sur un repo GitHub"
+  category: devops
+  risk_level: medium
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/github-open-pr"
+    method: POST
+  payload_schema: "schemas/payloads/github_open_pr.schema.json"
+
+- id: GITHUB_LIST_REPOS
+  name: "Lister les repos GitHub"
+  description: "Lister les repos d'un compte ou organisation GitHub"
+  category: devops
+  risk_level: low
+  auto_allowed_levels: [2, 3]
+  target:
+    type: mcp_tool
+    mcp_server: "github"
+    tool_name: "list_repositories"
+
+# ====================================================================
+# CLIENT WORKFLOWS
+# ====================================================================
+
+- id: CLIENT_WORKFLOW_RUN
+  name: "Exécuter workflow client"
+  description: "Lancer un workflow packagé pour un client spécifique"
+  category: client
+  risk_level: medium
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/client-workflow-run"
+    method: POST
+  payload_schema: "schemas/payloads/client_workflow_run.schema.json"
+  constraints:
+    requires_context: ["client_name", "workflow_id"]
+    requires_confirmation: false  # Mais high-risk selon client
+
+- id: CLIENT_ONBOARDING
+  name: "Onboarding client standard"
+  description: "Process d'onboarding automatisé pour nouveau client"
+  category: client
+  risk_level: medium
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/client-onboarding-standard"
+    method: POST
+  payload_schema: "schemas/payloads/client_onboarding.schema.json"
+
+- id: CLIENT_MONTHLY_REPORT
+  name: "Rapport mensuel client"
+  description: "Générer le rapport mensuel pour un client"
+  category: client
+  risk_level: low
+  auto_allowed_levels: [2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/client-monthly-report"
+    method: POST
+  payload_schema: "schemas/payloads/client_monthly_report.schema.json"
+
+# ====================================================================
+# MONITORING & HEALTHCHECK
+# ====================================================================
+
+- id: HEALTHCHECK_RUN
+  name: "Vérifier état des services"
+  description: "Healthcheck complet : n8n, AnythingLLM, PostgreSQL, Redis, Traefik"
+  category: monitoring
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/healthcheck-services"
+    method: POST
+
+- id: GLOBAL_ERROR_ALERT
+  name: "Alerte d'erreur globale"
+  description: "Envoyer une alerte pour erreur critique"
+  category: monitoring
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/global-error-alert"
+    method: POST
+  payload_schema: "schemas/payloads/error_alert.schema.json"
+
+# ====================================================================
+# BACKUP & RESTORE
+# ====================================================================
+
+- id: BACKUP_RUN
+  name: "Lancer un backup"
+  description: "Backup complet : n8n, repos, databases vers Google Drive"
+  category: backup
+  risk_level: high
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/backup-all-to-drive"
+    method: POST
+  constraints:
+    requires_confirmation: true
+    max_executions_per_day: 5
+
+- id: RESTORE_BACKUP
+  name: "Restaurer depuis backup"
+  description: "Restauration complète depuis un backup Google Drive"
+  category: backup
+  risk_level: high
+  auto_allowed_levels: []  # Nécessite intervention manuelle
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/restore-from-backup"
+    method: POST
+  constraints:
+    requires_confirmation: true
+
+# ====================================================================
+# REPORTING
+# ====================================================================
+
+- id: COST_REPORT_RUN
+  name: "Rapport de coûts"
+  description: "Générer un rapport de coûts API (Google, OpenAI, Anthropic, etc.)"
+  category: reporting
+  risk_level: low
+  auto_allowed_levels: [2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/api-cost-tracker"
+    method: POST
+  payload_schema: "schemas/payloads/cost_report.schema.json"
+
+- id: WEEKLY_SUMMARY
+  name: "Résumé hebdomadaire"
+  description: "Générer un résumé hebdomadaire des activités"
+  category: reporting
+  risk_level: low
+  auto_allowed_levels: [2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/weekly-summary-to-sheet"
+    method: POST
+
+# ====================================================================
+# N8N MANAGEMENT (v4+)
+# ====================================================================
+
+- id: N8N_WORKFLOW_DESIGN
+  name: "Designer un workflow n8n"
+  description: "Concevoir un workflow n8n à partir d'une description"
+  category: n8n_management
+  risk_level: medium
+  auto_allowed_levels: [2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/n8n-workflow-design"
+    method: POST
+  payload_schema: "schemas/payloads/n8n_workflow_design.schema.json"
+  examples:
+    - description: "Designer un workflow email automatique"
+      payload:
+        goal: "Envoyer email automatique pour nouvelle issue GitHub"
+        inputs: ["webhook GitHub (issue créée)"]
+        outputs: ["email envoyé"]
+        constraints:
+          max_nodes: 5
+          use_existing_credentials_only: true
+      expected_result:
+        spec:
+          name: "GitHub Issue to Email"
+          nodes: [...]
+        estimated_complexity: "low"
+
+- id: N8N_WORKFLOW_UPSERT
+  name: "Créer/modifier workflow n8n"
+  description: "Créer ou modifier un workflow n8n (sandbox par défaut)"
+  category: n8n_management
+  risk_level: high
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/n8n-workflow-upsert"
+    method: POST
+  payload_schema: "schemas/payloads/n8n_workflow_upsert.schema.json"
+  constraints:
+    requires_context: ["workflow_name", "spec"]
+    allowed_environments: ["sandbox", "staging"]  # production nécessite confirmation
+
+- id: N8N_WORKFLOW_TEST
+  name: "Tester un workflow n8n"
+  description: "Exécuter un test sur un workflow n8n"
+  category: n8n_management
+  risk_level: medium
+  auto_allowed_levels: [3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/n8n-workflow-test"
+    method: POST
+  payload_schema: "schemas/payloads/n8n_workflow_test.schema.json"
+
+- id: N8N_WORKFLOW_PROMOTE
+  name: "Promouvoir workflow vers production"
+  description: "Promouvoir un workflow de sandbox vers production"
+  category: n8n_management
+  risk_level: high
+  auto_allowed_levels: []  # Nécessite confirmation explicite (manuel)
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/n8n-workflow-promote"
+    method: POST
+  payload_schema: "schemas/payloads/n8n_workflow_promote.schema.json"
+  constraints:
+    requires_confirmation: true
+    requires_context: ["workflow_name", "confirmation_code"]
+
+- id: N8N_LIST_WORKFLOWS
+  name: "Lister workflows n8n"
+  description: "Lister tous les workflows n8n (avec filtres optionnels)"
+  category: n8n_management
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: mcp_tool
+    mcp_server: "n8n"
+    tool_name: "list_workflows"
+
+# ====================================================================
+# CORE / PROXY
+# ====================================================================
+
+- id: PROXY_EXEC
+  name: "Proxy Master"
+  description: "Point d'entrée global pour exécuter un outil logique"
+  category: core
+  risk_level: low
+  auto_allowed_levels: [0, 1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/proxy-exec"
+    method: POST
+  payload_schema: "schemas/payloads/prolex_output.schema.json"
+
+# ====================================================================
+# TODO & AMÉLIORATION
+# ====================================================================
+
+- id: TODO_CREATE
+  name: "Créer un TODO"
+  description: "Créer un TODO d'amélioration système (proposé par Prolex)"
+  category: productivity
+  risk_level: low
+  auto_allowed_levels: [1, 2, 3]
+  target:
+    type: webhook
+    url: "https://n8n.automatt.ai/webhook/task-create"
+    method: POST
+  payload_schema: "schemas/payloads/task_create.schema.json"

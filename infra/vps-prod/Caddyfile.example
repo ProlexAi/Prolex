@@ -1,0 +1,40 @@
+# Caddyfile pour Prolex v4
+# Reverse proxy avec HTTPS automatique
+
+# n8n-core (production)
+n8n.automatt.ai {
+    reverse_proxy n8n-core:5678
+    
+    # En-têtes de sécurité
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+    }
+    
+    # Logs
+    log {
+        output file /data/logs/n8n-core.log
+        format json
+    }
+}
+
+# n8n-sandbox (test/génération IA)
+sandbox.automatt.ai {
+    reverse_proxy n8n-sandbox:5678
+    
+    # En-têtes de sécurité
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        # Badge pour identifier la sandbox
+        X-Prolex-Environment "sandbox"
+    }
+    
+    # Logs
+    log {
+        output file /data/logs/n8n-sandbox.log
+        format json
+    }
+}

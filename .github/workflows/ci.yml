@@ -1,0 +1,157 @@
+name: CI - Validation Prolex v4
+
+on:
+  push:
+    branches: ["main", "feature/**", "claude/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # Job 1 : Validation des schémas JSON
+  validate-schemas:
+    name: Valider les schémas JSON
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Installer ajv-cli
+        run: npm install -g ajv-cli ajv-formats
+      
+      - name: Valider schemas/*.schema.json
+        run: |
+          for schema in schemas/*.schema.json; do
+            echo "Validation de $schema..."
+            ajv compile -s "$schema" --strict=false
+          done
+      
+      - name: Vérifier présence des schemas requis
+        run: |
+          required_schemas=(
+            "schemas/kimmy_payload.schema.json"
+            "schemas/prolex_output.schema.json"
+            "schemas/system_journal.schema.json"
+          )
+          
+          for schema in "${required_schemas[@]}"; do
+            if [ ! -f "$schema" ]; then
+              echo "❌ Schéma manquant : $schema"
+              exit 1
+            else
+              echo "✅ Schéma présent : $schema"
+            fi
+          done
+
+  # Job 2 : Validation des fichiers YAML
+  validate-yaml:
+    name: Valider les fichiers YAML
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Installer yamllint
+        run: pip install yamllint
+      
+      - name: Valider schemas/*.yml
+        run: |
+          yamllint schemas/
+
+      - name: Valider config/*.yml
+        run: |
+          yamllint config/
+
+  # Job 3 : Lint de la documentation Markdown
+  lint-docs:
+    name: Lint documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Installer markdownlint
+        run: npm install -g markdownlint-cli
+      
+      - name: Lint fichiers .md
+        run: |
+          markdownlint docs/**/*.md \
+            --ignore node_modules \
+            --config .markdownlint.json || true
+        # || true pour ne pas bloquer si erreurs de lint (juste warnings)
+
+  # Job 4 : Vérification de la cohérence des références
+  check-references:
+    name: Vérifier références entre fichiers
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Vérifier liens internes documentation
+        run: |
+          # Vérifier que tous les fichiers référencés dans les docs existent
+          echo "Vérification des références..."
+          
+          # Chercher les liens vers schemas/
+          grep -r "schemas/" docs/ | grep -oP 'schemas/[a-zA-Z0-9_/\.]+' | sort -u | while read ref; do
+            if [ ! -f "$ref" ]; then
+              echo "⚠️  Référence cassée : $ref"
+            fi
+          done
+          
+          # Chercher les liens vers config/
+          grep -r "config/" docs/ | grep -oP 'config/[a-zA-Z0-9_/\.]+' | sort -u | while read ref; do
+            if [ ! -f "$ref" ]; then
+              echo "⚠️  Référence cassée : $ref"
+            fi
+          done
+
+  # Job 5 : Validation des workflows n8n (si présents)
+  validate-workflows:
+    name: Valider workflows n8n
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Vérifier format JSON des workflows
+        run: |
+          if [ -d "n8n-workflows" ]; then
+            for workflow in n8n-workflows/*.json; do
+              if [ -f "$workflow" ]; then
+                echo "Validation de $workflow..."
+                jq empty "$workflow" || exit 1
+              fi
+            done
+            echo "✅ Tous les workflows JSON sont valides"
+          else
+            echo "ℹ️  Aucun workflow n8n à valider"
+          fi
+
+  # Job 6 : Rapport final
+  report:
+    name: Rapport CI
+    runs-on: ubuntu-latest
+    needs: [validate-schemas, validate-yaml, lint-docs, check-references]
+    if: always()
+    
+    steps:
+      - name: Afficher résumé
+        run: |
+          echo "## 📊 Résumé CI Prolex v4"
+          echo ""
+          echo "- Validation des schémas : ${{ needs.validate-schemas.result }}"
+          echo "- Validation YAML : ${{ needs.validate-yaml.result }}"
+          echo "- Lint documentation : ${{ needs.lint-docs.result }}"
+          echo "- Vérification références : ${{ needs.check-references.result }}"

@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+<<<<<< claude/n8n-mcp-server-01Rq2sQFqRYYFXx2RPEigtpH
+======
+import 'dotenv/config';
+>>>>>> main
 
 /**
  * n8n MCP Server

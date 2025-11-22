@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://automatt.ai/schemas/payloads/n8n_workflow_upsert.schema.json",
+  "title": "N8N Workflow Upsert Payload",
+  "description": "Payload pour créer ou mettre à jour un workflow n8n",
+  "type": "object",
+  "required": ["workflow_name", "workflow_json"],
+  "properties": {
+    "workflow_name": {
+      "type": "string",
+      "description": "Nom du workflow",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "workflow_id": {
+      "type": "string",
+      "description": "ID du workflow existant (pour mise à jour), null pour création"
+    },
+    "workflow_json": {
+      "type": "object",
+      "description": "Définition complète du workflow au format n8n JSON",
+      "additionalProperties": true
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["sandbox", "production"],
+      "default": "sandbox",
+      "description": "Environnement cible"
+    },
+    "active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Activer le workflow immédiatement après création/mise à jour"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags à assigner au workflow"
+    },
+    "commit_to_github": {
+      "type": "boolean",
+      "default": false,
+      "description": "Committer le workflow JSON dans le dépôt GitHub"
+    }
+  },
+  "additionalProperties": false
+}

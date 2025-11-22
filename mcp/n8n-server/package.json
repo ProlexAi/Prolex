@@ -21,6 +21,10 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "axios": "^1.7.9",
+<<<<<< claude/n8n-mcp-server-01Rq2sQFqRYYFXx2RPEigtpH
+======
+    "dotenv": "^17.2.3",
+>>>>>> main
     "zod": "^3.24.1"
   },
   "devDependencies": {

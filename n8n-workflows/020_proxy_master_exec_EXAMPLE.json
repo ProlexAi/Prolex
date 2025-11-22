@@ -1,0 +1,90 @@
+{
+  "name": "020_PROXY_MASTER_EXEC",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Webhook (Entrée Prolex)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "prolex-execution",
+      "id": "webhook-input"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Fonction de résolution robuste des variables\n// Exemple : {{ step_1.result.id }} → valeur réelle depuis executionContext\n\nfunction getCheck(obj, path) {\n  return path.split('.').reduce((acc, part) => acc && acc[part], obj);\n}\n\n// Contexte d'exécution (résultats des étapes précédentes)\nconst executionContext = $json.executionContext || {};\n\n// Payload de l'étape courante (venant de Prolex)\nconst currentStepPayload = $json.currentStepPayload || {};\n\n// Conversion en string pour remplacement\nlet payloadStr = JSON.stringify(currentStepPayload);\n\n// Remplacement de tous les {{ variable }}\nconst variablePattern = /\\{\\{\\s*([\\w\\.]+)\\s*\\}\\}/g;\npayloadStr = payloadStr.replace(variablePattern, (match, path) => {\n  const value = getCheck(executionContext, path);\n  if (value !== undefined) {\n    return typeof value === 'string' ? value : JSON.stringify(value);\n  }\n  // Si variable non trouvée, on laisse le placeholder pour debug\n  console.warn(`Variable non trouvée : ${path}`);\n  return match;\n});\n\n// Retour du payload résolu\nconst resolvedPayload = JSON.parse(payloadStr);\n\nreturn {\n  resolvedPayload,\n  originalPayload: currentStepPayload,\n  resolvedVariables: Object.keys(executionContext)\n};"
+      },
+      "name": "Résolution Variables",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "id": "resolve-variables"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Router vers le bon workflow Opex selon tool_id\nconst toolId = $json.resolvedPayload.tool_id;\nconst toolMap = {\n  'TASK_CREATE': '100_10_TASK_CREATE',\n  'TASK_LIST': '100_20_TASK_LIST',\n  'LOG_APPEND': '400_10_LOG_APPEND_SYSTEMJOURNAL'\n};\n\nconst workflowId = toolMap[toolId];\n\nif (!workflowId) {\n  throw new Error(`Outil inconnu : ${toolId}`);\n}\n\nreturn {\n  workflowId,\n  parameters: $json.resolvedPayload.parameters\n};"
+      },
+      "name": "Router vers Workflow",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "id": "router"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{ $json.workflowId }}",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Exécuter Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "id": "execute-workflow"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Logger dans SystemJournal\nconst entry = {\n  entry_id: $('Webhook (Entrée Prolex)').item.json.request_id,\n  timestamp: new Date().toISOString(),\n  event_type: 'tool_execution',\n  component: 'opex',\n  severity: 'info',\n  data: {\n    tool_id: $json.workflowId,\n    result: $json.result,\n    execution_time_ms: $json.executionTime\n  }\n};\n\nreturn { journalEntry: entry };"
+      },
+      "name": "Log SystemJournal",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "id": "log-journal"
+    },
+    {
+      "parameters": {},
+      "name": "Retour Résultat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "id": "respond"
+    }
+  ],
+  "connections": {
+    "Webhook (Entrée Prolex)": {
+      "main": [[{"node": "Résolution Variables", "type": "main", "index": 0}]]
+    },
+    "Résolution Variables": {
+      "main": [[{"node": "Router vers Workflow", "type": "main", "index": 0}]]
+    },
+    "Router vers Workflow": {
+      "main": [[{"node": "Exécuter Workflow", "type": "main", "index": 0}]]
+    },
+    "Exécuter Workflow": {
+      "main": [[{"node": "Log SystemJournal", "type": "main", "index": 0}]]
+    },
+    "Log SystemJournal": {
+      "main": [[{"node": "Retour Résultat", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-22T10:00:00.000Z",
+  "versionId": "1"
+}

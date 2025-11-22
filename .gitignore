@@ -1,0 +1,39 @@
+\# \--- Dépendances Node \---  
+node\_modules/  
+npm-debug.log\*  
+yarn-error.log\*
+
+\# \--- Build TypeScript / dist \---  
+dist/  
+build/  
+\*.tsbuildinfo
+
+\# \--- Environnements / secrets \---  
+.env  
+.env.local  
+.env.development.local  
+.env.production.local  
+.env.\*.local
+
+\# \--- Logs \---  
+\*.log  
+logs/  
+pids/  
+\*.pid  
+\*.seed
+
+\# \--- OS / éditeurs \---  
+.DS\_Store  
+Thumbs.db  
+.vscode/  
+.idea/
+
+\# \--- Divers \---
+\*.tmp
+\*.swp
+
+\# \--- MCP n8n-server \---
+mcp/n8n-server/package-lock.json
+mcp/n8n-server/.env.example
+mcp/n8n-server/.gitignore
+
