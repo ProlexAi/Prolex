@@ -1,0 +1,27 @@
+---
+# Configuration yamllint pour Prolex
+# Basée sur le profil 'relaxed' avec ajustements pour les schémas HA
+
+extends: relaxed
+
+rules:
+  # Désactive les règles qui posent souvent problème dans les schémas
+  key-duplicates: disable
+  empty-values: disable
+  octal-values: disable
+
+  # Ajuste les règles de commentaires
+  comments:
+    min-spaces-from-content: 1
+
+  # Longueur de ligne raisonnable pour la lisibilité
+  line-length:
+    max: 200
+
+  # Permet une certaine flexibilité sur l'indentation
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Autorise les documents sans document-start (---)
+  document-start: disable
