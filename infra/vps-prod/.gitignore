@@ -1,0 +1,41 @@
+# ═══════════════════════════════════════════════════════════════════
+# .gitignore - infra/vps-prod/
+# ═══════════════════════════════════════════════════════════════════
+
+# Fichier d'environnement avec secrets (NE JAMAIS VERSIONNER)
+.env
+
+# Données persistantes Docker
+n8n/data/
+anythingllm/data/
+postgres/data/
+redis/data/
+
+# Logs
+logs/
+*.log
+
+# Backups
+backup/
+*.sql
+*.sql.gz
+*.tar.gz
+*.zip
+
+# Certificats SSL Traefik
+traefik/acme.json
+
+# Scripts de backup créés (garder uniquement les templates)
+scripts/backup-*.sh
+
+# Fichiers temporaires
+*.tmp
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Données de production (si copiées localement)
+mcp/n8n-server/node_modules/
+mcp/n8n-server/dist/
+mcp/n8n-server/.env
