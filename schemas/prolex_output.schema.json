@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProlexOutput",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "Type de sortie générée par Prolex.",
+      "enum": [
+        "answer",
+        "tool_call",
+        "multi_tool_plan",
+        "clarification"
+      ]
+    },
+    "content": {
+      "type": "string",
+      "description": "Texte de la réponse pour l'utilisateur (utilisé principalement pour type = 'answer')."
+    },
+    "tool": {
+      "type": "string",
+      "description": "Identifiant logique de l'outil à appeler (ex: TASK_CREATE, LOG_APPEND, CLIENT_WORKFLOW_RUN...)."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Payload structuré pour l'outil cible. Doit respecter le schema spécifique de l'outil.",
+      "additionalProperties": true
+    },
+    "plan": {
+      "type": "array",
+      "description": "Plan multi-étapes lorsque Prolex propose plusieurs tool_call structurés.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "step_index": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Numéro d'étape (1, 2, 3, ...)."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description courte de l'étape."
+          },
+          "tool": {
+            "type": "string",
+            "description": "Identifiant logique de l'outil à appeler pour cette étape."
+          },
+          "payload": {
+            "type": "object",
+            "description": "Payload structuré pour cette étape.",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "step_index",
+          "description",
+          "tool",
+          "payload"
+        ]
+      }
+    },
+    "questions": {
+      "type": "array",
+      "description": "Questions de clarification à poser à l'utilisateur lorsque type = 'clarification'.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Métadonnées optionnelles à des fins de traçabilité et de contrôle.",
+      "additionalProperties": false,
+      "properties": {
+        "original_request_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Identifiant de la requête initiale (request_id du KimmyPayload)."
+        },
+        "intent": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Intention principale telle que comprise par Prolex."
+        },
+        "autonomy_level_used": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Niveau d'autonomie de Prolex lors de la génération de cette réponse."
+        },
+        "notes_for_human": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Notes internes à l'usage de Matthieu (ex: risques, hypothèses, TODO)."
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "Indique si la proposition est un plan sans exécution réelle (dry run).",
+          "default": false
+        }
+      }
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "answer"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "content"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "tool_call"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "tool",
+          "payload"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "multi_tool_plan"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "plan"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "clarification"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "questions"
+        ]
+      }
+    }
+  ]
+}
