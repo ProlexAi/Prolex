@@ -205,7 +205,7 @@ export class WorkflowFixer {
     // Apply changes based on action
     switch (fix.action) {
       case 'enable_node':
-        node.disabled = false;
+        (node as any).disabled = false;
         return true;
 
       case 'update_settings':
