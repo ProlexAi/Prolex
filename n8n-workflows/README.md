@@ -17,6 +17,16 @@ Quand tu push sur la branche `main` :
 
 ---
 
+## 📦 Workflows disponibles
+
+| Fichier | Nom du workflow | Description | Documentation |
+|---------|-----------------|-------------|---------------|
+| `010_sync-github-to-n8n.json` | GitHub to n8n Sync | Synchronisation automatique des workflows depuis GitHub vers n8n | Voir ci-dessous |
+| `020_example-hello-world.json` | Example Hello World | Exemple simple de workflow avec schedule quotidien | - |
+| `030_github-dev-log-to-sheets.json` | GitHub Dev Log → Sheets | Enregistre automatiquement tous les commits dans Google Sheets pour créer un journal de développement | [GITHUB_DEV_LOG_SETUP.md](./GITHUB_DEV_LOG_SETUP.md) |
+
+---
+
 ## 🚀 Configuration initiale (à faire UNE fois)
 
 ### Étape 1 : Préparer l'environnement n8n
