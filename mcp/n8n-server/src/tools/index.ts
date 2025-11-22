@@ -1,6 +1,7 @@
 /**
  * MCP Tools Registry
  * Exports all available MCP tools for n8n
+ * MCP v5.0.0 - Enhanced with security, autonomy, and self-healing
  */
 
 import { z } from 'zod';
@@ -377,3 +378,14 @@ export async function updateWorkflow(args: z.infer<typeof UpdateWorkflowSchema>)
     };
   }
 }
+
+// ===================================================================
+// NEW V5 TOOLS - Security, Autonomy, and Self-Healing
+// ===================================================================
+
+// Export new tools
+export { selfHealWorkflow, SelfHealWorkflowSchema } from './selfHealWorkflow.js';
+export { setAutonomy, SetAutonomySchema } from './setAutonomy.js';
+export { getSystemStatus, GetSystemStatusSchema } from './getSystemStatus.js';
+export { readFile, ReadFileSchema } from './readFile.js';
+export { writeFile, WriteFileSchema } from './writeFile.js';

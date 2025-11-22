@@ -1,6 +1,7 @@
 /**
- * MCP Server Implementation
+ * MCP Server Implementation v5.0.0
  * Main server that exposes n8n tools via Model Context Protocol
+ * Enhanced with security, autonomy management, and self-healing
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -10,6 +11,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { journal } from './logging/systemJournal.js';
+import { autonomyManager } from './security/autonomyManager.js';
 import * as tools from './tools/index.js';
 
 export class N8nMCPServer {
@@ -19,7 +21,7 @@ export class N8nMCPServer {
     this.server = new Server(
       {
         name: 'n8n-mcp-server',
-        version: '2.0.0',
+        version: '5.0.0',
       },
       {
         capabilities: {
@@ -29,7 +31,7 @@ export class N8nMCPServer {
     );
 
     this.setupHandlers();
-    journal.info('mcp_server_initialized', { version: '2.0.0' });
+    journal.info('mcp_server_v5_initialized', { version: '5.0.0' });
   }
 
   /**
@@ -40,11 +42,18 @@ export class N8nMCPServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       journal.debug('list_tools_request');
 
+      // Get current autonomy level for tool filtering
+      const currentLevel = autonomyManager.getCurrentLevel();
+
       return {
         tools: [
+          // ============================================================
+          // LEGACY WORKFLOW TOOLS (v4 - always available)
+          // ============================================================
           {
             name: 'list_workflows',
-            description: 'List all n8n workflows with their details (ID, name, active status, timestamps)',
+            description:
+              'List all n8n workflows with their details (ID, name, active status, timestamps)',
             inputSchema: {
               type: 'object',
               properties: {
@@ -57,7 +66,8 @@ export class N8nMCPServer {
           },
           {
             name: 'trigger_workflow',
-            description: 'Trigger execution of an n8n workflow by ID with optional payload. Supports real-time log streaming.',
+            description:
+              'Trigger execution of an n8n workflow by ID with optional payload. Supports real-time log streaming.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -169,6 +179,140 @@ export class N8nMCPServer {
               required: ['workflowId'],
             },
           },
+
+          // ============================================================
+          // NEW V5 TOOLS - Security, Autonomy, and Self-Healing
+          // ============================================================
+          {
+            name: 'read_file',
+            description:
+              '📄 [v5] Read file contents with safety checks. Autonomy: Level 0+',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                path: {
+                  type: 'string',
+                  description: 'Path to the file to read (relative or absolute)',
+                },
+                encoding: {
+                  type: 'string',
+                  enum: ['utf-8', 'base64', 'hex'],
+                  description: 'File encoding (default: utf-8)',
+                },
+                maxSize: {
+                  type: 'number',
+                  description: 'Maximum file size in bytes (default: 1MB)',
+                },
+              },
+              required: ['path'],
+            },
+          },
+          {
+            name: 'write_file',
+            description:
+              '✍️  [v5] Write file contents with safety checks, confirmations, and rollback. Autonomy: Level 1+ (requires confirmation < Level 3)',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                path: {
+                  type: 'string',
+                  description: 'Path to the file to write (relative or absolute)',
+                },
+                content: {
+                  type: 'string',
+                  description: 'Content to write to the file',
+                },
+                encoding: {
+                  type: 'string',
+                  enum: ['utf-8', 'base64', 'hex'],
+                  description: 'File encoding (default: utf-8)',
+                },
+                createDirs: {
+                  type: 'boolean',
+                  description: 'Create parent directories if they do not exist',
+                },
+                backup: {
+                  type: 'boolean',
+                  description: 'Create a rollback point before writing (default: true)',
+                },
+              },
+              required: ['path', 'content'],
+            },
+          },
+          {
+            name: 'self_heal_workflow',
+            description:
+              '🩺 [v5] Automatically diagnose and fix workflow issues. Autonomy: Level 3 only. Rate-limited: max 3 attempts/hour/workflow.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                workflowId: {
+                  type: 'string',
+                  description: 'ID of the workflow to self-heal',
+                },
+                force: {
+                  type: 'boolean',
+                  description: 'Skip confirmation (use with caution!)',
+                },
+                dryRun: {
+                  type: 'boolean',
+                  description: 'Only simulate, do not apply fixes',
+                },
+                maxFixes: {
+                  type: 'number',
+                  description: 'Maximum number of fixes to apply (default: 5)',
+                },
+                skipRateLimitCheck: {
+                  type: 'boolean',
+                  description: 'Skip rate limit check (DANGEROUS - admin only)',
+                },
+              },
+              required: ['workflowId'],
+            },
+          },
+          {
+            name: 'set_autonomy',
+            description:
+              '🤖 [v5] Change autonomy level (0-3). CRITICAL operation. Always requires confirmation. Level 3 only allowed in sandbox.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                level: {
+                  type: 'number',
+                  enum: [0, 1, 2, 3],
+                  description:
+                    'New autonomy level (0=read-only, 1=read-write, 2=low-risk, 3=advanced)',
+                },
+                reason: {
+                  type: 'string',
+                  description: 'Reason for changing autonomy level',
+                },
+                sandboxOnly: {
+                  type: 'boolean',
+                  description: 'Level 3 is only allowed in sandbox environment (default: true)',
+                },
+              },
+              required: ['level'],
+            },
+          },
+          {
+            name: 'get_system_status',
+            description:
+              '📊 [v5] Get comprehensive system status: MCP server, n8n connection, autonomy, security, self-heal system.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                includeRollbackPoints: {
+                  type: 'boolean',
+                  description: 'Include list of rollback points',
+                },
+                includeRateLimits: {
+                  type: 'boolean',
+                  description: 'Include self-heal rate limits',
+                },
+              },
+            },
+          },
         ],
       };
     });
@@ -178,20 +322,26 @@ export class N8nMCPServer {
       const { name, arguments: args } = request.params;
       const correlationId = journal.generateCorrelationId();
 
-      // === PROLEX V4.2 — Plus de demandes humaines autorisées ===
-      // Refuser automatiquement tout tool contenant "askHuman" ou "approval"
-      if (name.toLowerCase().includes('askhuman') || name.toLowerCase().includes('approval')) {
+      // ⚠️ IMPORTANT: Block any "askHuman" or "approval" tools (Prolex v4.2+ autonomy 4 logic)
+      // This is for compatibility with existing workflows
+      if (
+        name.toLowerCase().includes('askhuman') ||
+        name.toLowerCase().includes('approval')
+      ) {
         journal.warn('human_tool_rejected', {
           tool: name,
           correlationId,
-          reason: 'autonomy_level_4_active',
+          reason: 'autonomy_managed_by_mcp_v5',
         });
 
         return {
           content: [
             {
               type: 'text',
-              text: '🚫 Prolex est en autonomie niveau 4. Aucune validation humaine n\'est autorisée ni nécessaire. Toutes les décisions sont prises automatiquement.',
+              text:
+                '🚫 Human approval tools are disabled. MCP v5 manages confirmations internally via autonomy levels.\n\n' +
+                `Current autonomy level: ${autonomyManager.getCurrentLevel()}\n` +
+                `For actions requiring confirmation, MCP will prompt Claude to ask the user directly.`,
             },
           ],
           isError: false,
@@ -200,11 +350,14 @@ export class N8nMCPServer {
 
       journal.info('tool_call_request', {
         tool: name,
+        autonomyLevel: autonomyManager.getCurrentLevel(),
         correlationId,
       });
 
       try {
+        // Route tool calls
         switch (name) {
+          // Legacy workflow tools
           case 'list_workflows': {
             const validated = tools.ListWorkflowsSchema.parse(args || {});
             return await tools.listWorkflows(validated);
@@ -233,6 +386,32 @@ export class N8nMCPServer {
           case 'update_workflow': {
             const validated = tools.UpdateWorkflowSchema.parse(args);
             return await tools.updateWorkflow(validated);
+          }
+
+          // New v5 tools
+          case 'read_file': {
+            const validated = tools.ReadFileSchema.parse(args);
+            return await tools.readFile(validated);
+          }
+
+          case 'write_file': {
+            const validated = tools.WriteFileSchema.parse(args);
+            return await tools.writeFile(validated);
+          }
+
+          case 'self_heal_workflow': {
+            const validated = tools.SelfHealWorkflowSchema.parse(args);
+            return await tools.selfHealWorkflow(validated);
+          }
+
+          case 'set_autonomy': {
+            const validated = tools.SetAutonomySchema.parse(args);
+            return await tools.setAutonomy(validated);
+          }
+
+          case 'get_system_status': {
+            const validated = tools.GetSystemStatusSchema.parse(args || {});
+            return await tools.getSystemStatus(validated);
           }
 
           default:
@@ -266,10 +445,14 @@ export class N8nMCPServer {
     await this.server.connect(transport);
 
     journal.info('mcp_server_started', {
+      version: '5.0.0',
       transport: 'stdio',
+      autonomyLevel: autonomyManager.getCurrentLevel(),
     });
 
-    console.error('n8n MCP Server v2.0.0 running on stdio');
+    console.error(
+      `n8n MCP Server v5.0.0 running on stdio (Autonomy Level: ${autonomyManager.getCurrentLevel()})`
+    );
   }
 
   /**
