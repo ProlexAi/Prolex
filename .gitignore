@@ -37,3 +37,12 @@ mcp/n8n-server/package-lock.json
 mcp/n8n-server/.env.example
 mcp/n8n-server/.gitignore
 
+
+# --- Infrastructure VPS Production ---
+# Fichier .env contenant les secrets
+infra/vps-prod/.env
+# Certificats SSL Let's Encrypt
+infra/vps-prod/traefik/acme.json
+# Backups (archives)
+infra/vps-prod/backup/*.zip
+infra/vps-prod/backup/*.tar.gz
