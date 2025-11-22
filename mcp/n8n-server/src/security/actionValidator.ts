@@ -73,7 +73,7 @@ export class ActionValidator {
       );
 
       if (isForbidden) {
-        journal.error('forbidden_path_write_attempt', {
+        journal.error('forbidden_path_write_attempt', new Error('Forbidden path write attempt'), {
           targetResource: request.targetResource,
           correlationId,
         });

@@ -186,7 +186,7 @@ export class WorkflowDiagnosticsEngine {
     const connectedNodes = new Set<string>();
 
     for (const [sourceName, connections] of Object.entries(workflow.connections)) {
-      for (const outputs of Object.values(connections)) {
+      for (const outputs of Object.values(connections as Record<string, any>)) {
         for (const output of outputs as any[]) {
           for (const connection of output) {
             connectedNodes.add(connection.node);

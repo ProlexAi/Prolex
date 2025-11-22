@@ -9,6 +9,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  CallToolResult,
 } from '@modelcontextprotocol/sdk/types.js';
 import { journal } from './logging/systemJournal.js';
 import { autonomyManager } from './security/autonomyManager.js';
@@ -318,7 +319,7 @@ export class N8nMCPServer {
     });
 
     // Handle tool calls
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    this.server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToolResult> => {
       const { name, arguments: args } = request.params;
       const correlationId = journal.generateCorrelationId();
 

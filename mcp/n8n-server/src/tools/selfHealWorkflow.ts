@@ -220,7 +220,11 @@ export async function selfHealWorkflow(
       // Update workflow in n8n
       await client.updateWorkflow({
         id: args.workflowId,
-        ...modifiedWorkflow,
+        name: modifiedWorkflow.name,
+        nodes: modifiedWorkflow.nodes,
+        connections: modifiedWorkflow.connections,
+        active: modifiedWorkflow.active,
+        settings: modifiedWorkflow.settings,
       });
 
       journal.info('fixes_applied_to_n8n', {
