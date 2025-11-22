@@ -8,6 +8,7 @@ import { getN8nClient } from '../core/n8nClient.js';
 import { streamingLogger } from '../core/streamingLogger.js';
 import { journal } from '../logging/systemJournal.js';
 import type { MCPToolResponse } from '../types/index.js';
+import { validateWorkflowOperation } from '../security/cashWorkflowGuard.js';
 
 // Tool parameter schemas
 export const ListWorkflowsSchema = z.object({
@@ -103,6 +104,15 @@ export async function triggerWorkflow(args: z.infer<typeof TriggerWorkflowSchema
 
   try {
     const client = getN8nClient();
+
+    // 🚨 CASH WORKFLOW GUARD — Check if workflow is protected
+    // Get workflow name first to validate
+    const workflows = await client.listWorkflows(false);
+    const workflow = workflows.find(w => w.id === args.workflowId);
+    if (workflow) {
+      validateWorkflowOperation(workflow.name, 'trigger', { workflowId: args.workflowId, correlationId });
+    }
+
     const execution = await client.triggerWorkflow(args.workflowId, args.payload);
 
     // Start streaming if enabled
@@ -282,6 +292,9 @@ export async function createWorkflow(args: z.infer<typeof CreateWorkflowSchema>)
   const correlationId = journal.generateCorrelationId();
 
   try {
+    // 🚨 CASH WORKFLOW GUARD — Check if workflow name is protected
+    validateWorkflowOperation(args.name, 'create', { correlationId });
+
     const client = getN8nClient();
     const workflow = await client.createWorkflow({
       name: args.name,
@@ -334,7 +347,20 @@ export async function updateWorkflow(args: z.infer<typeof UpdateWorkflowSchema>)
 
   try {
     const client = getN8nClient();
-    const workflow = await client.updateWorkflow({
+
+    // 🚨 CASH WORKFLOW GUARD — Check if workflow is protected
+    // Get workflow name first to validate
+    const workflows = await client.listWorkflows(false);
+    const workflow = workflows.find(w => w.id === args.workflowId);
+    if (workflow) {
+      validateWorkflowOperation(workflow.name, 'update', { workflowId: args.workflowId, correlationId });
+    }
+    // Also check the new name if provided
+    if (args.name) {
+      validateWorkflowOperation(args.name, 'create', { workflowId: args.workflowId, correlationId });
+    }
+
+    const updatedWorkflow = await client.updateWorkflow({
       id: args.workflowId,
       name: args.name,
       nodes: args.nodes,
@@ -349,10 +375,10 @@ export async function updateWorkflow(args: z.infer<typeof UpdateWorkflowSchema>)
           type: 'text',
           text: JSON.stringify(
             {
-              id: workflow.id,
-              name: workflow.name,
-              active: workflow.active,
-              updatedAt: workflow.updatedAt,
+              id: updatedWorkflow.id,
+              name: updatedWorkflow.name,
+              active: updatedWorkflow.active,
+              updatedAt: updatedWorkflow.updatedAt,
               message: 'Workflow updated successfully',
             },
             null,
