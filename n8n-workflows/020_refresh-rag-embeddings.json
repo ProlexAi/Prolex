@@ -1,0 +1,324 @@
+{
+  "name": "RAG Embeddings Refresh (Nightly)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "⏰ Schedule (2am daily)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400],
+      "notes": "Runs every night at 2am UTC"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * INITIALISATION DU REBUILD\n * - Vérifie config\n * - Créer contexte de job\n * - Log début\n */\n\nconst executionId = $execution.id;\nconst timestamp = new Date().toISOString();\nconst runId = `rag_rebuild_${Date.now()}`;\n\n// Configuration\nconst GITHUB_REPO = $env.GITHUB_REPO || 'ProlexAi/Prolex';\nconst GITHUB_TOKEN = $env.GITHUB_TOKEN;\nconst OPENAI_API_KEY = $env.OPENAI_API_KEY;\nconst PINECONE_API_KEY = $env.PINECONE_API_KEY;\nconst PINECONE_INDEX = $env.PINECONE_INDEX || 'prolex-rag';\nconst EMBEDDING_MODEL = $env.EMBEDDING_MODEL || 'text-embedding-3-small';\nconst BATCH_SIZE = parseInt($env.RAG_BATCH_SIZE || '50');\nconst ENABLE_INCREMENTAL = ($env.RAG_INCREMENTAL_MODE || 'false') === 'true';\n\n// Validation config\nconst missingConfig = [];\nif (!GITHUB_TOKEN) missingConfig.push('GITHUB_TOKEN');\nif (!OPENAI_API_KEY) missingConfig.push('OPENAI_API_KEY');\nif (!PINECONE_API_KEY) missingConfig.push('PINECONE_API_KEY');\n\nif (missingConfig.length > 0) {\n  return {\n    json: {\n      run_id: runId,\n      execution_id: executionId,\n      timestamp_start: timestamp,\n      status: 'failed',\n      error: true,\n      error_type: 'config_missing',\n      error_message: `Missing required config: ${missingConfig.join(', ')}`,\n      config_valid: false\n    }\n  };\n}\n\nreturn {\n  json: {\n    run_id: runId,\n    execution_id: executionId,\n    timestamp_start: timestamp,\n    status: 'running',\n    error: false,\n    config: {\n      repo: GITHUB_REPO,\n      embedding_model: EMBEDDING_MODEL,\n      pinecone_index: PINECONE_INDEX,\n      batch_size: BATCH_SIZE,\n      incremental: ENABLE_INCREMENTAL\n    },\n    config_valid: true,\n    _context: {\n      GITHUB_REPO,\n      GITHUB_TOKEN,\n      OPENAI_API_KEY,\n      PINECONE_API_KEY,\n      PINECONE_INDEX,\n      EMBEDDING_MODEL,\n      BATCH_SIZE,\n      ENABLE_INCREMENTAL\n    }\n  }\n};"
+      },
+      "id": "init-job",
+      "name": "🎬 Init Job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.config_valid }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-valid-config",
+      "name": "✅ Filter Valid Config",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * LISTE TOUS LES FICHIERS DU REPO\n * - Scan récursif via GitHub API\n * - Filtre fichiers pertinents (md, ts, json, py, etc.)\n * - Exclut node_modules, .git, etc.\n */\n\nconst context = $input.item.json._context;\nconst metadata = $input.item.json;\n\nconst GITHUB_REPO = context.GITHUB_REPO;\nconst GITHUB_TOKEN = context.GITHUB_TOKEN;\nconst GITHUB_API_BASE = 'https://api.github.com';\nconst BRANCH = $env.RAG_SOURCE_BRANCH || 'main';\n\n// Extensions à inclure\nconst INCLUDE_EXTENSIONS = [\n  '.md', '.ts', '.js', '.py', '.json',\n  '.yaml', '.yml', '.txt', '.sh'\n];\n\n// Paths à exclure\nconst EXCLUDE_PATHS = [\n  'node_modules/', '.git/', 'dist/', 'build/',\n  '.next/', 'coverage/', '.vscode/', '.idea/'\n];\n\nconst MAX_FILE_SIZE = parseInt($env.RAG_MAX_FILE_SIZE || '500000'); // 500KB\n\n// Fonction récursive pour scanner le repo\nasync function scanDirectory(path = '') {\n  const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO}/contents/${path}?ref=${BRANCH}`;\n  \n  const response = await fetch(url, {\n    headers: {\n      'Authorization': `token ${GITHUB_TOKEN}`,\n      'Accept': 'application/vnd.github.v3+json'\n    }\n  });\n  \n  if (!response.ok) {\n    throw new Error(`GitHub API error: ${response.status}`);\n  }\n  \n  const items = await response.json();\n  const files = [];\n  \n  for (const item of items) {\n    // Skip exclusions\n    if (EXCLUDE_PATHS.some(ex => item.path.includes(ex))) {\n      continue;\n    }\n    \n    if (item.type === 'file') {\n      // Check extension\n      const hasValidExt = INCLUDE_EXTENSIONS.some(ext => item.name.endsWith(ext));\n      if (!hasValidExt) continue;\n      \n      // Check size\n      if (item.size > MAX_FILE_SIZE) continue;\n      \n      files.push({\n        path: item.path,\n        name: item.name,\n        sha: item.sha,\n        size: item.size,\n        url: item.download_url,\n        git_url: item.git_url\n      });\n      \n    } else if (item.type === 'dir') {\n      // Récursion pour sous-dossiers\n      const subFiles = await scanDirectory(item.path);\n      files.push(...subFiles);\n    }\n  }\n  \n  return files;\n}\n\ntry {\n  const allFiles = await scanDirectory();\n  \n  return {\n    json: {\n      ...metadata,\n      files_found: allFiles.length,\n      files: allFiles,\n      scan_status: 'success'\n    }\n  };\n  \n} catch (error) {\n  return {\n    json: {\n      ...metadata,\n      error: true,\n      error_type: 'github_scan_failed',\n      error_message: error.message,\n      scan_status: 'failed'\n    }\n  };\n}"
+      },
+      "id": "scan-repo-files",
+      "name": "📂 Scan Repo Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * SPLIT EN BATCHES\n * - Découpe en lots de N fichiers\n * - Pour éviter rate limits\n */\n\nconst item = $input.item.json;\nconst files = item.files || [];\nconst BATCH_SIZE = item._context.BATCH_SIZE;\n\nconst batches = [];\nfor (let i = 0; i < files.length; i += BATCH_SIZE) {\n  batches.push({\n    batch_index: Math.floor(i / BATCH_SIZE),\n    batch_size: BATCH_SIZE,\n    files: files.slice(i, i + BATCH_SIZE)\n  });\n}\n\nreturn batches.map(batch => ({\n  json: {\n    ...item,\n    ...batch,\n    total_batches: batches.length\n  }\n}));"
+      },
+      "id": "split-into-batches",
+      "name": "🔀 Split Into Batches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "process-batches",
+      "name": "🔄 Process Batches One by One",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1340, 400],
+      "notes": "Traite chaque batch séquentiellement"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * TÉLÉCHARGE CONTENU DES FICHIERS\n * - Fetch content de tous les fichiers du batch\n * - Avec retry\n */\n\nconst item = $input.item.json;\nconst files = item.files || [];\nconst context = item._context;\nconst GITHUB_TOKEN = context.GITHUB_TOKEN;\nconst MAX_RETRIES = 3;\n\nasync function fetchFileContent(file) {\n  let lastError;\n  \n  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {\n    try {\n      const response = await fetch(file.url, {\n        headers: {\n          'Authorization': `token ${GITHUB_TOKEN}`\n        }\n      });\n      \n      if (!response.ok) throw new Error(`HTTP ${response.status}`);\n      \n      const content = await response.text();\n      return { ...file, content, error: false };\n      \n    } catch (error) {\n      lastError = error;\n      if (attempt < MAX_RETRIES) {\n        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));\n      }\n    }\n  }\n  \n  return { ...file, content: '', error: true, error_message: lastError.message };\n}\n\ntry {\n  const filesWithContent = await Promise.all(\n    files.map(f => fetchFileContent(f))\n  );\n  \n  const successCount = filesWithContent.filter(f => !f.error).length;\n  const errorCount = filesWithContent.filter(f => f.error).length;\n  \n  return {\n    json: {\n      ...item,\n      files_with_content: filesWithContent,\n      batch_success_count: successCount,\n      batch_error_count: errorCount\n    }\n  };\n  \n} catch (error) {\n  return {\n    json: {\n      ...item,\n      error: true,\n      error_type: 'fetch_content_failed',\n      error_message: error.message\n    }\n  };\n}"
+      },
+      "id": "fetch-file-contents",
+      "name": "📥 Fetch File Contents",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * CHUNK LE CONTENU\n * - Découpe chaque fichier en chunks de ~1000 tokens\n * - Ajoute métadonnées pour chaque chunk\n */\n\nconst item = $input.item.json;\nconst filesWithContent = item.files_with_content || [];\n\nconst CHUNK_SIZE = parseInt($env.RAG_CHUNK_SIZE || '1000'); // caractères\nconst CHUNK_OVERLAP = parseInt($env.RAG_CHUNK_OVERLAP || '200');\n\nfunction chunkText(text, metadata) {\n  const chunks = [];\n  let start = 0;\n  let chunkIndex = 0;\n  \n  while (start < text.length) {\n    const end = Math.min(start + CHUNK_SIZE, text.length);\n    const chunk = text.slice(start, end);\n    \n    chunks.push({\n      chunk_id: `${metadata.sha}_${chunkIndex}`,\n      chunk_index: chunkIndex,\n      text: chunk,\n      metadata: {\n        file_path: metadata.path,\n        file_name: metadata.name,\n        file_sha: metadata.sha,\n        file_size: metadata.size,\n        chunk_start: start,\n        chunk_end: end,\n        total_chunks: 0 // sera mis à jour après\n      }\n    });\n    \n    start = end - CHUNK_OVERLAP;\n    chunkIndex++;\n  }\n  \n  // Mettre à jour total_chunks\n  chunks.forEach(c => c.metadata.total_chunks = chunks.length);\n  \n  return chunks;\n}\n\nconst allChunks = [];\n\nfor (const file of filesWithContent) {\n  if (file.error || !file.content) continue;\n  \n  const chunks = chunkText(file.content, file);\n  allChunks.push(...chunks);\n}\n\nreturn {\n  json: {\n    ...item,\n    chunks: allChunks,\n    chunk_count: allChunks.length\n  }\n};"
+      },
+      "id": "chunk-content",
+      "name": "✂️ Chunk Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * GÉNÈRE EMBEDDINGS VIA OPENAI\n * - Batch embeddings API\n * - Retry logic\n * - Rate limiting\n */\n\nconst item = $input.item.json;\nconst chunks = item.chunks || [];\nconst context = item._context;\nconst OPENAI_API_KEY = context.OPENAI_API_KEY;\nconst EMBEDDING_MODEL = context.EMBEDDING_MODEL;\nconst MAX_RETRIES = 3;\n\nif (chunks.length === 0) {\n  return {\n    json: {\n      ...item,\n      embeddings: [],\n      embedding_count: 0\n    }\n  };\n}\n\nasync function generateEmbeddings(texts) {\n  let lastError;\n  \n  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {\n    try {\n      const response = await fetch('https://api.openai.com/v1/embeddings', {\n        method: 'POST',\n        headers: {\n          'Authorization': `Bearer ${OPENAI_API_KEY}`,\n          'Content-Type': 'application/json'\n        },\n        body: JSON.stringify({\n          model: EMBEDDING_MODEL,\n          input: texts\n        })\n      });\n      \n      if (!response.ok) {\n        const errorData = await response.json();\n        throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);\n      }\n      \n      const data = await response.json();\n      return data.data.map(d => d.embedding);\n      \n    } catch (error) {\n      lastError = error;\n      if (attempt < MAX_RETRIES) {\n        // Rate limit backoff\n        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 2000));\n      }\n    }\n  }\n  \n  throw lastError;\n}\n\ntry {\n  const texts = chunks.map(c => c.text);\n  const embeddings = await generateEmbeddings(texts);\n  \n  // Combiner chunks avec embeddings\n  const chunksWithEmbeddings = chunks.map((chunk, i) => ({\n    ...chunk,\n    embedding: embeddings[i]\n  }));\n  \n  return {\n    json: {\n      ...item,\n      chunks_with_embeddings: chunksWithEmbeddings,\n      embedding_count: embeddings.length\n    }\n  };\n  \n} catch (error) {\n  return {\n    json: {\n      ...item,\n      error: true,\n      error_type: 'embedding_generation_failed',\n      error_message: error.message\n    }\n  };\n}"
+      },
+      "id": "generate-embeddings",
+      "name": "🧠 Generate Embeddings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * UPSERT DANS PINECONE\n * - Upsert vectors par batch\n * - Namespace par environnement\n * - Retry logic\n */\n\nconst item = $input.item.json;\nconst chunksWithEmbeddings = item.chunks_with_embeddings || [];\nconst context = item._context;\nconst PINECONE_API_KEY = context.PINECONE_API_KEY;\nconst PINECONE_INDEX = context.PINECONE_INDEX;\nconst PINECONE_ENVIRONMENT = $env.PINECONE_ENVIRONMENT || 'us-east1-gcp';\nconst NAMESPACE = $env.RAG_NAMESPACE || 'prolex-main';\nconst MAX_RETRIES = 3;\n\nif (chunksWithEmbeddings.length === 0) {\n  return {\n    json: {\n      ...item,\n      upsert_count: 0,\n      upsert_status: 'skipped'\n    }\n  };\n}\n\n// URL de l'index Pinecone\nconst PINECONE_URL = `https://${PINECONE_INDEX}-${PINECONE_ENVIRONMENT}.svc.pinecone.io`;\n\nasync function upsertVectors(vectors) {\n  let lastError;\n  \n  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {\n    try {\n      const response = await fetch(`${PINECONE_URL}/vectors/upsert`, {\n        method: 'POST',\n        headers: {\n          'Api-Key': PINECONE_API_KEY,\n          'Content-Type': 'application/json'\n        },\n        body: JSON.stringify({\n          vectors: vectors,\n          namespace: NAMESPACE\n        })\n      });\n      \n      if (!response.ok) {\n        const errorData = await response.json();\n        throw new Error(`Pinecone error: ${errorData.message || response.statusText}`);\n      }\n      \n      return await response.json();\n      \n    } catch (error) {\n      lastError = error;\n      if (attempt < MAX_RETRIES) {\n        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));\n      }\n    }\n  }\n  \n  throw lastError;\n}\n\ntry {\n  // Format pour Pinecone\n  const vectors = chunksWithEmbeddings.map(chunk => ({\n    id: chunk.chunk_id,\n    values: chunk.embedding,\n    metadata: {\n      ...chunk.metadata,\n      text: chunk.text.substring(0, 40960), // Max metadata size\n      indexed_at: new Date().toISOString()\n    }\n  }));\n  \n  const result = await upsertVectors(vectors);\n  \n  return {\n    json: {\n      ...item,\n      upsert_count: result.upsertedCount || vectors.length,\n      upsert_status: 'success',\n      pinecone_response: result\n    }\n  };\n  \n} catch (error) {\n  return {\n    json: {\n      ...item,\n      error: true,\n      error_type: 'pinecone_upsert_failed',\n      error_message: error.message,\n      upsert_status: 'failed'\n    }\n  };\n}"
+      },
+      "id": "upsert-to-pinecone",
+      "name": "📊 Upsert to Pinecone",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * LOG BATCH PROGRESS\n * - Track progress de chaque batch\n */\n\nconst item = $input.item.json;\nconst timestamp = new Date().toISOString();\n\nreturn {\n  json: {\n    timestamp_utc: timestamp,\n    run_id: item.run_id,\n    execution_id: item.execution_id,\n    batch_index: item.batch_index,\n    total_batches: item.total_batches,\n    batch_size: item.batch_size,\n    files_processed: item.files?.length || 0,\n    chunks_created: item.chunk_count || 0,\n    embeddings_generated: item.embedding_count || 0,\n    vectors_upserted: item.upsert_count || 0,\n    batch_success_count: item.batch_success_count || 0,\n    batch_error_count: item.batch_error_count || 0,\n    status: item.error ? 'failed' : 'success',\n    error_type: item.error_type || '',\n    error_message: item.error_message || ''\n  }\n};"
+      },
+      "id": "log-batch-progress",
+      "name": "📝 Log Batch Progress",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2440, 400]
+    },
+    {
+      "parameters": {},
+      "id": "merge-batch-results",
+      "name": "🔗 Merge Batch Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2660, 400]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * AGRÈGE RÉSULTATS\n * - Somme tous les batches\n * - Calcule métriques finales\n */\n\nconst items = $input.all();\nconst firstItem = items[0].json;\n\nconst totalChunks = items.reduce((sum, i) => sum + (i.json.chunks_created || 0), 0);\nconst totalEmbeddings = items.reduce((sum, i) => sum + (i.json.embeddings_generated || 0), 0);\nconst totalUpserted = items.reduce((sum, i) => sum + (i.json.vectors_upserted || 0), 0);\nconst totalErrors = items.reduce((sum, i) => sum + (i.json.batch_error_count || 0), 0);\n\nconst timestampEnd = new Date().toISOString();\nconst startTime = new Date(firstItem.timestamp_utc).getTime();\nconst endTime = new Date(timestampEnd).getTime();\nconst durationMs = endTime - startTime;\nconst durationMin = Math.round(durationMs / 60000);\n\nreturn {\n  json: {\n    run_id: firstItem.run_id,\n    execution_id: firstItem.execution_id,\n    timestamp_start: firstItem.timestamp_utc,\n    timestamp_end: timestampEnd,\n    duration_ms: durationMs,\n    duration_min: durationMin,\n    total_batches: items.length,\n    total_chunks: totalChunks,\n    total_embeddings: totalEmbeddings,\n    total_upserted: totalUpserted,\n    total_errors: totalErrors,\n    status: totalErrors > 0 ? 'completed_with_errors' : 'success',\n    success_rate: totalChunks > 0 ? Math.round((totalUpserted / totalChunks) * 100) : 0\n  }\n};"
+      },
+      "id": "aggregate-results",
+      "name": "📊 Aggregate Final Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2880, 400]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEETS_AUDIT_LOG_ID || '1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk' }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "rag_refresh_log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp_start": "={{ $json.timestamp_start }}",
+            "timestamp_end": "={{ $json.timestamp_end }}",
+            "run_id": "={{ $json.run_id }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "duration_min": "={{ $json.duration_min }}",
+            "total_batches": "={{ $json.total_batches }}",
+            "total_chunks": "={{ $json.total_chunks }}",
+            "total_embeddings": "={{ $json.total_embeddings }}",
+            "total_upserted": "={{ $json.total_upserted }}",
+            "total_errors": "={{ $json.total_errors }}",
+            "success_rate": "={{ $json.success_rate }}",
+            "status": "={{ $json.status }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "log-to-sheets",
+      "name": "📝 Log to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [3100, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-creds",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $env.SLACK_RAG_CHANNEL_ID || 'C12345' }}",
+          "mode": "id"
+        },
+        "text": "=✅ *RAG Embeddings Refresh Complete*\n\n*Duration:* {{ $json.duration_min }} minutes\n*Chunks:* {{ $json.total_chunks }}\n*Embeddings:* {{ $json.total_embeddings }}\n*Vectors Upserted:* {{ $json.total_upserted }}\n*Errors:* {{ $json.total_errors }}\n*Success Rate:* {{ $json.success_rate }}%\n*Status:* {{ $json.status }}\n\n*Run ID:* `{{ $json.run_id }}`",
+        "otherOptions": {}
+      },
+      "id": "notify-slack-success",
+      "name": "💬 Notify Slack (Success)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [3320, 300],
+      "credentials": {
+        "slackWebhookApi": {
+          "id": "slack-webhook",
+          "name": "Slack Webhook"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $env.SLACK_RAG_CHANNEL_ID || 'C12345' }}",
+          "mode": "id"
+        },
+        "text": "=🚨 *RAG Embeddings Refresh Failed*\n\n*Error:* {{ $json.error_message }}\n*Type:* {{ $json.error_type }}\n\n*Run ID:* `{{ $json.run_id }}`\n*Execution:* {{ $json.execution_id }}",
+        "otherOptions": {}
+      },
+      "id": "notify-slack-error",
+      "name": "💬 Notify Slack (Error)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [900, 580],
+      "credentials": {
+        "slackWebhookApi": {
+          "id": "slack-webhook",
+          "name": "Slack Webhook"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "⏰ Schedule (2am daily)": {
+      "main": [[{ "node": "🎬 Init Job", "type": "main", "index": 0 }]]
+    },
+    "🎬 Init Job": {
+      "main": [[
+        { "node": "✅ Filter Valid Config", "type": "main", "index": 0 },
+        { "node": "💬 Notify Slack (Error)", "type": "main", "index": 0 }
+      ]]
+    },
+    "✅ Filter Valid Config": {
+      "main": [[{ "node": "📂 Scan Repo Files", "type": "main", "index": 0 }]]
+    },
+    "📂 Scan Repo Files": {
+      "main": [[{ "node": "🔀 Split Into Batches", "type": "main", "index": 0 }]]
+    },
+    "🔀 Split Into Batches": {
+      "main": [[{ "node": "🔄 Process Batches One by One", "type": "main", "index": 0 }]]
+    },
+    "🔄 Process Batches One by One": {
+      "main": [[{ "node": "📥 Fetch File Contents", "type": "main", "index": 0 }]]
+    },
+    "📥 Fetch File Contents": {
+      "main": [[{ "node": "✂️ Chunk Content", "type": "main", "index": 0 }]]
+    },
+    "✂️ Chunk Content": {
+      "main": [[{ "node": "🧠 Generate Embeddings", "type": "main", "index": 0 }]]
+    },
+    "🧠 Generate Embeddings": {
+      "main": [[{ "node": "📊 Upsert to Pinecone", "type": "main", "index": 0 }]]
+    },
+    "📊 Upsert to Pinecone": {
+      "main": [[{ "node": "📝 Log Batch Progress", "type": "main", "index": 0 }]]
+    },
+    "📝 Log Batch Progress": {
+      "main": [[
+        { "node": "🔗 Merge Batch Results", "type": "main", "index": 0 },
+        { "node": "🔄 Process Batches One by One", "type": "main", "index": 0 }
+      ]]
+    },
+    "🔗 Merge Batch Results": {
+      "main": [[{ "node": "📊 Aggregate Final Results", "type": "main", "index": 0 }]]
+    },
+    "📊 Aggregate Final Results": {
+      "main": [[
+        { "node": "📝 Log to Sheets", "type": "main", "index": 0 },
+        { "node": "💬 Notify Slack (Success)", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 3600,
+    "timezone": "UTC"
+  },
+  "staticData": null,
+  "tags": ["rag", "embeddings", "automation", "nightly"],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-22T00:00:00.000Z",
+  "versionId": "1.0"
+}

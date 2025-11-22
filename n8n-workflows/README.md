@@ -97,7 +97,7 @@ N8N_API_KEY=votre-cle-api-secrete
 1. **Ouvrir le workflow "GitHub to n8n Sync"**
 2. **Cliquer sur le nœud "GitHub Push Webhook"**
 3. **Copier l'URL du webhook** :
-   - Format : `http://localhost:5678/webhook/github-sync`
+   - Format : `http://localhost:5678/webhook/github-to-n8n`
    - ⚠️ **Important** : Si tu es en local, tu dois exposer ton URL avec ngrok ou un tunnel similaire
 
 4. **Exposer le webhook localement (si nécessaire)** :
@@ -110,14 +110,14 @@ N8N_API_KEY=votre-cle-api-secrete
    ngrok http 5678
 
    # Copier l'URL publique (ex: https://abc123.ngrok.io)
-   # L'URL du webhook devient : https://abc123.ngrok.io/webhook/github-sync
+   # L'URL du webhook devient : https://abc123.ngrok.io/webhook/github-to-n8n
    ```
 
 5. **Configurer le webhook GitHub** :
    - Va sur https://github.com/ProlexAi/Prolex/settings/hooks
    - Clique sur **"Add webhook"**
    - Renseigne :
-     - **Payload URL** : `https://abc123.ngrok.io/webhook/github-sync` (ou ton URL publique)
+     - **Payload URL** : `https://abc123.ngrok.io/webhook/github-to-n8n` (ou ton URL publique)
      - **Content type** : `application/json`
      - **Secret** : (optionnel pour l'instant)
      - **Events** : Sélectionne "Just the push event"

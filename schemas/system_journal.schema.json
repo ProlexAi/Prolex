@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://prolex.ai/schemas/system_journal.schema.json",
+  "title": "SystemJournalEntry",
+  "description": "Structure d'une entrée du journal système (mémoire centralisée)",
+  "type": "object",
+  "required": [
+    "timestamp",
+    "agent",
+    "action_type",
+    "request_id",
+    "user_id",
+    "result"
+  ],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp UTC au format ISO 8601"
+    },
+    "agent": {
+      "type": "string",
+      "enum": ["kimmy", "prolex", "opex", "proxy", "system"],
+      "description": "Composant qui a généré l'entrée"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "classification",
+        "execution",
+        "planning",
+        "error",
+        "reporting",
+        "workflow_create",
+        "workflow_update",
+        "workflow_test",
+        "backup",
+        "healthcheck",
+        "alert"
+      ],
+      "description": "Type d'action effectuée"
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID de la requête liée (correspondance avec KimmyPayload)"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Identifiant de l'utilisateur (ex: 'matthieu', 'client_X')"
+    },
+    "intent": {
+      "type": ["string", "null"],
+      "description": "Intent de la requête originale"
+    },
+    "tool_used": {
+      "type": ["string", "null"],
+      "pattern": "^[A-Z_]+$",
+      "description": "ID de l'outil utilisé (si applicable)"
+    },
+    "payload_snapshot": {
+      "type": ["object", "null"],
+      "description": "Snapshot du payload utilisé (pour audit)"
+    },
+    "result": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["success", "failure", "partial", "pending"],
+          "description": "Statut de l'exécution"
+        },
+        "data": {
+          "type": ["object", "null"],
+          "description": "Données de résultat (si succès)"
+        },
+        "error": {
+          "type": ["string", "null"],
+          "description": "Message d'erreur (si échec)"
+        },
+        "error_code": {
+          "type": ["string", "null"],
+          "description": "Code d'erreur standardisé"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "execution_time_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Temps d'exécution en millisecondes"
+        },
+        "tokens_used": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Nombre de tokens LLM utilisés"
+        },
+        "cost_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Coût estimé en USD"
+        },
+        "autonomy_level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Niveau d'autonomie utilisé (0-3)"
+        },
+        "model": {
+          "type": "string",
+          "description": "Modèle LLM utilisé (ex: 'claude-3-5-sonnet')"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags pour filtrage et recherche"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes additionnelles"
+    }
+  }
+}

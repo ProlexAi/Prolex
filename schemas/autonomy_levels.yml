@@ -1,0 +1,116 @@
+# Niveaux d'autonomie Prolex v4
+# Définition unique des niveaux d'autonomie et de leurs capacités
+# Dernière mise à jour : 22/11/2025
+
+autonomy_levels:
+  - level: 0
+    name: "Information pure"
+    description: "Prolex ne fait que fournir de l'information, aucune action"
+    capabilities:
+      - "Répondre à des questions"
+      - "Fournir des informations"
+      - "Expliquer des concepts"
+    restrictions:
+      - "Aucune modification de données"
+      - "Aucun appel d'outil"
+    examples:
+      - "Quelle est la température à Paris ?"
+      - "Explique-moi comment fonctionne Git"
+    validation_required: false
+    typical_use_cases:
+      - "Questions générales"
+      - "Consultation d'informations publiques"
+
+  - level: 1
+    name: "Lecture seule"
+    description: "Prolex peut lire des données mais pas les modifier"
+    capabilities:
+      - "Lire des documents"
+      - "Consulter des bases de données"
+      - "Rechercher dans des systèmes"
+      - "Générer des rapports en lecture seule"
+    restrictions:
+      - "Aucune modification de données"
+      - "Aucune création de ressources"
+      - "Aucune suppression"
+    examples:
+      - "Liste les tâches de cette semaine"
+      - "Montre-moi les derniers commits"
+      - "Résume le document client ABC"
+    validation_required: false
+    typical_use_cases:
+      - "Consultation de données internes"
+      - "Génération de rapports"
+      - "Recherche documentaire"
+
+  - level: 2
+    name: "Action supervisée"
+    description: "Prolex peut modifier des données non-critiques avec confirmation"
+    capabilities:
+      - "Créer des tâches"
+      - "Modifier des données non-sensibles"
+      - "Envoyer des notifications"
+      - "Créer des issues GitHub"
+      - "Mettre à jour des documents"
+    restrictions:
+      - "Pas d'accès à la production"
+      - "Pas de suppression de données"
+      - "Pas de modifications critiques"
+    examples:
+      - "Crée une tâche 'Appeler client XYZ demain'"
+      - "Ajoute une issue GitHub pour ce bug"
+      - "Envoie un message Slack à l'équipe"
+    validation_required: true
+    validation_type: "one-click"
+    typical_use_cases:
+      - "Gestion de tâches quotidiennes"
+      - "Collaboration légère"
+      - "Documentation"
+
+  - level: 3
+    name: "Action autonome"
+    description: "Prolex peut effectuer des actions critiques avec validation forte"
+    capabilities:
+      - "Déployer en production"
+      - "Modifier des workflows n8n"
+      - "Lancer des backups"
+      - "Supprimer des ressources"
+      - "Modifier des configurations critiques"
+    restrictions:
+      - "Validation humaine obligatoire"
+      - "Logs détaillés systématiques"
+      - "Possibilité de rollback"
+    examples:
+      - "Lance le backup de la base prod"
+      - "Déploie le workflow XYZ en production"
+      - "Supprime le projet ABC (après confirmation)"
+    validation_required: true
+    validation_type: "explicit-approval"
+    typical_use_cases:
+      - "Opérations DevOps"
+      - "Maintenance système"
+      - "Gestion de production"
+
+# Mapping des intents vers les niveaux d'autonomie par défaut
+intent_to_autonomy_mapping:
+  TASK_HELP: 1
+  DOC_QUESTION: 1
+  DEV_HELP: 2
+  CLIENT_CONTEXT: 1
+  SYSTEM_STATUS: 0
+  HIGH_RISK_ACTION: 3
+  SIMPLE_QUESTION: 0
+  CLARIFICATION_NEEDED: 0
+
+# Règles de sécurité globales
+security_rules:
+  - rule: "Niveau 3 interdit pour utilisateurs non-admin"
+  - rule: "Validation humaine obligatoire pour toute suppression"
+  - rule: "Logs détaillés pour niveaux 2 et 3"
+  - rule: "Timeout automatique après 24h pour validations non traitées"
+
+# Définition MVP v4.0
+mvp_scope:
+  max_autonomy_level: 2
+  reason: "Le niveau 3 nécessite des mécanismes de sécurité supplémentaires non encore implémentés"
+  expected_availability: "Q1 2026"

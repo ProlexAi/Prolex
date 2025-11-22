@@ -1,0 +1,103 @@
+# Liste unique des intents Kimmy v4
+# Source de vérité pour la détection d'intention
+# Dernière mise à jour : 22/11/2025
+
+# Intents de base (MVP v4.0)
+basic_intents:
+  - id: TASK_HELP
+    label: "Aide tâche / productivité"
+    description: "L'utilisateur demande de l'aide pour une tâche personnelle ou professionnelle"
+    complexity: simple
+    examples:
+      - "Aide-moi à créer une liste de tâches"
+      - "Comment organiser ma journée ?"
+    prolex_required: false
+    autonomy_default: 1
+
+  - id: DOC_QUESTION
+    label: "Question sur un document"
+    description: "L'utilisateur pose une question sur un document, un fichier ou une donnée"
+    complexity: medium
+    examples:
+      - "Que dit le dernier rapport client ?"
+      - "Résume le document XYZ"
+    prolex_required: true
+    autonomy_default: 1
+
+  - id: DEV_HELP
+    label: "Aide développement / GitHub"
+    description: "L'utilisateur demande de l'aide pour du code, Git, ou un problème technique"
+    complexity: complex
+    examples:
+      - "Aide-moi à débugger ce code"
+      - "Crée une issue GitHub pour ce bug"
+    prolex_required: true
+    autonomy_default: 2
+
+  - id: CLIENT_CONTEXT
+    label: "Contexte / info client"
+    description: "L'utilisateur demande des informations sur un client ou projet"
+    complexity: medium
+    examples:
+      - "Quel est le statut du projet ABC ?"
+      - "Montre-moi les infos du client XYZ"
+    prolex_required: true
+    autonomy_default: 1
+
+  - id: SYSTEM_STATUS
+    label: "Statut système / infrastructure"
+    description: "L'utilisateur demande l'état du système, des services, ou de l'infra"
+    complexity: simple
+    examples:
+      - "Est-ce que n8n fonctionne ?"
+      - "Vérifie les logs système"
+    prolex_required: false
+    autonomy_default: 0
+
+# Intents sensibles (nécessitent précautions)
+sensitive_intents:
+  - id: HIGH_RISK_ACTION
+    label: "Action potentiellement dangereuse"
+    description: "L'utilisateur demande une action qui peut avoir des conséquences importantes"
+    complexity: critical
+    examples:
+      - "Lance le backup de prod"
+      - "Supprime ce workflow"
+      - "Déploie en production"
+    prolex_required: true
+    autonomy_default: 2
+    requires_validation: true
+
+# Intents de conversation (traités directement par Kimmy)
+conversational_intents:
+  - id: SIMPLE_QUESTION
+    label: "Question simple / générale"
+    description: "Question générale ne nécessitant pas d'action système"
+    complexity: simple
+    examples:
+      - "Comment ça va ?"
+      - "Quelle heure est-il ?"
+    prolex_required: false
+    autonomy_default: 0
+
+  - id: CLARIFICATION_NEEDED
+    label: "Demande de clarification"
+    description: "La requête est ambiguë ou incomplète"
+    complexity: simple
+    examples:
+      - "Je ne comprends pas ta requête"
+      - "Peux-tu préciser ?"
+    prolex_required: false
+    autonomy_default: 0
+
+# Intents futurs (v5+, non MVP)
+future_intents:
+  - id: LEARNING_REQUEST
+    label: "Demande d'apprentissage"
+    description: "L'utilisateur veut enseigner quelque chose au système"
+    status: vision
+
+  - id: WORKFLOW_GENERATION
+    label: "Génération de workflow"
+    description: "L'utilisateur demande la création d'un nouveau workflow automatisé"
+    status: vision
