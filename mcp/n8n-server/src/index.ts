@@ -1,179 +1,64 @@
 #!/usr/bin/env node
-<<<<<< claude/n8n-mcp-server-01Rq2sQFqRYYFXx2RPEigtpH
-======
-import 'dotenv/config';
->>>>>> main
-
 /**
- * n8n MCP Server
- * Exposes n8n workflow automation capabilities via Model Context Protocol
+ * n8n MCP Server v2.0.0
+ * Complete TypeScript 5 rebuild with Level 3 Autonomy
+ *
+ * Features:
+ * - 6 MCP tools (list, trigger, get, stop, create, update)
+ * - Automatic retry with exponential backoff (x3)
+ * - Local workflow cache with hash-based change detection
+ * - Real-time execution log streaming
+ * - Intelligent rate limiting with queue
+ * - SystemJournal v2 structured logging (JSONL)
+ * - HTTP healthcheck endpoints
+ * - Full Docker support
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
-import { N8nClient } from './n8nClient.js';
+import 'dotenv/config';
+import { N8nMCPServer } from './server.js';
+import { HealthCheckServer } from './healthcheck/server.js';
+import { journal } from './logging/systemJournal.js';
+import { config } from './config/env.js';
 
-// Validate environment variables
-const N8N_BASE_URL = process.env.N8N_BASE_URL;
-const N8N_API_KEY = process.env.N8N_API_KEY;
-
-if (!N8N_BASE_URL || !N8N_API_KEY) {
-  console.error('Error: N8N_BASE_URL and N8N_API_KEY environment variables are required');
-  process.exit(1);
-}
-
-// Initialize n8n client
-const n8nClient = new N8nClient({
-  baseUrl: N8N_BASE_URL,
-  apiKey: N8N_API_KEY,
-});
-
-// Zod schemas for tool parameters
-const TriggerWorkflowSchema = z.object({
-  workflowId: z.string().describe('The ID of the workflow to trigger'),
-  payload: z
-    .record(z.unknown())
-    .optional()
-    .describe('Optional JSON payload to pass to the workflow'),
-});
-
-// Create MCP server
-const server = new Server(
-  {
-    name: 'n8n-mcp-server',
-    version: '1.0.0',
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  }
-);
-
-// List available tools
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: [
-      {
-        name: 'list_workflows',
-        description:
-          'List all n8n workflows with their ID, name, active status, and timestamps',
-        inputSchema: {
-          type: 'object',
-          properties: {},
-        },
-      },
-      {
-        name: 'trigger_workflow',
-        description: 'Trigger execution of an n8n workflow by ID with optional payload',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            workflowId: {
-              type: 'string',
-              description: 'The ID of the workflow to trigger',
-            },
-            payload: {
-              type: 'object',
-              description: 'Optional JSON payload to pass to the workflow',
-            },
-          },
-          required: ['workflowId'],
-        },
-      },
-    ],
-  };
-});
-
-// Handle tool calls
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-
-  try {
-    switch (name) {
-      case 'list_workflows': {
-        const workflows = await n8nClient.getWorkflows();
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                workflows.map((w) => ({
-                  id: w.id,
-                  name: w.name,
-                  active: w.active,
-                  createdAt: w.createdAt,
-                  updatedAt: w.updatedAt,
-                  tags: w.tags,
-                })),
-                null,
-                2
-              ),
-            },
-          ],
-        };
-      }
-
-      case 'trigger_workflow': {
-        const validated = TriggerWorkflowSchema.parse(args);
-        const execution = await n8nClient.triggerWorkflow(
-          validated.workflowId,
-          validated.payload
-        );
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                {
-                  executionId: execution.executionId,
-                  status: execution.status,
-                  workflowId: execution.workflowId,
-                  mode: execution.mode,
-                  startedAt: execution.startedAt,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
-      }
-
-      default:
-        throw new Error(`Unknown tool: ${name}`);
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error: ${errorMessage}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-});
-
-// Start server
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  try {
+    journal.info('application_starting', {
+      version: '2.0.0',
+      nodeEnv: config.NODE_ENV,
+      n8nUrl: config.N8N_BASE_URL,
+    });
 
-  console.error('n8n MCP Server running on stdio');
+    // Start healthcheck server
+    const healthCheck = new HealthCheckServer();
+    healthCheck.start();
+
+    // Start MCP server
+    const mcpServer = new N8nMCPServer();
+    await mcpServer.start();
+
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+      journal.info('shutdown_signal_received', { signal: 'SIGINT' });
+      await mcpServer.stop();
+      healthCheck.stop();
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+      journal.info('shutdown_signal_received', { signal: 'SIGTERM' });
+      await mcpServer.stop();
+      healthCheck.stop();
+      process.exit(0);
+    });
+  } catch (error) {
+    journal.error('application_startup_error', error as Error);
+    console.error('Fatal error:', error);
+    process.exit(1);
+  }
 }
 
 main().catch((error) => {
+  journal.error('application_fatal_error', error as Error);
   console.error('Fatal error:', error);
   process.exit(1);
 });
