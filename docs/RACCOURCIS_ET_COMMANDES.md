@@ -337,7 +337,8 @@ nano /home/user/Prolex/config/prolex_config.yml
 | **Kimmy Intake** | `http://localhost:5678/webhook/kimmy-intake` | Texte brut | KimmyPayload JSON |
 | **Prolex Intake** | `http://localhost:5678/webhook/prolex-intake` | KimmyPayload JSON | ProlexOutput JSON |
 | **Proxy Exec** | `http://localhost:5678/webhook/proxy-exec` | ProlexOutput JSON | Routage workflows |
-| **GitHub Sync** | `http://localhost:5678/webhook/github-sync` | GitHub push event | Création/MAJ workflows |
+| **GitHub to n8n** | `http://localhost:5678/webhook/github-to-n8n` | GitHub push event | Création/MAJ workflows n8n |
+| **Prolex Git Pull** | `http://localhost:5678/webhook/prolex-git-pull` | Repo path + branch | Git pull status |
 
 ### API n8n REST
 
@@ -557,7 +558,7 @@ tar -xzf prolex-config-20251122.tar.gz -C /home/user/Prolex
 | Problème | Solution | Commande |
 |----------|----------|----------|
 | n8n ne démarre pas | Vérifier Docker | `docker ps` puis `docker logs n8n` |
-| Workflows non synchro | Relancer sync GitHub | Trigger webhook `/webhook/github-sync` |
+| Workflows non synchro | Relancer sync GitHub | Trigger webhook `/webhook/github-to-n8n` |
 | MCP n8n erreur | Vérifier API key | `echo $N8N_API_KEY` |
 | Git push refuse | Vérifier branche | `git branch` (doit commencer par `claude/`) |
 | Config non prise en compte | Redémarrer n8n | `docker restart n8n` |

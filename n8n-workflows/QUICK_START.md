@@ -82,7 +82,7 @@ Si tu es **en production** (serveur avec IP publique) :
 1. Va sur https://github.com/ProlexAi/Prolex/settings/hooks
 2. Clique sur **"Add webhook"**
 3. Renseigne :
-   - **Payload URL** : `https://abc123.ngrok.io/webhook/github-sync`
+   - **Payload URL** : `https://abc123.ngrok.io/webhook/github-to-n8n`
    - **Content type** : `application/json`
    - **Events** : "Just the push event"
    - **Active** : ✅
