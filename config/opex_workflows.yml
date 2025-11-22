@@ -1,177 +1,368 @@
-# Configuration des workflows Opex v4
-# Distinction entre workflows CORE (MVP) et LATER (post-MVP)
-# Dernière mise à jour : 22/11/2025
+# ============================================================================
+# CATALOGUE OPEX WORKFLOWS
+# ============================================================================
+# Source de vérité pour les workflows n8n / Prolex (Opex)
+# Ce fichier centralise la documentation de tous les workflows opérationnels
+# en offrant deux vues complémentaires :
+#   - Vue technique (categories) : organisation système
+#   - Vue métier (biz_areas) : pilotage business
+# ============================================================================
 
-# Workflows CORE - Prioritaires pour MVP v4.0
-core_workflows:
-  # Famille 100 - Productivité
-  - id: 100_10_TASK_CREATE
-    name: "Créer une tâche"
-    description: "Création d'une nouvelle tâche dans le système de gestion"
-    status: ⏳ En cours
-    priority: HIGH
-    autonomy_level: 2
-    estimated_completion: "25/11/2025"
+version: 1
+last_update: "2025-11-22"
+maintainer: "Matthieu"
+contact: "matthieu@automatt.ai"
 
-  - id: 100_20_TASK_LIST
-    name: "Lister les tâches"
-    description: "Récupération de la liste des tâches avec filtres"
-    status: ⏳ En cours
-    priority: HIGH
-    autonomy_level: 1
-    estimated_completion: "24/11/2025"
+# ============================================================================
+# CATÉGORIES TECHNIQUES (vue "technique")
+# ============================================================================
+# Organisation par domaine fonctionnel du système
+# Chaque catégorie correspond à une plage d'IDs pour faciliter l'organisation
 
-  # Famille 400 - Système & Logs
-  - id: 400_10_LOG_APPEND_SYSTEMJOURNAL
-    name: "Ajouter entrée au SystemJournal"
-    description: "Ajout d'une entrée de log dans le journal système centralisé"
-    status: ⏳ En cours
-    priority: CRITICAL
-    autonomy_level: 1
-    estimated_completion: "23/11/2025"
+categories:
+  core:
+    range: "000-099"
+    label: "Core / Proxy / Entrées globales"
+    description: "Workflows fondamentaux, points d'entrée système, proxy master"
 
-  # Famille 600 - Orchestration
-  - id: 600_10_PROXY_MASTER
-    name: "Proxy Master (exécution plans)"
-    description: "Orchestrateur principal pour l'exécution des plans multi-outils"
-    status: ⏳ En cours
-    priority: CRITICAL
-    autonomy_level: 2
-    estimated_completion: "26/11/2025"
-    notes: "Nécessite implémentation de la résolution robuste de variables"
+  productivity:
+    range: "100-199"
+    label: "Productivité / Tâches / Organisation"
+    description: "Gestion de tâches, calendrier, productivité personnelle"
 
-# Workflows LATER - Post-MVP (v4.1+)
-later_workflows:
-  # Famille 100 - Productivité (étendu)
-  - id: 100_30_TASK_UPDATE
-    name: "Mettre à jour une tâche"
-    status: 💡 Vision
-    priority: MEDIUM
-    target_version: "v4.1"
+  dev:
+    range: "200-299"
+    label: "Dev / Git / CI / Code"
+    description: "Développement, contrôle de version, intégration continue"
 
-  - id: 100_40_TASK_DELETE
-    name: "Supprimer une tâche"
-    status: 💡 Vision
-    priority: LOW
-    target_version: "v4.1"
+  clients:
+    range: "300-399"
+    label: "Workflows Clients / Dossiers"
+    description: "Gestion des clients, projets clients, onboarding"
 
-  # Famille 200 - Dev & GitHub
-  - id: 200_10_GITHUB_ISSUE_CREATE
-    name: "Créer une issue GitHub"
-    status: 💡 Vision
-    priority: MEDIUM
-    autonomy_level: 2
-    target_version: "v4.1"
+  monitoring:
+    range: "400-499"
+    label: "Monitoring / Backup / Alerting"
+    description: "Surveillance système, sauvegardes, alertes"
 
-  - id: 200_20_GITHUB_PR_CREATE
-    name: "Créer une pull request GitHub"
-    status: 💡 Vision
-    priority: MEDIUM
-    autonomy_level: 2
-    target_version: "v4.2"
+  reporting:
+    range: "500-599"
+    label: "Reporting / Dashboards"
+    description: "Tableaux de bord, rapports, KPIs, analytics"
 
-  - id: 200_30_GITHUB_PR_MERGE
-    name: "Merger une pull request"
-    status: 💡 Vision
-    priority: LOW
-    autonomy_level: 3
-    target_version: "v4.2"
+  n8n_admin:
+    range: "600-699"
+    label: "Administration n8n / Métasystème"
+    description: "Workflows de gestion de n8n lui-même, méta-orchestration"
 
-  # Famille 300 - Clients & Projets
-  - id: 300_10_CLIENT_INFO_GET
-    name: "Récupérer infos client"
-    status: 💡 Vision
-    priority: MEDIUM
-    autonomy_level: 1
-    target_version: "v4.1"
+  examples:
+    range: "900-999"
+    label: "Exemples / Tests / Sandbox"
+    description: "Workflows de test, prototypes, exemples pédagogiques"
 
-  - id: 300_20_CLIENT_PIPELINE_UPDATE
-    name: "Mettre à jour pipeline client"
-    status: 💡 Vision
-    priority: MEDIUM
-    autonomy_level: 2
-    target_version: "v4.2"
+# ============================================================================
+# DOMAINES MÉTIER (vue "business")
+# ============================================================================
+# Codes biz_area pour classification métier des workflows
+#
+# IMPORTANT :
+#   - Seuls ces codes sont valides
+#   - Tout code non listé doit générer un warning dans les outils de validation
+#   - MULTI doit être utilisé rarement (uniquement pour workflows vraiment hybrides)
+#   - Lorsqu'un workflow utilise MULTI, préciser les domaines concernés dans 'notes'
 
-  # Famille 400 - Système (étendu)
-  - id: 400_20_LOG_SEARCH
-    name: "Rechercher dans les logs"
-    status: 💡 Vision
-    priority: MEDIUM
-    autonomy_level: 1
-    target_version: "v4.1"
+biz_areas:
+  GE:
+    label: "Gestion Entreprise"
+    description: "Pilotage global, finances, reporting stratégique, décisions business"
 
-  - id: 400_30_BACKUP_RUN
-    name: "Lancer un backup"
-    status: 💡 Vision
-    priority: HIGH
-    autonomy_level: 3
-    target_version: "v4.2"
+  PROD:
+    label: "Production / Opérations"
+    description: "Livraison clients, exécution des services, opérations quotidiennes"
 
-  # Famille 500 - Reporting
-  - id: 500_10_REPORT_DAILY
-    name: "Générer rapport quotidien"
-    status: 💡 Vision
-    priority: LOW
-    autonomy_level: 1
-    target_version: "v4.2"
+  MKT:
+    label: "Marketing / Acquisition"
+    description: "Prospects, communication, contenus, génération de leads"
 
-  - id: 500_20_REPORT_CLIENT
-    name: "Générer rapport client"
-    status: 💡 Vision
-    priority: MEDIUM
-    autonomy_level: 1
-    target_version: "v4.2"
+  GP:
+    label: "Gestion Personnelle"
+    description: "Organisation personnelle de Matthieu, tâches perso, productivité individuelle"
 
-  # Famille 600 - Orchestration (étendu)
-  - id: 600_20_HIGH_RISK_APPROVAL
-    name: "Validation d'actions à risque"
-    status: ⏳ En cours
-    priority: HIGH
-    autonomy_level: 2
-    target_version: "v4.0"
-    notes: "Implémentation clickable via webhooks"
+  SYS:
+    label: "Système / Infrastructure"
+    description: "Maintenance technique, sécurité, déploiement, infrastructure"
 
-  - id: 600_30_N8N_WORKFLOW_UPSERT_SBX
-    name: "Créer/modifier workflow en sandbox"
-    status: ⏳ En cours
-    priority: HIGH
-    autonomy_level: 2
-    target_version: "v4.0"
+  MULTI:
+    label: "Multi-domaines"
+    description: "Workflows hybrides touchant plusieurs domaines (à utiliser rarement)"
+    note: "Quand MULTI est utilisé, préciser les domaines concernés dans le champ 'notes'"
 
-  - id: 600_40_N8N_WORKFLOW_PROMOTE_PROD
-    name: "Promouvoir workflow sandbox → prod"
-    status: 💡 Vision
-    priority: HIGH
-    autonomy_level: 3
-    target_version: "v4.1"
+# ============================================================================
+# CATALOGUE DES WORKFLOWS
+# ============================================================================
+# Liste exhaustive des workflows Opex
+#
+# Champs :
+#   - id (int, requis) : Identifiant unique du workflow
+#   - file (str, requis) : Nom du fichier JSON dans n8n-workflows/
+#   - name (str, requis) : Nom descriptif du workflow
+#   - category (str, requis) : Catégorie technique (clé de categories)
+#   - biz_area (str, optionnel) : Domaine métier (clé de biz_areas)
+#   - status (str, requis) : Statut du workflow
+#       * planned   : Planifié, pas encore développé
+#       * mvp       : Version minimale fonctionnelle
+#       * prod      : En production, stable
+#       * deprecated: Obsolète, à supprimer
+#   - scope (str, requis) : Portée du workflow
+#       * internal  : Usage interne Automatt.ai uniquement
+#       * client    : Destiné aux clients ou touche des données clients
+#   - priority (int, optionnel) : Priorité / importance du workflow
+#       * 1 = Peu utilisé / peu critique
+#       * 5 = Très utilisé / très critique
+#       * Sert de proxy pour l'importance tant qu'on n'a pas de métriques réelles
+#   - tags (list, optionnel) : Mots-clés pour recherche avancée future
+#   - webhook (str, optionnel) : Endpoint webhook si applicable
+#   - notes (str, optionnel) : Notes libres, contexte, précisions
 
-# Métriques MVP
-mvp_metrics:
-  total_workflows_planned: 34
-  core_workflows_count: 4
-  core_workflows_percentage: 12%
-  estimated_mvp_completion_date: "26/11/2025"
+workflows:
+  # ====================================================================
+  # CORE (000-099) : Workflows fondamentaux
+  # ====================================================================
 
-# Règles de prioritisation
-prioritization_rules:
-  - "CRITICAL : Workflows nécessaires au fonctionnement de base de Prolex"
-  - "HIGH : Workflows essentiels pour cas d'usage MVP"
-  - "MEDIUM : Workflows utiles mais pas bloquants"
-  - "LOW : Workflows de confort ou optimisation"
+  - id: 10
+    file: "010_sync-github-to-n8n.json"
+    name: "GitHub to n8n Sync"
+    category: "core"
+    biz_area: "SYS"
+    status: "prod"
+    scope: "internal"
+    priority: 5
+    tags: ["github", "sync", "deployment"]
+    webhook: "/webhook/github-sync"
+    notes: "Synchro automatique des workflows n8n depuis GitHub. Workflow critique pour le déploiement."
 
-# Dépendances inter-workflows
-dependencies:
-  - workflow: 600_10_PROXY_MASTER
-    depends_on:
-      - 400_10_LOG_APPEND_SYSTEMJOURNAL
-    reason: "Proxy Master doit logger toutes ses actions"
+  - id: 20
+    file: "020_example-hello-world.json"
+    name: "Hello World Example"
+    category: "examples"
+    biz_area: "SYS"
+    status: "prod"
+    scope: "internal"
+    priority: 1
+    tags: ["example", "test"]
+    notes: "Workflow d'exemple pour tester la stack. Peut servir de template."
 
-  - workflow: 600_20_HIGH_RISK_APPROVAL
-    depends_on:
-      - 400_10_LOG_APPEND_SYSTEMJOURNAL
-    reason: "Les validations doivent être tracées"
+  - id: 30
+    file: "030_github-dev-log-to-sheets.json"
+    name: "GitHub Dev Log to Sheets"
+    category: "dev"
+    biz_area: "SYS"
+    status: "prod"
+    scope: "internal"
+    priority: 3
+    tags: ["github", "logging", "sheets"]
+    notes: "Log des événements GitHub dans Google Sheets pour traçabilité."
 
-  - workflow: 600_40_N8N_WORKFLOW_PROMOTE_PROD
-    depends_on:
-      - 600_30_N8N_WORKFLOW_UPSERT_SBX
-    reason: "On ne peut promouvoir que ce qui existe en sandbox"
+  # ====================================================================
+  # PRODUCTIVITY (100-199) : Productivité et organisation
+  # ====================================================================
+
+  - id: 100
+    file: "100_task_create.json"
+    name: "Task Create"
+    category: "productivity"
+    biz_area: "GP"
+    status: "mvp"
+    scope: "internal"
+    priority: 3
+    tags: ["tasks", "google-tasks"]
+    notes: "Création de tâches dans Google Tasks. Utilisé par Prolex pour l'outil TASK_CREATE."
+
+  - id: 110
+    file: "110_calendar_event_create.json"
+    name: "Calendar Event Create"
+    category: "productivity"
+    biz_area: "GP"
+    status: "planned"
+    scope: "internal"
+    priority: 2
+    tags: ["calendar", "google-calendar"]
+    notes: "Création d'événements dans Google Calendar."
+
+  # ====================================================================
+  # DEV (200-299) : Développement et CI/CD
+  # ====================================================================
+
+  - id: 200
+    file: "200_code_review_trigger.json"
+    name: "Code Review Trigger"
+    category: "dev"
+    biz_area: "SYS"
+    status: "planned"
+    scope: "internal"
+    priority: 3
+    tags: ["github", "code-review", "automation"]
+    notes: "Déclenchement automatique de code reviews sur les PRs."
+
+  # ====================================================================
+  # CLIENTS (300-399) : Gestion clients
+  # ====================================================================
+
+  - id: 310
+    file: "310_client_onboarding.json"
+    name: "Client Onboarding"
+    category: "clients"
+    biz_area: "PROD"
+    status: "planned"
+    scope: "client"
+    priority: 4
+    tags: ["onboarding", "clients"]
+    notes: "Automatisation de l'onboarding des nouveaux clients : création dossiers, accès, documentation."
+
+  - id: 320
+    file: "320_client_offboarding.json"
+    name: "Client Offboarding"
+    category: "clients"
+    biz_area: "PROD"
+    status: "planned"
+    scope: "client"
+    priority: 3
+    tags: ["offboarding", "clients"]
+    notes: "Automatisation de l'offboarding : archivage, révocation accès, facturation finale."
+
+  # ====================================================================
+  # MONITORING (400-499) : Surveillance et alertes
+  # ====================================================================
+
+  - id: 400
+    file: "400_systemjournal_log_append.json"
+    name: "SystemJournal Log Append"
+    category: "monitoring"
+    biz_area: "SYS"
+    status: "mvp"
+    scope: "internal"
+    priority: 5
+    tags: ["logging", "systemjournal", "sheets"]
+    notes: "Ajout d'une entrée au SystemJournal (Google Sheets). Workflow critique pour traçabilité."
+
+  - id: 410
+    file: "410_health_check_services.json"
+    name: "Health Check Services"
+    category: "monitoring"
+    biz_area: "SYS"
+    status: "planned"
+    scope: "internal"
+    priority: 4
+    tags: ["monitoring", "health-check", "alerting"]
+    notes: "Vérification périodique de la santé des services (n8n, AnythingLLM, Traefik, etc.)."
+
+  - id: 420
+    file: "420_backup_to_drive.json"
+    name: "Backup to Google Drive"
+    category: "monitoring"
+    biz_area: "SYS"
+    status: "planned"
+    scope: "internal"
+    priority: 5
+    tags: ["backup", "google-drive"]
+    notes: "Sauvegarde automatique des configurations et données critiques sur Google Drive."
+
+  # ====================================================================
+  # REPORTING (500-599) : Tableaux de bord et rapports
+  # ====================================================================
+
+  - id: 510
+    file: "510_lead_capture.json"
+    name: "Lead Capture"
+    category: "reporting"
+    biz_area: "MKT"
+    status: "mvp"
+    scope: "internal"
+    priority: 3
+    tags: ["leads", "marketing", "sheets"]
+    notes: "Capture et suivi des leads issus de formulaires web. Log dans Google Sheets."
+
+  - id: 520
+    file: "520_weekly_report_generator.json"
+    name: "Weekly Report Generator"
+    category: "reporting"
+    biz_area: "GE"
+    status: "planned"
+    scope: "internal"
+    priority: 4
+    tags: ["reporting", "kpi", "weekly"]
+    notes: "Génération automatique du rapport hebdomadaire : KPIs, activité, finances."
+
+  - id: 530
+    file: "530_global_dashboard.json"
+    name: "Global Dashboard"
+    category: "reporting"
+    biz_area: "MULTI"
+    status: "planned"
+    scope: "internal"
+    priority: 2
+    tags: ["dashboard", "kpi", "multi"]
+    notes: "Dashboard mixant KPI finances (GE) et leads (MKT). Exemple d'usage MULTI légitime."
+
+  # ====================================================================
+  # N8N_ADMIN (600-699) : Administration n8n
+  # ====================================================================
+
+  - id: 600
+    file: "600_proxy_master.json"
+    name: "Proxy Master"
+    category: "n8n_admin"
+    biz_area: "SYS"
+    status: "mvp"
+    scope: "internal"
+    priority: 5
+    tags: ["orchestration", "proxy", "validation"]
+    notes: "Orchestrateur principal pour exécution des plans multi-outils. Gère validation et séquencement."
+
+  - id: 610
+    file: "610_workflow_usage_stats.json"
+    name: "Workflow Usage Stats"
+    category: "n8n_admin"
+    biz_area: "SYS"
+    status: "planned"
+    scope: "internal"
+    priority: 3
+    tags: ["n8n", "analytics", "usage"]
+    notes: "Collecte des stats d'utilisation des workflows pour alimenter opex_usage_cache.yml."
+
+  - id: 620
+    file: "620_global_error_handler.json"
+    name: "Global Error Handler"
+    category: "n8n_admin"
+    biz_area: "SYS"
+    status: "planned"
+    scope: "internal"
+    priority: 5
+    tags: ["error-handling", "alerting", "n8n"]
+    notes: "Gestionnaire global d'erreurs n8n. Centralise les alertes et logging des échecs."
+
+  - id: 630
+    file: "630_n8n_workflow_upsert_sandbox.json"
+    name: "N8N Workflow Upsert (Sandbox)"
+    category: "n8n_admin"
+    biz_area: "SYS"
+    status: "mvp"
+    scope: "internal"
+    priority: 4
+    tags: ["n8n", "workflow", "sandbox"]
+    notes: "Création/modification de workflows en environnement sandbox. Utilisé par Prolex pour autonomie niveau 2."
+
+  # ====================================================================
+  # EXAMPLES (900-999) : Tests et sandbox
+  # ====================================================================
+
+  - id: 900
+    file: "900_sandbox_test.json"
+    name: "Sandbox Test"
+    category: "examples"
+    biz_area: "SYS"
+    status: "mvp"
+    scope: "internal"
+    priority: 1
+    tags: ["sandbox", "test"]
+    notes: "Workflow de test libre pour expérimentations."
