@@ -468,7 +468,7 @@ GitHub to n8n Sync
 
 Fonctionnement :
 
-GitHub envoie un webhook push vers n8n (/webhook/github-sync).
+GitHub envoie un webhook push vers n8n (/webhook/github-to-n8n).
 
 Le workflow GitHub to n8n Sync :
 

@@ -68,12 +68,12 @@ GitHub Push → Webhook → Validate HMAC → Extract Files → Route by Type
 
 ### 📥 Webhook Setup
 
-1. **URL du webhook:** `https://your-n8n.com/webhook/github-sync-v2`
+1. **URL du webhook:** `https://your-n8n.com/webhook/github-to-n8n-v2`
 
 2. **Configuration GitHub:**
    ```bash
    # Aller dans Settings > Webhooks > Add webhook
-   Payload URL: https://your-n8n.com/webhook/github-sync-v2
+   Payload URL: https://your-n8n.com/webhook/github-to-n8n-v2
    Content type: application/json
    Secret: [votre GITHUB_WEBHOOK_SECRET]
    Events: Push events
@@ -81,7 +81,7 @@ GitHub Push → Webhook → Validate HMAC → Extract Files → Route by Type
 
 3. **Test:**
    ```bash
-   curl -X POST https://your-n8n.com/webhook/github-sync-v2 \
+   curl -X POST https://your-n8n.com/webhook/github-to-n8n-v2 \
      -H "Content-Type: application/json" \
      -H "X-Hub-Signature-256: sha256=xxx" \
      -d '{"ref":"refs/heads/main","repository":{"full_name":"ProlexAi/Prolex"}}'
@@ -391,7 +391,7 @@ Run ID: `rag_rebuild_1732241400000`
 6. **Configurer webhook GitHub:**
    ```bash
    # Repo > Settings > Webhooks > Add webhook
-   # URL: https://your-n8n.com/webhook/github-sync-v2
+   # URL: https://your-n8n.com/webhook/github-to-n8n-v2
    # Secret: [même valeur que GITHUB_WEBHOOK_SECRET]
    # Events: Push
    ```
