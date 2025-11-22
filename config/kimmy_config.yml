@@ -1,0 +1,93 @@
+# config/kimmy_config.yml
+# Configuration comportementale de Kimmy (filtre d'entrée v4)
+
+# Mode global de Kimmy :
+# - safe          : ne fait que l'analyse et l'escalade vers Prolex
+# - quick_actions : peut exécuter des actions simples et réversibles
+kimmy_mode: quick_actions
+
+# Langue de réponse principale
+kimmy_language: fr
+
+# Description courte de son rôle (utile pour les prompts système)
+kimmy_role: >
+  Kimmy est le filtre d'entrée de Prolex. Elle analyse les demandes,
+  comprend l'intention, évalue la complexité, extrait des paramètres simples
+  et décide si la demande peut être traitée en quick action ou doit être
+  escaladée vers Prolex.
+
+# Liste complète des intents que Kimmy peut assigner
+kimmy_intents:
+  - task_create
+  - task_update
+  - calendar_event
+  - doc_note
+  - doc_structuring
+  - question_simple
+  - question_systeme
+  - debug_infra
+  - client_workflow
+  - dev_workflow
+  - reporting
+  - config_change
+  - other
+
+# Intents considérés comme sensibles -> escalade obligatoire vers Prolex
+kimmy_sensitive_intents:
+  - question_systeme
+  - debug_infra
+  - client_workflow
+  - dev_workflow
+  - reporting
+  - config_change
+  - other
+
+# Mots-clés sensibles dans le message -> escalade obligatoire vers Prolex
+kimmy_sensitive_keywords:
+  - architecture
+  - infra
+  - infrastructure
+  - vps
+  - serveur
+  - docker
+  - traefik
+  - n8n
+  - mcp
+  - ssl
+  - sécurité
+  - sécurité réseau
+  - client
+  - clients
+  - offre
+  - devis
+  - facturation
+  - argent
+  - pricing
+  - prix
+  - roadmap
+  - plan complet
+
+# Seuils de décision pour simple / complexe / escalade
+kimmy_confidence_min_simple: 0.85        # Confiance minimale pour traiter en quick action
+kimmy_confidence_min_escalation: 0.80    # En dessous de ce seuil -> escalade systématique
+
+# Quick actions (ce que Kimmy peut faire seule quand toutes les conditions sont réunies)
+kimmy_quick_actions_enabled: true
+
+# Intents autorisés en quick actions
+kimmy_quick_actions_intents_allowed:
+  - task_create
+  - doc_note
+  - question_simple
+
+# Niveau de sensibilité maximal pour autoriser une quick action
+# low < medium < high
+kimmy_quick_actions_max_sensitivity: low
+
+# Clarification : nombre maximal de questions que Kimmy peut poser avant d'escalader
+kimmy_max_questions_clarification: 3
+
+# Paramètres techniques / logs
+kimmy_log_agent_name: kimmy          # Nom d'agent dans SystemJournal
+kimmy_default_source: chat           # Source par défaut si inconnue
+kimmy_default_max_cost_usd: 0.02     # Budget max par défaut si non précisé dans constraints
