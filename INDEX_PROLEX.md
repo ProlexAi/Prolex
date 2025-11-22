@@ -214,6 +214,47 @@ kimmy:
 
 ---
 
+## 🔒 Sécurité et Restrictions
+
+### 🚨 ZONE INTERDITE : Cash Workflows
+
+**Date de verrouillage** : 2025-11-22
+
+Prolex est **STRICTEMENT INTERDIT** de toucher aux workflows générateurs de revenus.
+
+**Document principal** : [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md)
+
+**Workflows protégés** :
+- `200_leadgen_li_mail.json` - Génération de leads
+- `250_proposal_auto.json` - **CRITIQUE** - Propositions commerciales
+- `300_content_machine.json` - Machine à contenu
+- `400_invoice_stripe_auto.json` - **CRITIQUE** - Facturation Stripe
+- `450_relances_impayes.json` - **CRITIQUE** - Relances impayés
+- `999_master_tracker.json` - **CRITIQUE** - Tracker cash
+
+**Actions interdites** :
+- ❌ Créer (workflows avec patterns interdits)
+- ❌ Modifier (workflows cash existants)
+- ❌ Supprimer
+- ❌ Déclencher manuellement
+- ❌ Réparer
+- ❌ Analyser
+- ❌ Proposer des améliorations
+
+**Verrou technique** :
+- Code: `mcp/n8n-server/src/security/cashWorkflowGuard.ts`
+- Config: `config/cash_workflows_forbidden.yml`
+- Appliqué dans: `createWorkflow()`, `updateWorkflow()`, `triggerWorkflow()`
+
+**En cas de violation** :
+1. ⛔ Arrêt immédiat de l'opération
+2. 📱 Alerte Telegram à Matthieu
+3. 📝 Log SystemJournal (severity: CRITICAL)
+
+**Seul autorisé** : Matthieu
+
+---
+
 ## 🛠️ Outils disponibles
 
 ### Catalogue complet

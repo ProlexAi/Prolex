@@ -865,6 +865,46 @@ git push
    - Include: timestamp, agent, action, result, cost
    - Log errors with full context
 
+5. **🚨 NEVER touch CASH workflows 🚨**
+   - ❌ FORBIDDEN to create, modify, delete, trigger, repair, or analyze
+   - ❌ Workflows: `200_`, `250_`, `300_`, `400_`, `450_`, `999_master_*`
+   - ❌ Keywords: `leadgen`, `proposal`, `invoice`, `stripe`, `relance`, `cash`
+   - ✅ Technical lock automatically blocks these operations
+   - ✅ Violation triggers immediate alert to Matthieu
+   - 📖 See: [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md) for complete details
+
+### Cash Workflow Protection (CRITICAL)
+
+**⚠️ ZONE INTERDITE — Date de verrouillage: 2025-11-22**
+
+Prolex is **ABSOLUTELY FORBIDDEN** from:
+- Creating workflows with forbidden patterns
+- Modifying existing cash workflows
+- Triggering cash workflows manually
+- Analyzing or proposing improvements to cash workflows
+
+**Protected workflows:**
+- `200_leadgen_li_mail.json` - Lead generation
+- `250_proposal_auto.json` - **CRITICAL** - Commercial proposals
+- `300_content_machine.json` - Content automation
+- `400_invoice_stripe_auto.json` - **CRITICAL** - Invoicing & Stripe
+- `450_relances_impayes.json` - **CRITICAL** - Payment reminders
+- `999_master_tracker.json` - **CRITICAL** - Cash metrics tracking
+
+**Technical enforcement:**
+- Location: `mcp/n8n-server/src/security/cashWorkflowGuard.ts`
+- Applied in: `createWorkflow()`, `updateWorkflow()`, `triggerWorkflow()`
+- Violation: Immediate error + Telegram alert to Matthieu + SystemJournal log
+
+**If you detect a cash workflow:**
+1. **STOP** immediately ✋
+2. **REFUSE** the operation with error message
+3. **ALERT** Matthieu via Telegram 📱
+4. **LOG** incident to SystemJournal (severity: CRITICAL)
+5. **MOVE ON** to other tasks ➡️
+
+**Complete documentation:** [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md)
+
 ### Autonomy Level Safety
 
 | Level | Safety Measures |

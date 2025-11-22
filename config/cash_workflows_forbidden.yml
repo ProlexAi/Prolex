@@ -1,0 +1,194 @@
+# CASH WORKFLOWS — ZONE INTERDITE À PROLEX
+# ==========================================
+# Date de verrouillage: 2025-11-22
+# Autorité: Matthieu (Automatt.ai)
+# Version: 1.0
+
+# 🚨 RÈGLE ABSOLUE 🚨
+# Prolex n'a PLUS LE DROIT de :
+# - Créer
+# - Modifier
+# - Supprimer
+# - Déclencher manuellement
+# - Réparer
+# - Analyser
+# - Proposer une amélioration
+#
+# des workflows listés ci-dessous
+
+# ═══════════════════════════════════════════════════════════════
+# WORKFLOWS INTERDITS (liste exhaustive)
+# ═══════════════════════════════════════════════════════════════
+
+forbidden_workflows:
+  # Lead Generation & Prospection
+  - file: "200_leadgen_li_mail.json"
+    name: "Lead Generation LinkedIn + Email"
+    category: "sales"
+    revenue_impact: "high"
+    reason: "Workflow critique de génération de leads"
+
+  # Proposition Commerciale Automatique
+  - file: "250_proposal_auto.json"
+    name: "Proposition Commerciale Automatique"
+    category: "sales"
+    revenue_impact: "critical"
+    reason: "Génération automatique des offres commerciales"
+
+  # Machine de Contenu
+  - file: "300_content_machine.json"
+    name: "Content Machine"
+    category: "marketing"
+    revenue_impact: "high"
+    reason: "Création automatique de contenu marketing"
+
+  # Facturation Stripe Automatique
+  - file: "400_invoice_stripe_auto.json"
+    name: "Invoice & Stripe Auto"
+    category: "finance"
+    revenue_impact: "critical"
+    reason: "Facturation automatique et paiements Stripe"
+
+  # Relances Impayés
+  - file: "450_relances_impayes.json"
+    name: "Relances Impayés"
+    category: "finance"
+    revenue_impact: "critical"
+    reason: "Recouvrement automatique des impayés"
+
+  # Master Tracker
+  - file: "999_master_tracker.json"
+    name: "Master Tracker"
+    category: "analytics"
+    revenue_impact: "critical"
+    reason: "Tracking centralisé de toutes les métriques cash"
+
+# ═══════════════════════════════════════════════════════════════
+# PATTERNS INTERDITS
+# ═══════════════════════════════════════════════════════════════
+
+forbidden_patterns:
+  # Préfixes numériques
+  numeric_prefixes:
+    - "200_"
+    - "250_"
+    - "300_"
+    - "400_"
+    - "450_"
+    - "999_master"
+
+  # Mots-clés cash
+  keywords:
+    - "leadgen"
+    - "lead"
+    - "offre"
+    - "proposal"
+    - "content_machine"
+    - "invoice"
+    - "facture"
+    - "stripe"
+    - "relance"
+    - "impaye"
+    - "cash"
+    - "tracker"
+    - "li_mail"
+    - "proposal_auto"
+
+# ═══════════════════════════════════════════════════════════════
+# ACTIONS INTERDITES
+# ═══════════════════════════════════════════════════════════════
+
+forbidden_actions:
+  - "create"       # Créer un nouveau workflow avec un nom interdit
+  - "modify"       # Modifier le contenu d'un workflow existant
+  - "update"       # Mettre à jour la configuration
+  - "delete"       # Supprimer le workflow
+  - "trigger"      # Déclencher manuellement l'exécution
+  - "repair"       # Réparer un workflow cassé
+  - "analyze"      # Analyser pour proposer des améliorations
+  - "propose"      # Proposer des modifications
+
+# ═══════════════════════════════════════════════════════════════
+# PROCÉDURE EN CAS DE VIOLATION
+# ═══════════════════════════════════════════════════════════════
+
+violation_procedure:
+  1_immediate_action:
+    - "Arrêter immédiatement l'opération"
+    - "Refuser l'exécution avec message d'erreur explicite"
+    - "Logger l'incident dans SystemJournal avec niveau CRITICAL"
+
+  2_alert:
+    - "Envoyer une alerte Telegram à Matthieu"
+    - "Format: 🚨 ALERTE SÉCURITÉ PROLEX — Tentative d'accès à [nom_workflow]"
+    - "Inclure: timestamp, action tentée, contexte"
+
+  3_logging:
+    - "Log dans SystemJournal avec champs:"
+    - "  event: cash_workflow_violation_attempt"
+    - "  severity: CRITICAL"
+    - "  alert_type: TELEGRAM"
+    - "  workflow_name: [nom]"
+    - "  action: [action tentée]"
+    - "  matched_patterns: [patterns détectés]"
+
+# ═══════════════════════════════════════════════════════════════
+# AUTORISATIONS
+# ═══════════════════════════════════════════════════════════════
+
+authorized_personnel:
+  - name: "Matthieu"
+    role: "Owner / Administrator"
+    permissions: "FULL"
+    context: "Seul autorisé à modifier les workflows cash"
+
+# ═══════════════════════════════════════════════════════════════
+# EXCEPTIONS
+# ═══════════════════════════════════════════════════════════════
+
+exceptions:
+  # Aucune exception autorisée
+  # Si modification nécessaire → demander à Matthieu
+  allowed: []
+  note: "Aucune exception. Toute modification nécessite l'intervention de Matthieu."
+
+# ═══════════════════════════════════════════════════════════════
+# MAINTENANCE
+# ═══════════════════════════════════════════════════════════════
+
+maintenance:
+  last_updated: "2025-11-22"
+  update_frequency: "As needed when adding new cash workflows"
+  owner: "Matthieu"
+  review_date: "2026-01-01"
+
+# ═══════════════════════════════════════════════════════════════
+# NOTES TECHNIQUES
+# ═══════════════════════════════════════════════════════════════
+
+technical_implementation:
+  location: "mcp/n8n-server/src/security/cashWorkflowGuard.ts"
+  enforcement_points:
+    - "tools/index.ts → createWorkflow()"
+    - "tools/index.ts → updateWorkflow()"
+    - "tools/index.ts → triggerWorkflow()"
+  logging: "logging/systemJournal.ts"
+  alert_system: "Telegram (via SystemJournal)"
+
+# ═══════════════════════════════════════════════════════════════
+# TESTS
+# ═══════════════════════════════════════════════════════════════
+
+test_scenarios:
+  - scenario: "Tentative de création d'un workflow avec pattern interdit"
+    expected: "Erreur + Alerte Telegram"
+  - scenario: "Tentative de modification d'un workflow cash existant"
+    expected: "Erreur + Alerte Telegram"
+  - scenario: "Tentative de trigger manuel d'un workflow cash"
+    expected: "Erreur + Alerte Telegram"
+  - scenario: "Création d'un workflow légitime (non-cash)"
+    expected: "Succès sans alerte"
+
+# ═══════════════════════════════════════════════════════════════
+# FIN DU FICHIER
+# ═══════════════════════════════════════════════════════════════
