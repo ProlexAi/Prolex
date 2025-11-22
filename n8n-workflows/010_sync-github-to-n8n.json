@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "github-sync-v2",
+        "path": "github-to-n8n",
         "responseMode": "onReceived",
         "options": {
           "rawBody": true
@@ -15,8 +15,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [240, 400],
-      "webhookId": "github-sync-v2",
-      "notes": "Endpoint: POST /webhook/github-sync-v2\nReçoit les push events GitHub avec validation HMAC"
+      "webhookId": "github-to-n8n",
+      "notes": "Endpoint: POST /webhook/github-to-n8n\nReçoit les push events GitHub avec validation HMAC"
     },
     {
       "parameters": {
