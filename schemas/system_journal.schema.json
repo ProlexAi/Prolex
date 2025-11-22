@@ -1,8 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+<<<<<< claude/fix-json-schema-validation-015bQveWcNSNed8DmfLdnTXU
+  "$id": "https://prolex.ai/schemas/system_journal.schema.json",
+  "title": "SystemJournalEntry",
+  "description": "Structure d'une entrée du journal système (mémoire centralisée)",
+======
   "$id": "https://automatt.ai/schemas/system-journal.json",
   "title": "SystemJournal",
   "description": "Structure d'une entrée dans le SystemJournal (Google Sheets)",
+>>>>>> main
   "type": "object",
   "required": [
     "timestamp",
