@@ -1,21 +1,183 @@
-# Prolex
+# Prolex v4 🧠
 
-Prolex est le **cerveau IA orchestrateur** de l’entreprise Automatt.ai.
+> **Cerveau IA orchestrateur** d'Automatt.ai avec autonomie étendue et gestion de workflows n8n
 
-Son rôle :
+Prolex est le **cerveau IA orchestrateur** de l'entreprise Automatt.ai.
 
-- Comprendre les demandes en langage naturel.
-- Décider quoi faire : répondre, lancer des automatisations, créer/modifier des workflows.
-- Piloter des outils externes (n8n, GitHub, Google, etc.) via des serveurs MCP.
-- Garder une trace claire de ce qui est déployé (logs dans Google Sheets).
+## 🎯 Nouveautés v4+
+
+✨ **Architecture complète Kimmy + Prolex + Opex**
+✨ **Prolex peut designer, créer et modifier des workflows n8n** de manière autonome
+✨ **4 niveaux d'autonomie** (0-3) pour contrôle fin des permissions
+✨ **30+ outils** disponibles (productivité, DevOps, clients, monitoring, etc.)
+✨ **Traçabilité complète** via SystemJournal (Google Sheets)
+
+---
+
+## 📚 Documentation v4
+
+### 🚀 Démarrage rapide
+1. **[INDEX_PROLEX.md](INDEX_PROLEX.md)** → Point d'entrée central (COMMENCEZ ICI)
+2. **[Architecture v4+](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)** → Document maître complet
+3. **[Analyse Critique](docs/guides/ANALYSE_CRITIQUE_V4.md)** → Forces, faiblesses, recommandations
+
+### 📋 Spécifications techniques
+- **[SPEC_KIMMY_V4.md](docs/specifications/SPEC_KIMMY_V4.md)** → Filtre d'entrée intelligent
+- **[SPEC_PROLEX_V4.md](docs/specifications/SPEC_PROLEX_V4.md)** → Cerveau orchestrateur
+- **[SPEC_OPEX_V4.md](docs/specifications/SPEC_OPEX_V4.md)** → Workflows n8n + Proxy Master
+
+### ⚙️ Configuration
+- **[config/autonomy.yml](config/autonomy.yml)** → Niveaux d'autonomie
+- **[config/system.yml](config/system.yml)** → Configuration système
+- **[rag/tools/tools.yml](rag/tools/tools.yml)** → Catalogue d'outils (30+)
+
+### 📊 Schémas JSON
+- **[KimmyPayload](schemas/payloads/kimmy_payload.schema.json)** → Format Kimmy → Prolex
+- **[ProlexOutput](schemas/payloads/prolex_output.schema.json)** → Format Prolex → Opex
+- **[SystemJournal](schemas/logs/systemjournal_entry.schema.json)** → Format logs
+
+### 🎁 Pour clients
+- **[GUIDE_CLIENTS.md](docs/guides/GUIDE_CLIENTS.md)** → Documentation futurs clients
+
+---
+
+## 🏗️ Architecture v4 (résumé)
+
+```
+┌──────────────────────────────────┐
+│ KIMMY                            │  ← Filtre d'entrée
+│ (LLM + n8n)                      │     - Classifie intention
+│ - Français toujours              │     - Évalue complexité
+└──────────┬───────────────────────┘     - Produit KimmyPayload
+           ↓ KimmyPayload (JSON)
+┌──────────────────────────────────┐
+│ PROLEX                           │  ← Cerveau orchestrateur
+│ (Claude 3.5 Sonnet + RAG)        │     - Raisonne
+│ - Autonomie niveaux 0-3          │     - Planifie
+└──────────┬───────────────────────┘     - Produit ProlexOutput
+           ↓ ProlexOutput (JSON)
+┌──────────────────────────────────┐
+│ OPEX                             │  ← Bras exécutif
+│ (n8n workflows + Proxy Master)   │     - Valide (Proxy)
+│ - 30+ outils disponibles         │     - Exécute (n8n)
+└──────────────────────────────────┘     - Logue (SystemJournal)
+```
+
+### Composants clés
+| Composant | Rôle | Technologie |
+|-----------|------|-------------|
+| **Kimmy** | Filtre d'entrée | GPT-4 Turbo / Claude Haiku + n8n |
+| **Prolex** | Cerveau orchestrateur | Claude 3.5 Sonnet + AnythingLLM |
+| **Opex** | Bras exécutif | n8n workflows + Proxy Master |
+| **SystemJournal** | Mémoire d'exécution | Google Sheets |
+| **RAG** | Base de connaissance | Google Drive + docs structurés |
+
+---
+
+## 📂 Structure du repository v4
+
+```
+Prolex/
+├── README.md                               # Ce fichier
+├── INDEX_PROLEX.md                         # 📘 Index central (COMMENCEZ ICI)
+│
+├── docs/                                   # Documentation
+│   ├── architecture/
+│   │   └── ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md  # Document maître
+│   ├── specifications/
+│   │   ├── SPEC_KIMMY_V4.md
+│   │   ├── SPEC_PROLEX_V4.md
+│   │   └── SPEC_OPEX_V4.md
+│   └── guides/
+│       ├── ANALYSE_CRITIQUE_V4.md
+│       └── GUIDE_CLIENTS.md
+│
+├── schemas/                                # Schémas JSON (JSON Schema Draft 07)
+│   ├── payloads/
+│   ├── logs/
+│   └── tools/
+│
+├── rag/                                    # Base de connaissance Prolex
+│   ├── tools/tools.yml                     # Catalogue d'outils
+│   ├── rules/
+│   ├── examples/
+│   └── context/
+│
+├── config/                                 # Configuration système
+│   ├── autonomy.yml                        # Niveaux d'autonomie
+│   └── system.yml                          # Config globale
+│
+├── n8n-workflows/                          # Workflows n8n (source de vérité)
+│   ├── 010_sync-github-to-n8n.json
+│   ├── 020_example-hello-world.json
+│   └── 030_github-dev-log-to-sheets.json
+│
+├── mcp/                                    # Serveurs MCP
+│   └── n8n-server/                         # MCP pour piloter n8n
+│
+├── infra/                                  # Infrastructure (VPS à déployer)
+│   └── vps-prod/
+│
+└── cli/                                    # CLI (futur)
+    └── prolexctl/
+```
+
+---
+
+## 🚀 Démarrage rapide v4
+
+### Pour comprendre le système
+1. Lire **[INDEX_PROLEX.md](INDEX_PROLEX.md)**
+2. Consulter **[Architecture v4+](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)**
+
+### Pour développer
+1. Vérifier **[SPEC_KIMMY_V4](docs/specifications/SPEC_KIMMY_V4.md)**, **[SPEC_PROLEX_V4](docs/specifications/SPEC_PROLEX_V4.md)**, **[SPEC_OPEX_V4](docs/specifications/SPEC_OPEX_V4.md)**
+2. Consulter **[Catalogue d'outils](rag/tools/tools.yml)**
+3. Configurer **[config/autonomy.yml](config/autonomy.yml)** et **[config/system.yml](config/system.yml)**
+
+### Pour déployer
+1. (À venir) Suivre guide de déploiement VPS
+2. Vérifier checklist pré-déploiement dans INDEX_PROLEX.md
+
+---
+
+## 💡 Exemples d'utilisation
+
+### Exemple 1 : Créer une tâche
+**Entrée utilisateur** : "Créer une tâche pour réviser l'architecture Prolex avant vendredi"
+
+**Pipeline** :
+1. **Kimmy** → Classifie `intent: task_create`, `complexity: simple`
+2. **Prolex** → Génère `tool_call: TASK_CREATE` avec payload
+3. **Opex** → Exécute workflow n8n `task_create`
+4. **Résultat** : Tâche créée dans Google Tasks
+
+### Exemple 2 : Designer un workflow n8n
+**Entrée utilisateur** : "Crée un workflow qui envoie un email quand une PR est mergée"
+
+**Pipeline** :
+1. **Kimmy** → Classifie `intent: dev_workflow`, `complexity: complex`
+2. **Prolex** → Génère `multi_tool_plan` :
+   - Step 1: `N8N_WORKFLOW_DESIGN`
+   - Step 2: `N8N_WORKFLOW_UPSERT` (sandbox)
+   - Step 3: `N8N_WORKFLOW_TEST`
+3. **Opex** → Exécute séquentiellement
+4. **Résultat** : Workflow créé et testé en sandbox, prêt pour review
+
+---
 
 Ce dépôt GitHub est la **source de vérité technique** pour :
 
-- le serveur MCP connecté à n8n ;
-- la définition versionnée des workflows n8n (`n8n-workflows/*.json`) ;
-- l’architecture de l’orchestrateur Prolex.
+- l'architecture complète Kimmy + Prolex + Opex (v4+)
+- le serveur MCP connecté à n8n
+- la définition versionnée des workflows n8n (`n8n-workflows/*.json`)
+- la configuration système (autonomie, outils, règles)
 
 ---
+
+# Architecture héritée (pré-v4)
+
+> **Note** : Section conservée pour historique. Voir documentation v4 ci-dessus pour architecture actuelle.
 
 ## 1. Architecture globale (vue simple)
 

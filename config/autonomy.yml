@@ -1,0 +1,215 @@
+# CONFIGURATION AUTONOMIE PROLEX v4
+# Ce fichier définit le niveau d'autonomie actuel de Prolex
+# et les capacités associées à chaque niveau
+
+# ====================================================================
+# NIVEAU D'AUTONOMIE ACTUEL
+# ====================================================================
+
+# Niveau actuel : 0, 1, 2, ou 3
+# À ajuster selon l'environnement et la confiance
+prolex_current_autonomy_level: 2
+
+# ====================================================================
+# DÉFINITION DES NIVEAUX
+# ====================================================================
+
+autonomy_levels:
+  # ------------------------------------------------------------------
+  # NIVEAU 0 : LECTURE SEULE
+  # ------------------------------------------------------------------
+  0:
+    name: "Lecture seule"
+    description: |
+      Prolex peut lire et analyser, mais n'exécute aucune action.
+      Utilisé pour validation initiale ou environnements ultra-critiques.
+
+    allowed_actions:
+      - read_documents      # Lire docs du RAG
+      - read_systemjournal  # Consulter SystemJournal
+      - analyze_logs        # Analyser patterns dans logs
+      - propose_todos       # Proposer des TODO (sans créer)
+      - answer_questions    # Répondre aux questions
+
+    forbidden_actions:
+      - all_tool_calls      # Aucun tool_call autorisé
+
+    use_cases:
+      - "Environnement de test initial"
+      - "Audit sans modification"
+      - "Démonstration read-only"
+
+  # ------------------------------------------------------------------
+  # NIVEAU 1 : LECTURE + LOGS
+  # ------------------------------------------------------------------
+  1:
+    name: "Lecture + Logs"
+    description: |
+      Prolex peut lire et logger automatiquement.
+      Première étape d'autonomie : capacité de tracer ses actions.
+
+    allowed_actions:
+      - all_level_0         # Toutes actions niveau 0
+      - LOG_APPEND          # Logger dans SystemJournal
+      - DOC_CREATE_NOTE     # Créer notes/mémos
+      - WEB_SEARCH          # Recherches web
+      - HEALTHCHECK_RUN     # Vérifier état services
+
+    forbidden_actions:
+      - task_create         # Pas encore de création tâches
+      - client_workflows    # Pas de workflows clients
+      - git_operations      # Pas d'opérations Git
+      - n8n_management      # Pas de gestion workflows
+
+    use_cases:
+      - "Environnement de staging"
+      - "Prolex en formation"
+      - "Collecte de données sans impact"
+
+  # ------------------------------------------------------------------
+  # NIVEAU 2 : ACTIONS LOW-RISK
+  # ------------------------------------------------------------------
+  2:
+    name: "Actions low-risk"
+    description: |
+      Prolex peut exécuter des actions personnelles et low-risk.
+      Niveau recommandé pour usage quotidien personnel.
+
+    allowed_actions:
+      - all_level_1              # Toutes actions niveau 1
+      - TASK_CREATE              # Créer tâches perso
+      - TASK_UPDATE              # Modifier tâches
+      - CAL_EVENT_CREATE         # Créer événements calendrier
+      - DOC_UPDATE               # Modifier docs
+      - N8N_WORKFLOW_DESIGN      # Designer workflows (sans créer)
+      - CLIENT_MONTHLY_REPORT    # Rapports clients (lecture seule)
+      - COST_REPORT_RUN          # Rapports coûts
+      - WEEKLY_SUMMARY           # Résumés hebdomadaires
+      - N8N_LIST_WORKFLOWS       # Lister workflows
+
+    forbidden_actions:
+      - client_workflows         # Pas d'exécution workflows clients
+      - git_sync                 # Pas de sync Git
+      - n8n_workflow_upsert      # Pas de création/modif workflows
+      - backup_run               # Pas de backups
+
+    use_cases:
+      - "Usage quotidien Matthieu"
+      - "Automatisations personnelles"
+      - "Développement et design"
+
+    constraints:
+      max_cost_per_request_usd: 0.50
+      max_tools_per_plan: 5
+
+  # ------------------------------------------------------------------
+  # NIVEAU 3 : ACTIONS AVANCÉES
+  # ------------------------------------------------------------------
+  3:
+    name: "Actions avancées"
+    description: |
+      Prolex peut gérer des workflows clients et créer des workflows n8n.
+      Niveau maximum d'autonomie pour opérations packagées et sécurisées.
+
+    allowed_actions:
+      - all_level_2                  # Toutes actions niveau 2
+      - CLIENT_WORKFLOW_RUN          # Exécuter workflows clients packagés
+      - CLIENT_ONBOARDING            # Onboarding clients
+      - GIT_CLONE                    # Cloner repos (sur repos autorisés)
+      - GIT_SYNC                     # Sync Git
+      - GITHUB_OPEN_PR               # Créer PRs
+      - N8N_WORKFLOW_UPSERT          # Créer/modifier workflows (sandbox uniquement)
+      - N8N_WORKFLOW_TEST            # Tester workflows
+      - BACKUP_RUN                   # Lancer backups (avec limite)
+
+    forbidden_actions:
+      - n8n_workflow_promote         # Promotion production = manuel
+      - restore_backup               # Restauration = manuel
+      - git_operations_production    # Git sur prod = manuel
+
+    use_cases:
+      - "Production avec workflows validés"
+      - "Gestion multi-clients"
+      - "Développement avancé workflows"
+
+    constraints:
+      max_cost_per_request_usd: 2.00
+      max_tools_per_plan: 10
+      sandbox_only_for_n8n: true     # Workflows n8n en sandbox uniquement
+
+# ====================================================================
+# GARDE-FOUS GLOBAUX
+# ====================================================================
+
+global_safeguards:
+  # Outils nécessitant TOUJOURS confirmation explicite (même niveau 3)
+  always_require_confirmation:
+    - N8N_WORKFLOW_PROMOTE
+    - RESTORE_BACKUP
+    - GIT_OPERATIONS_ON_MAIN_BRANCH
+
+  # Limites journalières
+  daily_limits:
+    BACKUP_RUN: 5
+    WEB_SEARCH: 100
+    CLIENT_WORKFLOW_RUN: 50
+
+  # Environnements autorisés par type d'outil
+  environment_restrictions:
+    n8n_workflows:
+      level_2: ["sandbox"]
+      level_3: ["sandbox", "staging"]
+      manual_only: ["production"]
+
+    git_operations:
+      level_2: []
+      level_3: ["dev", "staging"]
+      manual_only: ["production"]
+
+# ====================================================================
+# CONFIGURATION PAR ENVIRONNEMENT
+# ====================================================================
+
+environments:
+  development:
+    default_autonomy_level: 2
+    allow_experimental_tools: true
+    log_all_decisions: true
+
+  staging:
+    default_autonomy_level: 2
+    allow_experimental_tools: false
+    log_all_decisions: true
+
+  production:
+    default_autonomy_level: 2  # ou 3 après validation
+    allow_experimental_tools: false
+    log_all_decisions: true
+    require_double_confirmation_for_high_risk: true
+
+# ====================================================================
+# ESCALADE VERS HUMAIN
+# ====================================================================
+
+human_escalation:
+  # Situations nécessitant validation humaine
+  triggers:
+    - "Outil high-risk non autorisé au niveau actuel"
+    - "Coût estimé > max_cost_per_request_usd"
+    - "Erreur répétée > 3 fois sur même action"
+    - "Données sensibles (sensitivity: high) détectées"
+    - "Demande ambiguë (confidence < 0.70)"
+
+  # Canal de notification
+  notification_channel: "email"  # ou "slack", "telegram"
+  notification_recipient: "matthieu@automatt.ai"
+
+# ====================================================================
+# HISTORIQUE DES CHANGEMENTS
+# ====================================================================
+
+changelog:
+  - date: "2025-11-22"
+    version: "4.0"
+    change: "Ajout niveaux 0-3 + outils N8N_* + garde-fous"
+    author: "Matthieu"
