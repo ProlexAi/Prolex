@@ -283,3 +283,61 @@ Copier le code
 }
 Redémarrer Claude Desktop.
 Claude pourra alors utiliser les tools list_workflows et trigger_workflow.
+
+Architecture final organisation :
+
+# Infra Vps visée :
+
+| Zone           | Fichier / dossier                         | Contenu / rôle                            | Statut |
+|----------------|-------------------------------------------|-------------------------------------------|--------|
+| Infra VPS      | infra/vps-prod/docker-compose.yml         | Stack Traefik + n8n + AnythingLLM + MCP   | OK     |
+| Infra VPS      | infra/vps-prod/scripts/bootstrap_vps.sh   | Install complète d’un VPS vierge          | À faire|
+| MCP            | mcp/google-sheets/                        | MCP Google Sheets                         | À faire|
+| Workflows n8n  | workflows/n8n/global_error_alert.json     | Alerte globale erreurs n8n                | À faire|
+...
+
+# Architecture Github final :
+
+Prolex/
+  README.md
+  infra/
+    vps-prod/
+      docker-compose.yml
+      .env.example
+      traefik/
+        traefik.yml
+        acme.example.json
+      scripts/
+        bootstrap_vps.sh
+        deploy_stack.sh
+        backup_prolex.sh
+        restore_prolex.sh
+      docs/
+        VPS_RUNBOOK.md
+        DEPLOY_GUIDE.md
+  mcp/
+    n8n-server/
+      ...
+    google-sheets/
+      ...
+    google-drive/
+      ...
+    systemjournal/
+      ...
+  workflows/
+    n8n/
+      global_error_alert.json
+      healthcheck_services.json
+      systemjournal_entry.json
+      backup_to_drive.json
+      api_cost_tracker.json
+  cli/
+    prolexctl/
+      ...
+  docs/
+    SYSTEMJOURNAL_MODELE.md
+    CLIENT_TEMPLATE_AUTOMATT.md
+  INDEX_PROLEX.md   <- fichier index central
+
+
+
