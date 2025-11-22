@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  n8n-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: prolex/n8n-mcp-server:2.0.0
+    container_name: n8n-mcp-server
+    restart: unless-stopped
+
+    environment:
+      # n8n Configuration
+      N8N_BASE_URL: ${N8N_BASE_URL}
+      N8N_API_KEY: ${N8N_API_KEY}
+      N8N_TIMEOUT: ${N8N_TIMEOUT:-30000}
+
+      # Server Configuration
+      NODE_ENV: ${NODE_ENV:-production}
+      HEALTHCHECK_PORT: ${HEALTHCHECK_PORT:-3000}
+      LOG_PATH: /app/logs
+
+      # Cache Configuration
+      CACHE_TTL: ${CACHE_TTL:-300}
+      CACHE_CHECK_PERIOD: ${CACHE_CHECK_PERIOD:-60}
+
+      # Rate Limit Configuration
+      RATE_LIMIT_PER_SECOND: ${RATE_LIMIT_PER_SECOND:-10}
+      RATE_LIMIT_MAX_CONCURRENT: ${RATE_LIMIT_MAX_CONCURRENT:-5}
+      RATE_LIMIT_QUEUE_SIZE: ${RATE_LIMIT_QUEUE_SIZE:-100}
+
+      # Retry Configuration
+      RETRY_MAX_ATTEMPTS: ${RETRY_MAX_ATTEMPTS:-3}
+      RETRY_INITIAL_DELAY: ${RETRY_INITIAL_DELAY:-1000}
+      RETRY_MAX_DELAY: ${RETRY_MAX_DELAY:-10000}
+      RETRY_BACKOFF_MULTIPLIER: ${RETRY_BACKOFF_MULTIPLIER:-2}
+      RETRY_FALLBACK_WORKFLOW_ID: ${RETRY_FALLBACK_WORKFLOW_ID:-}
+
+      # Streaming Configuration
+      STREAMING_ENABLED: ${STREAMING_ENABLED:-true}
+      STREAMING_POLL_INTERVAL: ${STREAMING_POLL_INTERVAL:-1000}
+
+    ports:
+      - "${HEALTHCHECK_PORT:-3000}:3000"
+
+    volumes:
+      # Persist logs
+      - ./logs:/app/logs
+      # Optional: Mount custom .env file
+      - ./.env:/app/.env:ro
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    labels:
+      com.prolex.service: "n8n-mcp-server"
+      com.prolex.version: "2.0.0"
+      com.prolex.description: "n8n MCP Server with Level 3 Autonomy"
+
+    # Security
+    security_opt:
+      - no-new-privileges:true
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+# Optional: If you want to run n8n alongside
+  # n8n:
+  #   image: n8nio/n8n:latest
+  #   container_name: n8n
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5678:5678"
+  #   environment:
+  #     - N8N_BASIC_AUTH_ACTIVE=true
+  #     - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+  #     - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-changeme}
+  #   volumes:
+  #     - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
+    driver: local
