@@ -3,7 +3,6 @@
 **Statut actuel : Autonomie niveau 4 activée le 22 novembre 2025** 🚀
 
 > L'IA prend toutes les décisions business et techniques seule.
-> Matthieu ne reçoit que les alertes critiques (> 5000 €, modification règles, etc.).
 
 **Plus de validation humaine** · **Factures auto** · **RAG auto-refresh** · **Déploiements instantanés**
 
