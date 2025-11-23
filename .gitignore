@@ -8,12 +8,16 @@ dist/
 build/  
 \*.tsbuildinfo
 
-\# \--- Environnements / secrets \---  
-.env  
-.env.local  
-.env.development.local  
-.env.production.local  
+\# \--- Environnements / secrets \---
+.env
+.env.local
+.env.vps
+.env.test
+.env.development.local
+.env.production.local
 .env.\*.local
+\# Secrets directory
+config/secrets/
 
 \# \--- Logs \---  
 \*.log  

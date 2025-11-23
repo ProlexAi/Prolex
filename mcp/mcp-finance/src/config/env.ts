@@ -1,45 +1,44 @@
 /**
  * Configuration Environnement pour MCP Finance
+ * Utilise la configuration centralisée de Prolex
  */
 
-import dotenv from 'dotenv';
+import { config as centralConfig } from '../../../config/dist/config-loader';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-
-// Charger les variables d'environnement
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
  * Configuration complète du MCP Finance
+ * Mappée depuis la config centrale
  */
 export const config = {
   // Environnement
-  env: process.env.NODE_ENV || 'development',
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
+  env: centralConfig.nodeEnv,
+  isDevelopment: centralConfig.nodeEnv === 'development',
+  isProduction: centralConfig.nodeEnv === 'production',
 
   // Stripe (Paiements)
   stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY || '',
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-    enabled: !!process.env.STRIPE_SECRET_KEY,
+    secretKey: centralConfig.stripe.secretKey || '',
+    publishableKey: centralConfig.stripe.publishableKey || '',
+    webhookSecret: centralConfig.stripe.webhookSecret || '',
+    enabled: !!centralConfig.stripe.secretKey,
   },
 
   // PayPal (Paiements alternatifs)
   paypal: {
-    clientId: process.env.PAYPAL_CLIENT_ID || '',
-    clientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
-    mode: (process.env.PAYPAL_MODE || 'sandbox') as 'sandbox' | 'live',
-    enabled: !!process.env.PAYPAL_CLIENT_ID,
+    clientId: centralConfig.paypal.clientId || '',
+    clientSecret: centralConfig.paypal.clientSecret || '',
+    mode: (centralConfig.paypal.mode || 'sandbox') as 'sandbox' | 'live',
+    enabled: !!centralConfig.paypal.clientId,
   },
 
   // Plaid (Connexion bancaire)
   plaid: {
-    clientId: process.env.PLAID_CLIENT_ID || '',
+    clientId: process.env.PLAID_CLIENT_ID || '', // Pas encore dans config central, utiliser process.env temporairement
     secret: process.env.PLAID_SECRET || '',
     env: (process.env.PLAID_ENV || 'sandbox') as 'sandbox' | 'development' | 'production',
     enabled: !!process.env.PLAID_CLIENT_ID,
@@ -47,21 +46,21 @@ export const config = {
 
   // Google Sheets (Stockage comptabilité)
   googleSheets: {
-    credentialsPath: process.env.GOOGLE_SHEETS_CREDENTIALS_PATH || join(__dirname, '../../credentials/google-sheets-key.json'),
-    comptabiliteSpreadsheetId: process.env.COMPTABILITE_SPREADSHEET_ID || '',
-    enabled: !!process.env.COMPTABILITE_SPREADSHEET_ID,
+    credentialsPath: centralConfig.google.credentialsPath || join(__dirname, '../../credentials/google-sheets-key.json'),
+    comptabiliteSpreadsheetId: centralConfig.google.comptabiliteSpreadsheetId || '',
+    enabled: !!centralConfig.google.comptabiliteSpreadsheetId,
   },
 
   // CoinGecko (Crypto)
   coingecko: {
-    apiKey: process.env.COINGECKO_API_KEY || '',
+    apiKey: process.env.COINGECKO_API_KEY || '', // Pas encore dans config central
     baseUrl: 'https://api.coingecko.com/api/v3',
     enabled: true, // API gratuite, pas besoin de clé
   },
 
   // Binance (Crypto trading)
   binance: {
-    apiKey: process.env.BINANCE_API_KEY || '',
+    apiKey: process.env.BINANCE_API_KEY || '', // Pas encore dans config central
     apiSecret: process.env.BINANCE_API_SECRET || '',
     baseUrl: 'https://api.binance.com',
     enabled: !!process.env.BINANCE_API_KEY,
@@ -69,32 +68,32 @@ export const config = {
 
   // SystemJournal (Logging)
   systemJournal: {
-    enabled: process.env.SYSTEM_JOURNAL_ENABLED === 'true',
-    spreadsheetId: process.env.SYSTEM_JOURNAL_SPREADSHEET_ID || '',
+    enabled: centralConfig.google.systemJournalEnabled,
+    spreadsheetId: centralConfig.google.systemJournalSpreadsheetId,
   },
 
   // Cache
   cache: {
-    enabled: process.env.CACHE_ENABLED !== 'false',
-    ttl: parseInt(process.env.CACHE_TTL_SECONDS || '300', 10),
+    enabled: centralConfig.cache.enabled,
+    ttl: centralConfig.cache.ttl,
   },
 
   // Sécurité
   security: {
-    enableRequestValidation: process.env.ENABLE_REQUEST_VALIDATION !== 'false',
-    maxInvoiceAmount: parseFloat(process.env.MAX_INVOICE_AMOUNT || '50000'),
-    requireConfirmationAbove: parseFloat(process.env.REQUIRE_CONFIRMATION_ABOVE || '10000'),
+    enableRequestValidation: centralConfig.security.enableRequestValidation,
+    maxInvoiceAmount: centralConfig.security.maxInvoiceAmount || 50000,
+    requireConfirmationAbove: centralConfig.security.requireConfirmationAbove || 10000,
   },
 
   // Taux de change
   exchangeRate: {
-    apiKey: process.env.EXCHANGE_RATE_API_KEY || '',
+    apiKey: process.env.EXCHANGE_RATE_API_KEY || '', // Pas encore dans config central
     baseUrl: 'https://api.exchangerate-api.com/v4/latest',
   },
 
   // Webhooks
   webhooks: {
-    secret: process.env.WEBHOOK_SECRET || '',
+    secret: process.env.WEBHOOK_SECRET || '', // Pas encore dans config central
   },
 
   // Defaults
