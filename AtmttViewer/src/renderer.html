@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtmttViewer - Visualiseur de fichiers</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Colonne gauche : Navigateur de fichiers -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>📁 Fichiers</h2>
+        <button id="btn-change-dir" class="btn btn-small" title="Changer de dossier">
+          🔄
+        </button>
+      </div>
+
+      <div class="root-dir-display" id="root-dir-display">
+        Chargement...
+      </div>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="🔍 Rechercher un fichier..."
+        >
+      </div>
+
+      <div class="file-list" id="file-list">
+        <div class="loading">Chargement des fichiers...</div>
+      </div>
+    </div>
+
+    <!-- Colonne droite : Éditeur / Viewer -->
+    <div class="main-content">
+      <div class="editor-header">
+        <div class="file-path" id="current-file-path">
+          Aucun fichier ouvert
+        </div>
+        <div class="editor-actions">
+          <button id="btn-toggle-preview" class="btn btn-small" style="display: none;">
+            👁️ Aperçu
+          </button>
+          <button id="btn-save" class="btn btn-primary" disabled>
+            💾 Enregistrer
+          </button>
+        </div>
+      </div>
+
+      <div class="editor-container">
+        <!-- Message de bienvenue -->
+        <div id="welcome-message" class="welcome-message">
+          <h1>👋 Bienvenue dans AtmttViewer</h1>
+          <p>Sélectionnez un fichier dans la liste de gauche pour commencer.</p>
+          <div class="supported-formats">
+            <h3>Formats supportés :</h3>
+            <ul>
+              <li>📝 Markdown (.md) - avec aperçu en temps réel</li>
+              <li>📄 Texte (.txt)</li>
+              <li>🔧 JSON (.json)</li>
+              <li>⚙️ YAML (.yaml, .yml)</li>
+              <li>📋 Logs (.log)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Zone d'édition -->
+        <textarea
+          id="editor"
+          class="editor"
+          placeholder="Commencez à écrire..."
+          style="display: none;"
+        ></textarea>
+
+        <!-- Zone de prévisualisation Markdown -->
+        <div id="preview" class="preview markdown-body" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
