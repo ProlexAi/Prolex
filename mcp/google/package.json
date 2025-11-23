@@ -1,0 +1,45 @@
+{
+  "name": "@prolex/mcp-google",
+  "version": "1.0.0",
+  "description": "MCP Server for Google Workspace integration (Sheets, Drive, Calendar, Gmail, Tasks)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "google",
+    "google-workspace",
+    "sheets",
+    "drive",
+    "calendar",
+    "gmail",
+    "tasks",
+    "prolex",
+    "automatt"
+  ],
+  "author": "Automatt.ai",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "googleapis": "^144.0.0",
+    "google-auth-library": "^9.14.2",
+    "pino": "^8.17.2",
+    "zod": "^3.22.4",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

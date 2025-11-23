@@ -176,6 +176,20 @@ monitoring_backup:
     tool_id: "GLOBAL_ERROR_ALERT"
     autonomy_levels: [1, 2, 3]
 
+  - id: "415"
+    file: "415_postgres_logs_cleanup.json"
+    name: "PostgreSQL Logs Cleanup"
+    role: "Purge automatique logs PostgreSQL > 90 jours + VACUUM"
+    tool_id: "POSTGRES_LOGS_CLEANUP"
+    autonomy_levels: [2, 3]
+    schedule: "Daily at 2AM (cron: 0 2 * * *)"
+    features:
+      - "Suppression logs > 90 jours"
+      - "VACUUM ANALYZE automatique"
+      - "Statistiques détaillées"
+      - "Notification Telegram"
+      - "Log SystemJournal"
+
   - id: "420"
     file: "420_security_alerts.json"
     name: "Security Alerts"

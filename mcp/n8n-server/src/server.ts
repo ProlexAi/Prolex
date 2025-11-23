@@ -314,6 +314,38 @@ export class N8nMCPServer {
               },
             },
           },
+          {
+            name: 'log_event',
+            description:
+              '📝 [v5] Write a log event to PostgreSQL central database. Autonomy: Level 0+ (always available). Use for agent self-logging and traceability.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                source: {
+                  type: 'string',
+                  description: 'Source of the log (e.g., "mcp_n8n", "prolex", "n8n_workflow_123")',
+                  minLength: 1,
+                  maxLength: 50,
+                },
+                level: {
+                  type: 'string',
+                  enum: ['debug', 'info', 'warn', 'error'],
+                  description: 'Log level: debug, info, warn, error',
+                },
+                message: {
+                  type: 'string',
+                  description: 'Log message (max 500 characters)',
+                  minLength: 1,
+                  maxLength: 500,
+                },
+                details: {
+                  type: 'object',
+                  description: 'Optional additional details as JSON',
+                },
+              },
+              required: ['source', 'level', 'message'],
+            },
+          },
         ],
       };
     });
@@ -413,6 +445,11 @@ export class N8nMCPServer {
           case 'get_system_status': {
             const validated = tools.GetSystemStatusSchema.parse(args || {});
             return await tools.getSystemStatus(validated);
+          }
+
+          case 'log_event': {
+            const validated = tools.LogEventSchema.parse(args);
+            return await tools.logEvent(validated);
           }
 
           default:

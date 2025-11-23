@@ -1,0 +1,396 @@
+{
+  "name": "PostgreSQL Logs Cleanup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789001",
+      "name": "Cron Trigger - Daily 2AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Compter les logs avant purge\nSELECT COUNT(*) as total_logs_before FROM app_logs;",
+        "options": {}
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789002",
+      "name": "Count Logs Before",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [450, 300],
+      "credentials": {
+        "postgres": {
+          "id": "prolex_postgres_credentials",
+          "name": "Prolex PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Supprimer les logs de plus de 90 jours\nDELETE FROM app_logs\nWHERE created_at < NOW() - INTERVAL '90 days';",
+        "options": {}
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789003",
+      "name": "Delete Old Logs (>90 days)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [650, 300],
+      "credentials": {
+        "postgres": {
+          "id": "prolex_postgres_credentials",
+          "name": "Prolex PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Compter les logs après purge\nSELECT COUNT(*) as total_logs_after FROM app_logs;",
+        "options": {}
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789004",
+      "name": "Count Logs After",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [850, 300],
+      "credentials": {
+        "postgres": {
+          "id": "prolex_postgres_credentials",
+          "name": "Prolex PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Optimiser la table après suppression\nVACUUM ANALYZE app_logs;",
+        "options": {}
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789005",
+      "name": "VACUUM Table",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1050, 300],
+      "credentials": {
+        "postgres": {
+          "id": "prolex_postgres_credentials",
+          "name": "Prolex PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculer les statistiques de purge\nconst logsBefore = $('Count Logs Before').first().json.total_logs_before;\nconst logsAfter = $('Count Logs After').first().json.total_logs_after;\nconst logsDeleted = logsBefore - logsAfter;\nconst deletionPercentage = ((logsDeleted / logsBefore) * 100).toFixed(2);\n\nreturn {\n  json: {\n    timestamp: new Date().toISOString(),\n    operation: 'postgres_logs_cleanup',\n    logs_before: logsBefore,\n    logs_after: logsAfter,\n    logs_deleted: logsDeleted,\n    deletion_percentage: deletionPercentage,\n    retention_days: 90,\n    vacuum_completed: true,\n    status: 'success'\n  }\n};"
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789006",
+      "name": "Calculate Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://docs.google.com/spreadsheets/d/1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk/edit",
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "sheetName": "SystemJournal",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.timestamp }}",
+            "agent": "n8n_workflow_415",
+            "action": "postgres_logs_cleanup",
+            "status": "={{ $json.status }}",
+            "details": "={{ JSON.stringify($json) }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789007",
+      "name": "Log to SystemJournal",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [1450, 300],
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "google_sheets_service_account",
+          "name": "Google Sheets Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "TELEGRAM_CHAT_ID_MATTHIEU",
+        "text": "🧹 **PostgreSQL Logs Cleanup Completed**\n\n📊 **Statistics:**\n• Logs before: {{ $json.logs_before }}\n• Logs after: {{ $json.logs_after }}\n• Deleted: {{ $json.logs_deleted }} ({{ $json.deletion_percentage }}%)\n• Retention: {{ $json.retention_days }} days\n• VACUUM: ✅ Completed\n\n⏰ {{ $json.timestamp }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789008",
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1650, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot_prolex",
+          "name": "Telegram Bot Prolex"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// En cas d'erreur, formater le message d'erreur\nconst error = $input.first().json.error || $input.first().json;\n\nreturn {\n  json: {\n    timestamp: new Date().toISOString(),\n    operation: 'postgres_logs_cleanup',\n    status: 'error',\n    error_message: error.message || String(error),\n    error_stack: error.stack || 'N/A'\n  }\n};"
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789009",
+      "name": "Format Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "chatId": "TELEGRAM_CHAT_ID_MATTHIEU",
+        "text": "❌ **PostgreSQL Logs Cleanup FAILED**\n\n🔴 **Error:**\n```\n{{ $json.error_message }}\n```\n\n⏰ {{ $json.timestamp }}\n\n⚠️ Manual intervention required!",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789010",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1050, 500],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot_prolex",
+          "name": "Telegram Bot Prolex"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://docs.google.com/spreadsheets/d/1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk/edit",
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "sheetName": "SystemJournal",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.timestamp }}",
+            "agent": "n8n_workflow_415",
+            "action": "postgres_logs_cleanup",
+            "status": "error",
+            "details": "={{ JSON.stringify($json) }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "c1a2e3d4-5678-9abc-def0-123456789011",
+      "name": "Log Error to SystemJournal",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [1250, 500],
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "google_sheets_service_account",
+          "name": "Google Sheets Service Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger - Daily 2AM": {
+      "main": [
+        [
+          {
+            "node": "Count Logs Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Logs Before": {
+      "main": [
+        [
+          {
+            "node": "Delete Old Logs (>90 days)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Old Logs (>90 days)": {
+      "main": [
+        [
+          {
+            "node": "Count Logs After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Logs After": {
+      "main": [
+        [
+          {
+            "node": "VACUUM Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VACUUM Table": {
+      "main": [
+        [
+          {
+            "node": "Calculate Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Stats": {
+      "main": [
+        [
+          {
+            "node": "Log to SystemJournal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to SystemJournal": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Logs Before": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Format Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Old Logs (>90 days)": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Format Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Logs After": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Format Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VACUUM Table": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Format Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Error Alert": {
+      "main": [
+        [
+          {
+            "node": "Log Error to SystemJournal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "prolex-n8n-instance"
+  },
+  "tags": [
+    {
+      "createdAt": "2025-11-23T00:00:00.000Z",
+      "updatedAt": "2025-11-23T00:00:00.000Z",
+      "id": "monitoring",
+      "name": "monitoring"
+    },
+    {
+      "createdAt": "2025-11-23T00:00:00.000Z",
+      "updatedAt": "2025-11-23T00:00:00.000Z",
+      "id": "postgres",
+      "name": "postgres"
+    },
+    {
+      "createdAt": "2025-11-23T00:00:00.000Z",
+      "updatedAt": "2025-11-23T00:00:00.000Z",
+      "id": "maintenance",
+      "name": "maintenance"
+    }
+  ],
+  "pinData": {},
+  "id": "415"
+}
