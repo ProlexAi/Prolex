@@ -6,7 +6,7 @@
 # NIVEAU D'AUTONOMIE ACTUEL
 # ====================================================================
 
-# Niveau actuel : 0, 1, 2, 3, ou 4
+# Niveau actuel : 0, 1, 2, 3, 
 # À ajuster selon l'environnement et la confiance
 prolex_current_autonomy_level: 4
 
@@ -166,7 +166,7 @@ autonomy_levels:
     name: "Autonomie complète"
     description: |
       Prolex est en autonomie totale sans validation humaine.
-      Niveau de production pour opérations business critiques.
+      Niveau de production pour 
       Alertes critiques seulement (>5000€, modification règles, nouveaux workflows).
 
     allowed_actions:
