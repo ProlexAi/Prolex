@@ -289,10 +289,15 @@ services:
       retries: 3
 
   # ─────────────────────────────────────────────────────────────────
-  # 🐘 POSTGRESQL - Base de données
+  # 🐘 POSTGRESQL - Base de données centrale
   # ─────────────────────────────────────────────────────────────────
-  # Base de données relationnelle pour n8n.
+  # Base de données relationnelle pour :
+  #   - n8n (workflows, credentials, exécutions)
+  #   - Prolex (logs centraux app_logs, futur RAG)
+  #   - MCP servers (logs et événements)
+  #
   # Plus robuste que SQLite pour la production.
+  # Logs centralisés pour debugging, monitoring et AIOps.
   # ─────────────────────────────────────────────────────────────────
 
   postgres:
@@ -313,11 +318,14 @@ services:
       # Données persistantes
       - ./postgres/data:/var/lib/postgresql/data
 
-      # Script d'initialisation (optionnel)
-      # - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Script d'initialisation pour extensions (pgcrypto, uuid)
+      - ../../infra/db/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
 
-    # Pas d'exposition publique : service interne uniquement
-    # n8n se connecte via le réseau Docker
+    # Port (commenté par défaut pour la sécurité)
+    # Décommenter pour accéder à la DB depuis l'hôte en développement
+    # ⚠️ En production, garder commenté (accès uniquement via réseau Docker)
+    # ports:
+    #   - "5432:5432"
 
     networks:
       - prolex-net

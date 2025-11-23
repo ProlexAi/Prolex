@@ -78,8 +78,99 @@ Prolex est le **cerveau IA orchestrateur** de l'entreprise Automatt.ai.
 | **Kimmy** | Filtre d'entrée | GPT-4 Turbo / Claude Haiku + n8n |
 | **Prolex** | Cerveau orchestrateur | Claude 3.5 Sonnet + AnythingLLM |
 | **Opex** | Bras exécutif | n8n workflows + Proxy Master |
-| **SystemJournal** | Mémoire d'exécution | Google Sheets |
+| **PostgreSQL** | **Logs centralisés (PRIORITÉ)** | **PostgreSQL 16 + table `app_logs`** |
+| **SystemJournal** | Mémoire d'exécution (legacy) | Google Sheets |
 | **RAG** | Base de connaissance | Google Drive + docs structurés |
+
+---
+
+## 📊 Logging centralisé (PostgreSQL)
+
+### Vue d'ensemble
+
+⚠️ **NOUVEAU (v4.2+)** : PostgreSQL est désormais le **système de logging PRIORITAIRE** pour Prolex.
+
+**Tous les composants** (n8n, MCP servers, Prolex agent) loguent leurs événements dans une **table PostgreSQL centralisée** (`app_logs`) pour :
+
+✅ **Performance** : Écriture/lecture ultra-rapides
+✅ **Requêtes puissantes** : SQL pour analyses complexes
+✅ **Scalabilité** : Millions de logs sans problème
+✅ **Indexation** : Recherche optimisée (source, niveau, date)
+✅ **Détails JSON** : Métadonnées flexibles avec JSONB
+✅ **Future RAG** : Préparation pour LogRAG et AIOps (phase 2)
+
+### Architecture
+
+```
+┌─────────────────────────────────────┐
+│ n8n, MCP servers, Prolex Agent     │
+└─────────────┬───────────────────────┘
+              │ logEvent()
+              ▼
+     ┌────────────────┐
+     │  dbClient.ts   │  ← Pool PostgreSQL (pg)
+     └────────┬───────┘
+              │
+              ▼
+     ┌────────────────┐
+     │  PostgreSQL    │
+     │  app_logs      │  ← Table centrale
+     └────────────────┘
+```
+
+### Table `app_logs`
+
+```sql
+CREATE TABLE app_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  source TEXT NOT NULL,              -- "mcp_n8n", "prolex_agent", etc.
+  level TEXT NOT NULL,                -- "debug", "info", "warn", "error"
+  message TEXT NOT NULL,              -- Message principal
+  details JSONB DEFAULT '{}'::jsonb  -- Métadonnées flexibles
+);
+```
+
+### Outil MCP `log_event`
+
+**Nouveau tool MCP** (niveau 0+) pour permettre aux agents IA de s'auto-logger :
+
+```typescript
+// Exemple d'utilisation
+{
+  "source": "prolex_agent",
+  "level": "info",
+  "message": "Workflow design completed",
+  "details": {
+    "workflow_id": "abc123",
+    "duration_ms": 1250
+  }
+}
+```
+
+### Documentation complète
+
+📚 **[docs/LOGS_POSTGRES.md](docs/LOGS_POSTGRES.md)** → Documentation complète avec :
+- Installation & configuration
+- Guide d'utilisation du client TypeScript
+- Requêtes SQL utiles
+- Monitoring & maintenance
+- Roadmap LogRAG/AIOps
+
+### Quick Start
+
+```bash
+# 1. Démarrer PostgreSQL
+cd infra/vps-prod
+docker-compose up -d postgres
+
+# 2. Exécuter les migrations
+cd ../db
+./migrate.sh
+
+# 3. Vérifier la table
+docker exec -it prolex-postgres psql -U prolex_user -d prolex_db -c "\d app_logs"
+```
 
 ---
 

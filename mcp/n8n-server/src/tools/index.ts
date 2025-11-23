@@ -415,3 +415,4 @@ export { setAutonomy, SetAutonomySchema } from './setAutonomy.js';
 export { getSystemStatus, GetSystemStatusSchema } from './getSystemStatus.js';
 export { readFile, ReadFileSchema } from './readFile.js';
 export { writeFile, WriteFileSchema } from './writeFile.js';
+export { logEvent, LogEventSchema } from './logEvent.js';
