@@ -216,6 +216,28 @@ Prolex/
 │       ├── tsconfig.json
 │       └── README.md
 │
+├── services/                               # Backend services
+│   └── prolex-sandbox/                    # ✅ Prolex Sandbox (test environment)
+│       ├── src/
+│       │   ├── index.ts                   # Service entry point
+│       │   ├── server.ts                  # Express server
+│       │   ├── config.ts                  # Configuration
+│       │   ├── db.ts                      # Database layer
+│       │   ├── services/                  # Core services
+│       │   │   ├── sandboxService.ts      # Main sandbox orchestrator
+│       │   │   ├── n8nSimulator.ts        # n8n workflow simulator
+│       │   │   ├── mcpSimulator.ts        # MCP call simulator
+│       │   │   └── gardeFousSandbox.ts    # Risk evaluation
+│       │   ├── routes/                    # API routes
+│       │   │   ├── scenariosRoutes.ts     # Scenario endpoints
+│       │   │   └── runsRoutes.ts          # Run endpoints
+│       │   └── types/                     # TypeScript types
+│       ├── scripts/                       # Utility scripts
+│       │   └── creer-scenario-workflow-n8n.ts
+│       ├── package.json
+│       ├── tsconfig.json
+│       └── README.md                      # Complete documentation
+│
 ├── infra/                                  # Infrastructure as code
 │   └── vps-prod/                          # Production VPS config
 │       ├── docker-compose.yml             # Docker stack definition
@@ -248,6 +270,7 @@ Prolex/
 | `rag/` | Prolex knowledge base | Adding tools, rules, context |
 | `n8n-workflows/` | Workflow definitions | Creating/modifying workflows |
 | `mcp/` | MCP servers | Adding integrations |
+| `services/` | Backend services | Adding/modifying services |
 | `infra/` | Infrastructure code | Deployment changes |
 
 ---
@@ -904,6 +927,45 @@ Prolex is **ABSOLUTELY FORBIDDEN** from:
 5. **MOVE ON** to other tasks ➡️
 
 **Complete documentation:** [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md)
+
+### Prolex Sandbox - Safe Testing Environment
+
+**⚙️ SERVICE COMPLÉMENTAIRE - Disponible depuis: 2025-11-23**
+
+Le **Prolex Sandbox** est un service complémentaire aux garde-fous existants qui permet :
+- ✅ **Expérimentation sécurisée** : Tester workflows et appels MCP sans toucher à la production
+- ✅ **Apprentissage** : Analyser et détecter les patterns à risque avant exécution
+- ✅ **Validation préventive** : Identifier les problèmes en amont des garde-fous critiques
+
+**Caractéristiques** :
+- **Simulation complète** : Analyse workflows n8n, appels MCP, séquences mixtes
+- **Détection de risques** : Identifie actions critiques (DELETE, DROP TABLE, etc.)
+- **2 modes** :
+  - `strict` : Bloque les actions à risque élevé/critique
+  - `relaxed` : Simule tout mais génère des alertes détaillées
+- **Aucune exécution réelle** : N'appelle JAMAIS les API de production
+
+**Utilisation** :
+```bash
+# Démarrer le service
+cd services/prolex-sandbox
+npm install && npm run dev
+
+# Créer un scénario depuis un workflow
+npm run creer-scenario-workflow -- ../../n8n-workflows/020_example-hello-world.json
+
+# Lancer une simulation
+curl -X POST http://localhost:3001/api/run \
+  -H "Content-Type: application/json" \
+  -d '{"scenarioId": "<ID>"}'
+```
+
+**Relation avec les garde-fous** :
+- Le Sandbox **complète** (ne remplace pas) les garde-fous de passage humain
+- Permet de détecter les risques **avant** d'atteindre les protections critiques
+- Offre un environnement d'apprentissage **sans danger** pour Prolex
+
+**Documentation complète** : [services/prolex-sandbox/README.md](services/prolex-sandbox/README.md)
 
 ### Autonomy Level Safety
 
