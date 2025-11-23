@@ -1,0 +1,328 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Context Routing Configuration - Prolex v4",
+  "description": "Configuration de routage des fichiers de contexte pour l'orchestrateur. GitHub Prolex est la source de vérité unique.",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-23",
+
+  "roots": {
+    "comment": "Chemins racine vers le repo Prolex sur différents environnements",
+    "local": {
+      "windows": "C:/Users/Matth/OneDrive/Documents/GitHub/Prolex/",
+      "linux": "/home/user/Prolex/",
+      "description": "Racine du dépôt Git Prolex en local"
+    },
+    "vps": {
+      "path": "/opt/automatt/Prolex/",
+      "description": "Clone/miroir du repo sur le VPS de production"
+    },
+    "mcp": {
+      "comment": "Pour les MCPs, on utilise le même repo, juste un sous-dossier",
+      "relativePath": "mcp/",
+      "description": "Serveurs MCP dans le repo principal"
+    }
+  },
+
+  "webhooks": {
+    "unknownFile": {
+      "url": "https://n8n.automatt.ai/webhook/automatt_unknown_file",
+      "description": "Webhook n8n pour fichiers non classifiés"
+    },
+    "contextOrchestrator": {
+      "url": "https://n8n.automatt.ai/webhook/automatt_context_orchestrator",
+      "description": "Webhook principal de l'orchestrateur de contexte"
+    }
+  },
+
+  "categories": {
+    "rag_source": {
+      "localPath": "rag/sources/",
+      "description": "Fichiers sources pour le RAG Prolex (documents, textes bruts)",
+      "createIfMissing": true,
+      "match": {
+        "extensions": [".txt", ".md", ".pdf", ".docx"],
+        "nameContains": ["rag_", "source_rag_", "doc_rag_", "knowledge_"],
+        "namePatterns": ["^rag_.*", ".*_source$", ".*_knowledge$"]
+      },
+      "examples": [
+        "rag_rules_v4.md",
+        "source_rag_tools.txt",
+        "doc_rag_architecture.pdf"
+      ]
+    },
+
+    "rag_index": {
+      "localPath": "rag/index/",
+      "description": "Index vectoriels et embeddings pour le RAG",
+      "createIfMissing": true,
+      "match": {
+        "extensions": [".jsonl", ".faiss", ".idx", ".bin", ".npy"],
+        "nameContains": ["index_", "embeddings_", "vector_store", "faiss_"],
+        "namePatterns": ["^index_.*", ".*_embeddings$", ".*_vectors$"]
+      },
+      "examples": [
+        "index_prolex_v4.faiss",
+        "embeddings_tools.jsonl",
+        "vector_store_20251123.bin"
+      ]
+    },
+
+    "rag_context": {
+      "localPath": "rag/context/",
+      "description": "Fichiers de contexte système pour Prolex (déjà existant)",
+      "createIfMissing": false,
+      "match": {
+        "extensions": [".md", ".txt"],
+        "nameContains": ["context_", "contexte_", "02_VARIABLES"],
+        "namePatterns": ["^\\d+_.*CONTEXT.*", "^\\d+_.*VARIABLES.*"]
+      },
+      "examples": [
+        "02_VARIABLES_ET_CONTEXTE.md"
+      ]
+    },
+
+    "rag_rules": {
+      "localPath": "rag/rules/",
+      "description": "Règles et instructions pour Prolex (déjà existant)",
+      "createIfMissing": false,
+      "match": {
+        "extensions": [".md", ".txt"],
+        "nameContains": ["regles_", "rules_", "01_REGLES"],
+        "namePatterns": ["^\\d+_.*REGLES.*", "^\\d+_.*RULES.*"]
+      },
+      "examples": [
+        "01_REGLES_PRINCIPALES.md"
+      ]
+    },
+
+    "rag_tools": {
+      "localPath": "rag/tools/",
+      "description": "Catalogue des outils Prolex (déjà existant)",
+      "createIfMissing": false,
+      "match": {
+        "extensions": [".yml", ".yaml", ".md"],
+        "nameContains": ["tools", "outils"],
+        "namePatterns": [".*tools.*"]
+      },
+      "examples": [
+        "tools.yml"
+      ]
+    },
+
+    "contexte_system": {
+      "localPath": "docs/contextes/",
+      "description": "Contextes système et prompts Prolex/Kimmy/Opex",
+      "createIfMissing": true,
+      "match": {
+        "extensions": [".md", ".txt", ".json"],
+        "nameContains": ["contexte_", "context_", "system_", "prompt_", "instruction_"],
+        "namePatterns": ["^contexte_.*", "^system_prompt_.*", ".*_instruction$"]
+      },
+      "examples": [
+        "contexte_prolex_v4.md",
+        "system_prompt_kimmy.txt",
+        "instruction_opex_validation.json"
+      ]
+    },
+
+    "mcp_source": {
+      "localPath": "mcp/",
+      "description": "Code source des serveurs MCP (TypeScript/JavaScript)",
+      "createIfMissing": false,
+      "match": {
+        "extensions": [".ts", ".js", ".json"],
+        "nameContains": ["mcp_", "server_", "tool_"],
+        "namePatterns": [".*\\.ts$", ".*\\.mjs$", "package\\.json$"],
+        "excludePaths": ["node_modules/", "dist/", "build/"]
+      },
+      "examples": [
+        "mcp_n8n_tools.ts",
+        "server_google_workspace.js",
+        "tool_calendar.ts"
+      ]
+    },
+
+    "mcp_build": {
+      "localPath": "mcp/build/",
+      "description": "Builds compilés des serveurs MCP",
+      "createIfMissing": true,
+      "match": {
+        "extensions": [".js", ".mjs", ".cjs"],
+        "nameContains": ["dist_", "build_"],
+        "namePatterns": ["^dist/.*", "^build/.*"],
+        "excludePaths": ["src/"]
+      },
+      "examples": [
+        "dist_n8n_server.js",
+        "build_google_workspace.mjs"
+      ]
+    },
+
+    "mcp_config": {
+      "localPath": "mcp/config/",
+      "description": "Fichiers de configuration pour les MCPs",
+      "createIfMissing": true,
+      "match": {
+        "extensions": [".json", ".yml", ".yaml", ".env.example"],
+        "nameContains": ["config_", "settings_", ".env"],
+        "namePatterns": [".*config.*", ".*settings.*", "\\.env\\.example$"]
+      },
+      "examples": [
+        "config_mcp_n8n.json",
+        "settings_google_workspace.yml",
+        ".env.example"
+      ]
+    },
+
+    "logs_tech": {
+      "localPath": "logs/tech/",
+      "description": "Logs techniques (erreurs, debug, exécutions)",
+      "createIfMissing": true,
+      "match": {
+        "extensions": [".log", ".jsonl", ".txt"],
+        "nameContains": ["log_", "prolex_", "error_", "errors_", "debug_", "execution_"],
+        "namePatterns": ["^\\d{8}_.*\\.log$", ".*_error\\.log$", ".*_debug\\.jsonl$"]
+      },
+      "examples": [
+        "20251123_prolex_execution.log",
+        "log_errors_n8n.jsonl",
+        "debug_mcp_20251123.log"
+      ]
+    },
+
+    "logs_system": {
+      "localPath": "logs/system/",
+      "description": "Logs système et infrastructure",
+      "createIfMissing": true,
+      "match": {
+        "extensions": [".log", ".jsonl"],
+        "nameContains": ["system_", "infra_", "docker_", "vps_"],
+        "namePatterns": ["^system_.*", "^infra_.*"]
+      },
+      "examples": [
+        "system_startup_20251123.log",
+        "infra_vps_health.jsonl"
+      ]
+    },
+
+    "schemas": {
+      "localPath": "schemas/",
+      "description": "Schémas JSON pour validation (déjà existant)",
+      "createIfMissing": false,
+      "match": {
+        "extensions": [".json", ".schema.json"],
+        "nameContains": ["schema", "payload", "response"],
+        "namePatterns": [".*\\.schema\\.json$"]
+      },
+      "examples": [
+        "kimmy_payload.schema.json",
+        "prolex_output.schema.json"
+      ]
+    },
+
+    "n8n_workflows": {
+      "localPath": "n8n-workflows/",
+      "description": "Workflows n8n exportés (déjà existant - NE PAS MODIFIER sauf via Git)",
+      "createIfMissing": false,
+      "readOnly": true,
+      "match": {
+        "extensions": [".json"],
+        "nameContains": [],
+        "namePatterns": ["^\\d{3}_.*\\.json$"]
+      },
+      "examples": [
+        "010_sync-github-to-n8n.json",
+        "350_client_onboarding.json"
+      ],
+      "warning": "Les workflows n8n doivent être modifiés via l'interface n8n puis exportés, pas directement"
+    },
+
+    "config": {
+      "localPath": "config/",
+      "description": "Fichiers de configuration système (déjà existant)",
+      "createIfMissing": false,
+      "match": {
+        "extensions": [".yml", ".yaml", ".json"],
+        "nameContains": ["config", "autonomy", "system"],
+        "namePatterns": [".*\\.yml$"]
+      },
+      "examples": [
+        "autonomy.yml",
+        "system.yml",
+        "context-routing.json"
+      ]
+    },
+
+    "unknown": {
+      "localPath": "inbox/unknown/",
+      "description": "Fichiers non classifiés automatiquement",
+      "createIfMissing": true,
+      "match": {
+        "extensions": ["*"],
+        "nameContains": [],
+        "namePatterns": []
+      },
+      "fallback": true,
+      "webhookNotify": true
+    }
+  },
+
+  "rules": {
+    "priorityOrder": [
+      "n8n_workflows",
+      "config",
+      "schemas",
+      "mcp_source",
+      "mcp_build",
+      "mcp_config",
+      "rag_index",
+      "rag_source",
+      "rag_context",
+      "rag_rules",
+      "rag_tools",
+      "contexte_system",
+      "logs_tech",
+      "logs_system",
+      "unknown"
+    ],
+    "description": "Ordre de priorité pour la classification (premier match gagne)",
+
+    "createMissingDirs": true,
+    "description_createMissingDirs": "Créer automatiquement les dossiers manquants",
+
+    "notifyOnUnknown": true,
+    "description_notifyOnUnknown": "Envoyer une notification webhook si fichier non classifié",
+
+    "logAllOperations": true,
+    "description_logAllOperations": "Logger toutes les opérations de routage",
+
+    "dryRun": false,
+    "description_dryRun": "Mode simulation (ne déplace pas réellement les fichiers)",
+
+    "backupBeforeMove": false,
+    "description_backupBeforeMove": "Créer une copie backup avant déplacement",
+
+    "gitAutoCommit": false,
+    "description_gitAutoCommit": "Commit automatique Git après déplacement (à activer plus tard)",
+
+    "allowedRoots": {
+      "description": "Empêcher les déplacements en dehors du repo Prolex",
+      "enforce": true,
+      "paths": [
+        "C:/Users/Matth/OneDrive/Documents/GitHub/Prolex/",
+        "/home/user/Prolex/",
+        "/opt/automatt/Prolex/"
+      ]
+    }
+  },
+
+  "metadata": {
+    "author": "Matthieu @ Automatt.ai",
+    "project": "Prolex v4 - Context Orchestrator",
+    "repositoryUrl": "https://github.com/ProlexAi/Prolex",
+    "documentation": "README.md, CLAUDE.md, INDEX_PROLEX.md",
+    "version": "1.0.0",
+    "createdDate": "2025-11-23",
+    "lastModified": "2025-11-23"
+  }
+}

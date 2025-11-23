@@ -214,6 +214,95 @@ kimmy:
 
 ---
 
+## 📁 Organisation des Fichiers (Context Orchestrator)
+
+### Vue d'ensemble
+
+**Principe** : **GitHub Prolex = Source de vérité unique**
+
+Tous les fichiers de contexte (RAG, MCP, logs, configs) sont organisés dans une seule structure cohérente, versionnée dans Git et synchronisée sur tous les environnements.
+
+### Document principal
+
+| Document | Rôle |
+|----------|------|
+| [CONTEXT_ORCHESTRATOR.md](docs/CONTEXT_ORCHESTRATOR.md) | **Documentation complète** du système de routage des fichiers |
+
+### Configuration
+
+| Fichier | Rôle |
+|---------|------|
+| [config/context-routing.json](config/context-routing.json) | **Configuration de routage** : catégories, patterns, webhooks |
+
+### Structure des dossiers
+
+```
+Prolex/
+├── rag/
+│   ├── sources/          # 📄 Documents sources pour RAG (versionnés)
+│   ├── index/            # 🔍 Index vectoriels (générés, non versionnés)
+│   ├── context/          # 📋 Contextes système (existant)
+│   ├── rules/            # 📐 Règles Prolex (existant)
+│   └── tools/            # 🛠️ Catalogue outils (existant)
+│
+├── docs/
+│   └── contextes/        # 💬 Prompts & instructions Kimmy/Prolex/Opex
+│
+├── mcp/
+│   ├── */src/            # Code source MCP (versionnés)
+│   ├── build/            # 🔨 Builds compilés (non versionnés)
+│   └── config/           # ⚙️ Configs MCP (.example versionnés, .env non)
+│
+├── logs/
+│   ├── tech/             # 🐛 Logs techniques (non versionnés)
+│   └── system/           # 💻 Logs infrastructure (non versionnés)
+│
+└── inbox/
+    └── unknown/          # 📥 Fichiers non classifiés (buffer temporaire)
+```
+
+### Catégories principales
+
+| Catégorie | Path | Git | Rôle |
+|-----------|------|-----|------|
+| `rag_source` | `rag/sources/` | ✅ | Documents sources pour RAG |
+| `rag_index` | `rag/index/` | ❌ | Index vectoriels générés |
+| `contexte_system` | `docs/contextes/` | ✅ | Prompts système LLM |
+| `mcp_source` | `mcp/` | ✅ | Code TypeScript/JS |
+| `mcp_build` | `mcp/build/` | ❌ | Fichiers compilés |
+| `mcp_config` | `mcp/config/` | ⚠️ | Configs (secrets ignorés) |
+| `logs_tech` | `logs/tech/` | ❌ | Logs applicatifs |
+| `logs_system` | `logs/system/` | ❌ | Logs infrastructure |
+| `unknown` | `inbox/unknown/` | ❌ | Non classifiés → notification |
+
+### Workflow automatique
+
+```
+Fichier reçu → Classification (context-routing.json)
+    ↓
+Routage vers dossier approprié
+    ↓
+Si "unknown" → Notification webhook n8n
+    ↓
+(Optionnel) Trigger workflows downstream
+    (ex: RAG indexing si rag_source)
+```
+
+### Commandes CLI (à venir)
+
+```bash
+# Classer un fichier
+prolexctl context route /path/to/file.md
+
+# Lister les catégories
+prolexctl context categories
+
+# Valider la config
+prolexctl context validate-config
+```
+
+---
+
 ## 🔒 Sécurité et Restrictions
 
 ### 🚨 ZONE INTERDITE : Cash Workflows

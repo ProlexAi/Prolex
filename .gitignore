@@ -50,3 +50,16 @@ infra/vps-prod/traefik/acme.json
 # Backups (archives)
 infra/vps-prod/backup/*.zip
 infra/vps-prod/backup/*.tar.gz
+
+# --- RAG Index (fichiers générés automatiquement) ---
+rag/index/*
+!rag/index/README.md
+
+# --- Inbox Unknown (buffer temporaire) ---
+inbox/unknown/*
+!inbox/unknown/README.md
+
+# --- MCP Config (secrets uniquement) ---
+mcp/config/*.env
+!mcp/config/*.env.example
+!mcp/config/README.md
