@@ -1,21 +1,42 @@
 # 🎯 MCP Servers Prolex - Serveurs Model Context Protocol
 
-> **Collection complète de serveurs MCP pour automatisation et gestion financière**
-> Clientèle française 🇫🇷 | Version 1.0.0
+> **Collection complète et organisée de serveurs MCP pour automatisation intelligente**
+> Clientèle française 🇫🇷 | Version 2.0.0 | **4 serveurs optimisés**
 
 ---
 
 ## 📋 Vue d'ensemble
 
-Ce répertoire contient **3 serveurs MCP** spécialisés pour Prolex AI :
+Ce répertoire contient **4 serveurs MCP** spécialisés pour Prolex AI, organisés selon une **nomenclature cohérente** : `mcp-<service>`
 
 | MCP | Description | Status | Tools |
 |-----|-------------|--------|-------|
-| **n8n-server** | Gestion workflows n8n | ✅ Production | 17 tools |
-| **google-workspace-server** | Google Sheets/Docs/Drive | ✅ Production | 12 tools |
-| **finance** | Paiements, Comptabilité, Crypto | 🚧 En développement | 9 tools |
+| **mcp-n8n** | Gestion workflows n8n | ✅ Production | 17 tools |
+| **mcp-google** | Google Workspace COMPLET | ✅ Production | 21 tools |
+| **mcp-communication** | Multi-canal (Email, SMS, WhatsApp) | 🚧 Dev | 5/15 tools |
+| **mcp-finance** | Paiements, Comptabilité, Crypto | 🚧 Dev | 9/25 tools |
 
-**Total : 38 tools disponibles**
+**Total : 52 tools disponibles** (67 tools prévus à terme)
+
+---
+
+## 🎯 Nouveautés v2.0
+
+### ✨ Changements Majeurs
+
+1. **Nomenclature Unifiée** : Tous les MCP suivent le pattern `mcp-<service>`
+   - ✅ `n8n-server/` → `mcp-n8n/`
+   - ✅ `google-workspace-server/` + `google/` → `mcp-google/` (fusionné)
+   - ✅ `communication/` → `mcp-communication/`
+   - ✅ `finance/` → `mcp-finance/`
+
+2. **Fusion Google** : Les deux serveurs Google ont été fusionnés en un seul `mcp-google` unifié
+   - 21 tools (au lieu de 12 ou 18)
+   - Tous les services Google Workspace : Sheets, Docs, Drive, Calendar, Gmail, Tasks
+   - Meilleur code des deux serveurs
+   - Pas de doublons
+
+3. **Organisation Simplifiée** : 4 serveurs au lieu de 5 (élimination des doublons)
 
 ---
 
@@ -23,35 +44,53 @@ Ce répertoire contient **3 serveurs MCP** spécialisés pour Prolex AI :
 
 ```
 mcp/
-├── n8n-server/                    # MCP n8n (workflows automation)
+├── mcp-n8n/                      # MCP n8n (workflows automation)
 │   ├── src/
-│   │   ├── core/                  # Client n8n, retry, cache
-│   │   ├── security/              # Autonomie, CASH protection
-│   │   ├── selfheal/              # Auto-réparation
-│   │   ├── tools/                 # 17 tools MCP
-│   │   └── types/                 # Types TypeScript
+│   │   ├── core/                 # Client n8n, retry, cache
+│   │   ├── security/             # Autonomie, CASH protection
+│   │   ├── selfheal/             # Auto-réparation
+│   │   ├── tools/                # 17 tools MCP
+│   │   └── types/                # Types TypeScript
 │   ├── package.json
 │   └── README.md
 │
-├── google-workspace-server/       # MCP Google Workspace
+├── mcp-google/                   # MCP Google Workspace (UNIFIÉ)
 │   ├── src/
-│   │   ├── clients/               # Sheets, Docs, Drive
-│   │   ├── tools/                 # 12 tools MCP
-│   │   └── auth/                  # Google OAuth
+│   │   ├── clients/              # Sheets, Docs, Drive, Calendar, Gmail, Tasks
+│   │   ├── tools/                # 21 tools MCP
+│   │   │   ├── sheets/           # 4 tools
+│   │   │   ├── docs/             # 4 tools
+│   │   │   ├── drive/            # 4 tools
+│   │   │   ├── calendar/         # 3 tools
+│   │   │   ├── gmail/            # 3 tools
+│   │   │   └── tasks/            # 3 tools
+│   │   ├── auth/                 # Google OAuth
+│   │   └── logging/              # SystemJournal
 │   ├── package.json
 │   └── README.md
 │
-├── finance/                       # MCP Finance (nouveau)
+├── mcp-communication/            # MCP Communication multi-canal
 │   ├── src/
-│   │   ├── clients/               # Stripe, Crypto, Banque
-│   │   ├── tools/                 # 9 tools MCP (25 prévus)
-│   │   │   ├── paiements/         # 5 tools
-│   │   │   └── crypto/            # 4 tools
-│   │   └── types/                 # Types finance
+│   │   ├── clients/              # Email, SMS, WhatsApp, Slack, Telegram
+│   │   ├── tools/                # 5/15 tools MCP
+│   │   │   ├── email/            # 2 tools (Gmail/SMTP)
+│   │   │   └── sms/              # 3 tools (Twilio)
+│   │   ├── security/             # Validation, rate limiting
+│   │   └── types/                # Types communication
 │   ├── package.json
 │   └── README.md
 │
-└── README.md                      # Ce fichier
+├── mcp-finance/                  # MCP Finance
+│   ├── src/
+│   │   ├── clients/              # Stripe, Crypto, Banque
+│   │   ├── tools/                # 9/25 tools MCP
+│   │   │   ├── paiements/        # 5 tools (Stripe)
+│   │   │   └── crypto/           # 4 tools (CoinGecko)
+│   │   └── types/                # Types finance
+│   ├── package.json
+│   └── README.md
+│
+└── README.md                     # Ce fichier
 ```
 
 ---
@@ -68,17 +107,22 @@ mcp/
 
 ```bash
 # MCP n8n
-cd mcp/n8n-server
+cd mcp/mcp-n8n
 npm install
 npm run build
 
-# MCP Google Workspace
-cd ../google-workspace-server
+# MCP Google (unifié)
+cd ../mcp-google
+npm install
+npm run build
+
+# MCP Communication
+cd ../mcp-communication
 npm install
 npm run build
 
 # MCP Finance
-cd ../finance
+cd ../mcp-finance
 npm install
 npm run build
 ```
@@ -130,33 +174,28 @@ AUTONOMY_LEVEL=2
 SYSTEM_JOURNAL_ENABLED=true
 ```
 
-### Usage
-
-```bash
-npm run dev
-# ou
-npm start
-```
-
 ---
 
-## 📂 MCP Google Workspace - Sheets, Docs, Drive
+## 📊 MCP Google - Google Workspace COMPLET (NOUVEAU)
 
 ### Fonctionnalités
 
 - ✅ Google Sheets (lecture/écriture/création)
 - ✅ Google Docs (lecture/création/modification)
 - ✅ Google Drive (upload/download/organisation)
+- ✅ Google Calendar (événements)
+- ✅ Gmail (lecture/envoi)
+- ✅ Google Tasks (gestion tâches)
 - ✅ Cache intelligent
 - ✅ Logs SystemJournal
 
-### 12 Tools disponibles
+### 21 Tools disponibles (UNIFIÉ)
 
 **Google Sheets (4 tools)**
-1. `read_sheet` - Lire des données
-2. `write_sheet` - Écrire des données
-3. `append_sheet` - Ajouter des lignes
-4. `create_spreadsheet` - Créer un tableur
+1. `sheets_read` - Lire des données
+2. `sheets_write` - Écrire des données
+3. `sheets_append` - Ajouter des lignes
+4. `sheets_create` - Créer une feuille
 
 **Google Docs (4 tools)**
 5. `read_doc` - Lire un document
@@ -170,13 +209,73 @@ npm start
 11. `download_drive_file` - Télécharger fichier
 12. `create_drive_folder` - Créer dossier
 
+**Google Calendar (3 tools)**
+13. `calendar_list_events` - Lister événements
+14. `calendar_create_event` - Créer événement
+15. `calendar_delete_event` - Supprimer événement
+
+**Gmail (3 tools)**
+16. `gmail_list` - Lister emails
+17. `gmail_send` - Envoyer email
+18. `gmail_read` - Lire email
+
+**Google Tasks (3 tools)**
+19. `tasks_list` - Lister tâches
+20. `tasks_create` - Créer tâche
+21. `tasks_complete` - Marquer complétée
+
 ### Configuration
 
 ```env
 # .env
-GOOGLE_APPLICATION_CREDENTIALS=./credentials/google-key.json
+GOOGLE_SERVICE_ACCOUNT_KEY_PATH=./credentials/google-key.json
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your-sa@project.iam.gserviceaccount.com
 SYSTEM_JOURNAL_SPREADSHEET_ID=your_sheet_id
 CACHE_ENABLED=true
+```
+
+---
+
+## 📱 MCP Communication - Multi-Canal Sécurisé
+
+### Fonctionnalités
+
+- 🚧 Email (Gmail/SMTP) - ✅ Implémenté (2 tools)
+- 🚧 SMS (Twilio) - ✅ Implémenté (3 tools)
+- 🚧 WhatsApp (Twilio) - En développement
+- 🚧 Slack - En développement
+- 🚧 Telegram - En développement
+
+### 5 Tools disponibles (15 prévus)
+
+**Email (2 tools)**
+1. `envoyer_email` - Envoyer avec validation multi-niveau
+2. `lire_emails` - Lire emails récents
+
+**SMS (3 tools)**
+3. `envoyer_sms` - Envoyer SMS avec whitelist stricte
+4. `lire_sms_recus` - Lire SMS reçus
+5. `obtenir_statut_sms` - Vérifier statut livraison
+
+### Configuration
+
+```env
+# .env
+# Gmail
+GMAIL_CLIENT_ID=xxxxx.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=xxxxx
+GMAIL_REFRESH_TOKEN=xxxxx
+
+# Twilio (SMS/WhatsApp)
+TWILIO_ACCOUNT_SID=ACxxxxx
+TWILIO_AUTH_TOKEN=xxxxx
+TWILIO_PHONE_NUMBER=+33xxxxxxxxx
+
+# Sécurité (OBLIGATOIRE en production)
+ALLOWED_EMAIL_RECIPIENTS=client@example.com
+ALLOWED_PHONE_NUMBERS=+33612345678
+RATE_LIMIT_EMAIL_PER_HOUR=50
+RATE_LIMIT_SMS_PER_HOUR=20
 ```
 
 ---
@@ -206,12 +305,6 @@ CACHE_ENABLED=true
 8. `calculer_gains_crypto` - Gains/pertes
 9. `generer_rapport_fiscal_crypto` - Rapport fiscal
 
-**À venir (16 tools)**
-- Comptabilité (5 tools)
-- Banque (4 tools)
-- Budget (4 tools)
-- Analytics (3 tools)
-
 ### Configuration
 
 ```env
@@ -235,12 +328,12 @@ cd /opt/prolex
 git pull origin main
 
 # Rebuild n8n MCP
-cd mcp/n8n-server
+cd mcp/mcp-n8n
 npm install
 npm run build
 
 # Rebuild Google MCP
-cd ../google-workspace-server
+cd ../mcp-google
 npm install
 npm run build
 
@@ -249,13 +342,16 @@ pm2 restart mcp-n8n
 pm2 restart mcp-google
 ```
 
-### MCP Finance (Local uniquement)
+### MCP Communication & Finance (Local uniquement)
 
-Le MCP Finance reste **en local** pour l'instant :
+Ces MCP restent **en local** pour l'instant :
 
 ```bash
 # Local seulement
-cd mcp/finance
+cd mcp/mcp-communication
+npm run dev
+
+cd ../mcp-finance
 npm run dev
 ```
 
@@ -295,10 +391,10 @@ Exemple de log :
 ```json
 {
   "timestamp": "2025-11-23T10:00:00Z",
-  "agent": "MCP_N8N",
-  "action": "trigger_workflow",
-  "workflowId": "123",
-  "correlationId": "n8n_1732356000_abc123",
+  "agent": "MCP_GOOGLE",
+  "action": "sheets_read",
+  "spreadsheetId": "1xEE...",
+  "correlationId": "google_1732356000_abc123",
   "status": "success"
 }
 ```
@@ -309,7 +405,7 @@ Exemple de log :
 
 ```bash
 # Tester un MCP
-cd mcp/n8n-server
+cd mcp/mcp-n8n
 npm test
 npm run test:coverage
 
@@ -321,47 +417,27 @@ npm run lint
 
 ## 📝 Développement
 
-### Ajouter un nouveau tool
+### Convention de Nommage
 
-1. Créer le fichier dans `src/tools/`
-2. Définir le schéma Zod
-3. Implémenter la fonction
-4. Exporter depuis `src/tools/index.ts`
-5. Enregistrer dans `src/server.ts`
-6. Tester
+**Pattern** : `mcp-<service>`
 
-### Pattern de tool
+✅ **Exemples valides** :
+- `mcp-n8n` - Workflows automation
+- `mcp-google` - Google Workspace
+- `mcp-communication` - Multi-canal
+- `mcp-finance` - Finance
 
-```typescript
-import { z } from 'zod';
-import type { MCPToolResponse } from '../types/index.js';
+❌ **À éviter** :
+- `n8n-server` (suffixe `-server` inutile)
+- `google-workspace-server` (trop verbeux)
+- `google` (trop générique)
 
-export const MonToolSchema = z.object({
-  param: z.string().describe('Description'),
-});
+### Ajouter un nouveau MCP
 
-export async function monTool(
-  args: z.infer<typeof MonToolSchema>
-): Promise<MCPToolResponse> {
-  try {
-    // Logique
-    return {
-      content: [{
-        type: 'text',
-        text: JSON.stringify({ succes: true })
-      }]
-    };
-  } catch (error) {
-    return {
-      content: [{
-        type: 'text',
-        text: `Erreur: ${(error as Error).message}`
-      }],
-      isError: true
-    };
-  }
-}
-```
+1. Créer le dossier `mcp/mcp-<service>/`
+2. Suivre la structure standard (src/, package.json, README.md)
+3. Utiliser le pattern de tools existant
+4. Documenter dans ce README
 
 ---
 
@@ -376,17 +452,17 @@ export async function monTool(
 
 ## 📜 Roadmap
 
-### v1.1 (Q1 2025)
+### v2.1 (Q1 2025)
+- [ ] Compléter MCP Communication (10 tools restants)
 - [ ] Compléter MCP Finance (16 tools restants)
-- [ ] Ajouter webhooks Stripe
-- [ ] Intégrer Plaid (banque)
+- [ ] Déployer Communication & Finance sur VPS
 
-### v1.2 (Q2 2025)
-- [ ] MCP Slack (communication)
+### v2.2 (Q2 2025)
+- [ ] MCP Slack (communication équipe)
 - [ ] MCP Notion (knowledge base)
-- [ ] MCP Calendar (agenda)
+- [ ] MCP DevOps (GitHub, GitLab, Docker)
 
-### v2.0 (Q3 2025)
+### v3.0 (Q3 2025)
 - [ ] Commercialisation MCP n8n & Google
 - [ ] Marketplace MCP
 - [ ] Documentation publique
@@ -399,6 +475,8 @@ MIT
 
 ---
 
-**Version** : 1.0.0
+**Version** : 2.0.0
 **Dernière mise à jour** : 2025-11-23
-**Total tools** : 38 (17 n8n + 12 Google + 9 Finance)
+**Serveurs MCP** : 4 (optimisé de 5 → 4)
+**Total tools** : 52 disponibles (67 prévus)
+**Changements majeurs** : Fusion Google, nomenclature unifiée
