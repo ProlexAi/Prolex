@@ -1,0 +1,40 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# TypeScript
+*.tsbuildinfo
+dist/
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# Docker Compose (on garde .example mais pas le fichier actif)
+docker-compose.yml
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Tests
+coverage/
+
+# Temporary
+tmp/
+temp/

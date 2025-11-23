@@ -1,0 +1,35 @@
+{
+  "name": "automatt-docker-panel",
+  "version": "1.0.0",
+  "description": "Dashboard Docker Automatt - Interface web pour gérer vos conteneurs Docker",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "docker",
+    "dashboard",
+    "automatt",
+    "dockerode"
+  ],
+  "author": "Automatt.ai",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "dockerode": "^4.0.0",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.47",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^4.17.20",
+    "@types/node": "^20.10.0",
+    "nodemon": "^3.0.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
+  }
+}
