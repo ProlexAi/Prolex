@@ -168,7 +168,7 @@ export async function dupliquerWorkflow(args: z.infer<typeof DupliquerWorkflowSc
 
     journal.logAction('workflow_duplique', {
       workflowIdOriginal: args.workflowId,
-      workflowIdNouv eau: duplicatedWorkflow.id,
+      workflowIdNouveau: duplicatedWorkflow.id,
       correlationId,
     });
 
