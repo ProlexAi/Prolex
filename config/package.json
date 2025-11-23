@@ -1,0 +1,27 @@
+{
+  "name": "@prolex/config",
+  "version": "1.0.0",
+  "description": "Configuration centrale pour tous les services et MCP servers Prolex",
+  "main": "dist/config-loader.js",
+  "types": "dist/config-loader.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "prolex",
+    "config",
+    "environment"
+  ],
+  "author": "Automatt.ai",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "dotenv-flow": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  }
+}

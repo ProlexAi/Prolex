@@ -1,34 +1,25 @@
 /**
  * Configuration Environnement pour MCP Communication
  * ⚠️ SÉCURITÉ RENFORCÉE
+ * Utilise la configuration centralisée de Prolex
  */
 
-import dotenv from 'dotenv';
+import { config as centralConfig } from '../../../config/dist/config-loader';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-// Charger les variables d'environnement
-dotenv.config();
+import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * Parse une liste séparée par virgules
- */
-function parseList(envVar: string | undefined, defaultValue: string[] = []): string[] {
-  if (!envVar) return defaultValue;
-  return envVar.split(',').map(s => s.trim()).filter(Boolean);
-}
-
-/**
  * Configuration complète du MCP Communication
+ * Mappée depuis la config centrale
  */
 export const config = {
   // Environnement
-  env: process.env.NODE_ENV || 'development',
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
+  env: centralConfig.nodeEnv,
+  isDevelopment: centralConfig.nodeEnv === 'development',
+  isProduction: centralConfig.nodeEnv === 'production',
 
   // ============================================================
   // EMAIL - Gmail API ou SMTP
@@ -36,55 +27,55 @@ export const config = {
   email: {
     // Gmail API (recommandé)
     gmail: {
-      clientId: process.env.GMAIL_CLIENT_ID || '',
-      clientSecret: process.env.GMAIL_CLIENT_SECRET || '',
-      refreshToken: process.env.GMAIL_REFRESH_TOKEN || '',
-      userEmail: process.env.GMAIL_USER_EMAIL || '',
-      enabled: !!process.env.GMAIL_CLIENT_ID,
+      clientId: centralConfig.email.gmail?.clientId || '',
+      clientSecret: centralConfig.email.gmail?.clientSecret || '',
+      refreshToken: centralConfig.email.gmail?.refreshToken || '',
+      userEmail: centralConfig.email.gmail?.userEmail || '',
+      enabled: !!centralConfig.email.gmail?.clientId,
     },
 
     // SMTP (alternatif)
     smtp: {
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_SECURE === 'true',
-      user: process.env.SMTP_USER || '',
-      password: process.env.SMTP_PASSWORD || '',
-      enabled: !!process.env.SMTP_USER,
+      host: centralConfig.email.smtp?.host || 'smtp.gmail.com',
+      port: centralConfig.email.smtp?.port || 587,
+      secure: centralConfig.email.smtp?.secure || false,
+      user: centralConfig.email.smtp?.user || '',
+      password: centralConfig.email.smtp?.password || '',
+      enabled: !!centralConfig.email.smtp?.user,
     },
 
-    from: process.env.EMAIL_FROM || 'Prolex AI <noreply@automatt.ai>',
+    from: centralConfig.email.from,
   },
 
   // ============================================================
   // SMS & WhatsApp - Twilio
   // ============================================================
   twilio: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
-    authToken: process.env.TWILIO_AUTH_TOKEN || '',
-    phoneNumber: process.env.TWILIO_PHONE_NUMBER || '',
-    whatsappNumber: process.env.TWILIO_WHATSAPP_NUMBER || '',
-    enabled: !!process.env.TWILIO_ACCOUNT_SID,
+    accountSid: centralConfig.twilio.accountSid || '',
+    authToken: centralConfig.twilio.authToken || '',
+    phoneNumber: centralConfig.twilio.phoneNumber || '',
+    whatsappNumber: centralConfig.twilio.whatsappNumber || '',
+    enabled: !!centralConfig.twilio.accountSid,
   },
 
   // ============================================================
   // Slack
   // ============================================================
   slack: {
-    botToken: process.env.SLACK_BOT_TOKEN || '',
-    appToken: process.env.SLACK_APP_TOKEN || '',
-    signingSecret: process.env.SLACK_SIGNING_SECRET || '',
-    defaultChannel: process.env.SLACK_DEFAULT_CHANNEL || '#general',
-    enabled: !!process.env.SLACK_BOT_TOKEN,
+    botToken: centralConfig.slack.botToken || '',
+    appToken: centralConfig.slack.appToken || '',
+    signingSecret: centralConfig.slack.signingSecret || '',
+    defaultChannel: centralConfig.slack.defaultChannel || '#general',
+    enabled: !!centralConfig.slack.botToken,
   },
 
   // ============================================================
   // Telegram
   // ============================================================
   telegram: {
-    botToken: process.env.TELEGRAM_BOT_TOKEN || '',
-    defaultChatId: process.env.TELEGRAM_DEFAULT_CHAT_ID || '',
-    enabled: !!process.env.TELEGRAM_BOT_TOKEN,
+    botToken: centralConfig.telegram.botToken || '',
+    defaultChatId: centralConfig.telegram.defaultChatId || '',
+    enabled: !!centralConfig.telegram.botToken,
   },
 
   // ============================================================
@@ -93,43 +84,43 @@ export const config = {
   security: {
     // Whitelist
     whitelist: {
-      emails: parseList(process.env.ALLOWED_EMAIL_RECIPIENTS),
-      telephones: parseList(process.env.ALLOWED_PHONE_NUMBERS),
-      domainesEmail: parseList(process.env.ALLOWED_EMAIL_DOMAINS),
-      slackUsers: parseList(process.env.ALLOWED_SLACK_USERS),
-      telegramChats: parseList(process.env.ALLOWED_TELEGRAM_CHATS),
+      emails: centralConfig.security.allowedEmailRecipients || [],
+      telephones: centralConfig.security.allowedPhoneNumbers || [],
+      domainesEmail: centralConfig.security.allowedEmailDomains || [],
+      slackUsers: centralConfig.security.allowedSlackUsers || [],
+      telegramChats: centralConfig.security.allowedTelegramChats || [],
     },
 
     // Blacklist
     blacklist: {
-      contacts: parseList(process.env.BLOCKED_RECIPIENTS),
+      contacts: centralConfig.security.blockedRecipients || [],
     },
 
     // Rate Limits (par heure)
     rateLimits: {
-      email: parseInt(process.env.RATE_LIMIT_EMAIL_PER_HOUR || '50', 10),
-      sms: parseInt(process.env.RATE_LIMIT_SMS_PER_HOUR || '20', 10),
-      whatsapp: parseInt(process.env.RATE_LIMIT_WHATSAPP_PER_HOUR || '30', 10),
-      slack: parseInt(process.env.RATE_LIMIT_SLACK_PER_HOUR || '100', 10),
-      telegram: parseInt(process.env.RATE_LIMIT_TELEGRAM_PER_HOUR || '100', 10),
-      global: parseInt(process.env.RATE_LIMIT_GLOBAL_PER_HOUR || '200', 10),
+      email: centralConfig.security.rateLimitEmailPerHour || 50,
+      sms: centralConfig.security.rateLimitSmsPerHour || 20,
+      whatsapp: centralConfig.security.rateLimitWhatsappPerHour || 30,
+      slack: centralConfig.security.rateLimitSlackPerHour || 100,
+      telegram: centralConfig.security.rateLimitTelegramPerHour || 100,
+      global: centralConfig.security.rateLimitGlobalPerHour || 200,
     },
 
     // Pièces jointes
-    maxAttachmentSizeMB: parseInt(process.env.MAX_ATTACHMENT_SIZE_MB || '10', 10),
+    maxAttachmentSizeMB: centralConfig.security.maxAttachmentSizeMb || 10,
 
     // Confirmation
     confirmation: {
-      seuilEnvoiMasse: parseInt(process.env.REQUIRE_CONFIRMATION_BULK_THRESHOLD || '10', 10),
-      requiseHorsWhitelist: process.env.REQUIRE_CONFIRMATION_NON_WHITELISTED !== 'false',
+      seuilEnvoiMasse: centralConfig.security.requireConfirmationBulkThreshold,
+      requiseHorsWhitelist: centralConfig.security.requireConfirmationNonWhitelisted,
     },
 
     // Détection de menaces
     detection: {
-      activee: process.env.ENABLE_THREAT_DETECTION !== 'false',
-      bloquerLiensSuspects: process.env.BLOCK_SUSPICIOUS_LINKS !== 'false',
-      scannerPiecesJointes: process.env.SCAN_ATTACHMENTS === 'true',
-      virusTotalApiKey: process.env.VIRUSTOTAL_API_KEY || '',
+      activee: centralConfig.security.enableThreatDetection || false,
+      bloquerLiensSuspects: centralConfig.security.blockSuspiciousLinks || false,
+      scannerPiecesJointes: centralConfig.security.scanAttachments || false,
+      virusTotalApiKey: centralConfig.security.virusTotalApiKey || '',
     },
   },
 
@@ -138,31 +129,31 @@ export const config = {
   // ============================================================
   logging: {
     systemJournal: {
-      enabled: process.env.SYSTEM_JOURNAL_ENABLED === 'true',
-      spreadsheetId: process.env.SYSTEM_JOURNAL_SPREADSHEET_ID || '',
+      enabled: centralConfig.google.systemJournalEnabled,
+      spreadsheetId: centralConfig.google.systemJournalSpreadsheetId,
     },
 
     securityLog: {
-      enabled: process.env.SECURITY_LOG_ENABLED === 'true',
-      path: process.env.SECURITY_LOG_PATH || './logs/security.log',
+      enabled: centralConfig.logging.securityLogEnabled,
+      path: centralConfig.logging.securityLogPath,
     },
 
-    logAllMessages: process.env.LOG_ALL_MESSAGES !== 'false',
+    logAllMessages: centralConfig.logging.logAllMessages,
   },
 
   // ============================================================
   // ALERTES
   // ============================================================
   alertes: {
-    adminEmail: process.env.ADMIN_EMAIL || '',
-    adminTelegramChatId: process.env.ADMIN_TELEGRAM_CHAT_ID || '',
-    alerterActiviteSuspecte: process.env.ALERT_ON_SUSPICIOUS_ACTIVITY !== 'false',
+    adminEmail: centralConfig.admin.email,
+    adminTelegramChatId: centralConfig.admin.telegramChatId || '',
+    alerterActiviteSuspecte: centralConfig.security.alertOnSuspiciousActivity || false,
   },
 
   // Cache
   cache: {
-    enabled: process.env.CACHE_ENABLED !== 'false',
-    ttl: parseInt(process.env.CACHE_TTL_SECONDS || '300', 10),
+    enabled: centralConfig.cache.enabled,
+    ttl: centralConfig.cache.ttl,
   },
 };
 
@@ -261,3 +252,5 @@ export function maskSecrets(value: string): string {
   if (!value || value.length < 8) return '***';
   return value.substring(0, 4) + '***' + value.substring(value.length - 4);
 }
+
+console.log('✅ MCP Communication : configuration chargée depuis config-loader central');

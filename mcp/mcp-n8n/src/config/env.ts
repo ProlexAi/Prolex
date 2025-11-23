@@ -1,58 +1,83 @@
 /**
  * Environment Configuration
- * Validates and exports configuration from environment variables
+ * Adapter pour utiliser la configuration centralisée de Prolex
+ *
+ * Ce fichier fait le pont entre le config-loader central et le code existant
+ * du MCP n8n pour maintenir la compatibilité.
  */
 
-import { z } from 'zod';
-import 'dotenv/config';
+import { config as centralConfig } from '../../../config/dist/config-loader';
 
-const envSchema = z.object({
+/**
+ * Interface de configuration pour le MCP n8n
+ * Compatible avec l'ancienne interface EnvConfig
+ */
+export interface EnvConfig {
   // n8n Configuration
-  N8N_BASE_URL: z.string().url(),
-  N8N_API_KEY: z.string().min(1),
-  N8N_TIMEOUT: z.coerce.number().optional().default(30000),
+  N8N_BASE_URL: string;
+  N8N_API_KEY: string;
+  N8N_TIMEOUT: number;
 
   // Server Configuration
-  NODE_ENV: z.enum(['development', 'production', 'test']).optional().default('development'),
-  HEALTHCHECK_PORT: z.coerce.number().optional().default(3000),
-  LOG_PATH: z.string().optional().default('./logs'),
+  NODE_ENV: 'development' | 'production' | 'test';
+  HEALTHCHECK_PORT: number;
+  LOG_PATH: string;
 
   // Cache Configuration
-  CACHE_TTL: z.coerce.number().optional().default(300), // 5 minutes
-  CACHE_CHECK_PERIOD: z.coerce.number().optional().default(60), // 1 minute
+  CACHE_TTL: number;
+  CACHE_CHECK_PERIOD: number;
 
   // Rate Limit Configuration
-  RATE_LIMIT_PER_SECOND: z.coerce.number().optional().default(10),
-  RATE_LIMIT_MAX_CONCURRENT: z.coerce.number().optional().default(5),
-  RATE_LIMIT_QUEUE_SIZE: z.coerce.number().optional().default(100),
+  RATE_LIMIT_PER_SECOND: number;
+  RATE_LIMIT_MAX_CONCURRENT: number;
+  RATE_LIMIT_QUEUE_SIZE: number;
 
   // Retry Configuration
-  RETRY_MAX_ATTEMPTS: z.coerce.number().optional().default(3),
-  RETRY_INITIAL_DELAY: z.coerce.number().optional().default(1000),
-  RETRY_MAX_DELAY: z.coerce.number().optional().default(10000),
-  RETRY_BACKOFF_MULTIPLIER: z.coerce.number().optional().default(2),
-  RETRY_FALLBACK_WORKFLOW_ID: z.string().optional(),
+  RETRY_MAX_ATTEMPTS: number;
+  RETRY_INITIAL_DELAY: number;
+  RETRY_MAX_DELAY: number;
+  RETRY_BACKOFF_MULTIPLIER: number;
+  RETRY_FALLBACK_WORKFLOW_ID?: string;
 
   // Streaming Configuration
-  STREAMING_ENABLED: z.coerce.boolean().optional().default(true),
-  STREAMING_POLL_INTERVAL: z.coerce.number().optional().default(1000),
-});
-
-export type EnvConfig = z.infer<typeof envSchema>;
-
-let config: EnvConfig;
-
-try {
-  config = envSchema.parse(process.env);
-} catch (error) {
-  if (error instanceof z.ZodError) {
-    console.error('❌ Invalid environment configuration:');
-    error.errors.forEach((err) => {
-      console.error(`  - ${err.path.join('.')}: ${err.message}`);
-    });
-    process.exit(1);
-  }
-  throw error;
+  STREAMING_ENABLED: boolean;
+  STREAMING_POLL_INTERVAL: number;
 }
 
-export { config };
+/**
+ * Configuration du MCP n8n mappée depuis la config centrale
+ */
+export const config: EnvConfig = {
+  // n8n Configuration
+  N8N_BASE_URL: centralConfig.n8n.baseUrl,
+  N8N_API_KEY: centralConfig.n8n.apiKey,
+  N8N_TIMEOUT: centralConfig.n8n.timeout,
+
+  // Server Configuration
+  NODE_ENV: centralConfig.nodeEnv as 'development' | 'production' | 'test',
+  HEALTHCHECK_PORT: centralConfig.mcp.healthcheckPort,
+  LOG_PATH: centralConfig.logging.path,
+
+  // Cache Configuration
+  CACHE_TTL: centralConfig.cache.ttl,
+  CACHE_CHECK_PERIOD: centralConfig.cache.checkPeriod || 60,
+
+  // Rate Limit Configuration
+  RATE_LIMIT_PER_SECOND: centralConfig.security.rateLimitPerSecond || 10,
+  RATE_LIMIT_MAX_CONCURRENT: centralConfig.security.rateLimitMaxConcurrent || 5,
+  RATE_LIMIT_QUEUE_SIZE: centralConfig.security.rateLimitQueueSize || 100,
+
+  // Retry Configuration
+  RETRY_MAX_ATTEMPTS: centralConfig.retry.maxAttempts,
+  RETRY_INITIAL_DELAY: centralConfig.retry.initialDelay,
+  RETRY_MAX_DELAY: centralConfig.retry.maxDelay,
+  RETRY_BACKOFF_MULTIPLIER: centralConfig.retry.backoffMultiplier,
+  RETRY_FALLBACK_WORKFLOW_ID: centralConfig.retry.fallbackWorkflowId,
+
+  // Streaming Configuration
+  STREAMING_ENABLED: centralConfig.streaming.enabled,
+  STREAMING_POLL_INTERVAL: centralConfig.streaming.pollInterval,
+};
+
+// Log de confirmation
+console.log('✅ MCP n8n : configuration chargée depuis config-loader central');
