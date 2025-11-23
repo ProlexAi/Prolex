@@ -211,6 +211,17 @@ Prolex/
 │   ├── 020_example-hello-world.json
 │   └── 030_github-dev-log-to-sheets.json
 │
+├── apps/                                   # Applications Electron et Node.js
+│   ├── atmtt-viewer/                       # Visualiseur Markdown/texte
+│   ├── automatt-docker-panel/              # Panneau Docker
+│   ├── prolex-run-logger/                  # Logger centralisé
+│   ├── prolex-web-scraper/                 # Web scraper
+│   └── prolex-tools-manager/               # 🛠️ Gestionnaire d'outils central
+│
+├── tools/                                  # Outils et scripts utilitaires
+│   ├── windows-registry/                   # Outils registre Windows
+│   └── filter_workflows.py                 # Script filtrage workflows
+│
 ├── mcp/                                    # Serveurs MCP
 │   └── n8n-server/                         # MCP pour piloter n8n
 │
@@ -564,6 +575,80 @@ n8n = copie exécutable de cette vérité.
 
 Tous les détails (architecture des nœuds, tests, dépannage…) sont dans n8n-workflows/README.md.
 Pour une mise en route rapide, utiliser n8n-workflows/QUICK_START.md.
+
+---
+
+## 🛠️ Applications et Outils
+
+Prolex inclut une suite d'applications et d'outils pour faciliter le développement, la gestion et l'utilisation du système.
+
+### 🎯 Tools Manager - Panneau de Contrôle Central
+
+Le **Prolex Tools Manager** est un panneau de contrôle centralisé (application Electron) qui permet de gérer tous les outils et applications en un seul endroit.
+
+📂 **Emplacement** : `apps/prolex-tools-manager/`
+
+**Fonctionnalités** :
+- 📱 Gestion centralisée de tous les outils
+- 📦 Installation automatique en un clic
+- ▶️ Lancement rapide des applications
+- 🔄 Actualisation du statut en temps réel
+- 🎯 Filtres par catégorie (Apps / Outils)
+- 📊 Statistiques d'installation
+
+**Installation rapide** :
+```bash
+# Depuis la racine du projet
+.\install-tools.bat
+
+# OU manuellement
+cd apps/prolex-tools-manager
+npm install
+npm start
+```
+
+### 📱 Applications disponibles
+
+| Application | Description | Documentation |
+|-------------|-------------|---------------|
+| **AtmttViewer** | Visualiseur et éditeur de fichiers Markdown et texte | [apps/atmtt-viewer/README.md](apps/atmtt-viewer/README.md) |
+| **Docker Panel** | Panneau de contrôle Docker pour Automatt | [apps/automatt-docker-panel/README.md](apps/automatt-docker-panel/README.md) |
+| **Prolex Run Logger** | Logger centralisé pour Prolex | [apps/prolex-run-logger/README.md](apps/prolex-run-logger/README.md) |
+| **Web Scraper** | Outil de scraping web pour Prolex | [apps/prolex-web-scraper/README.md](apps/prolex-web-scraper/README.md) |
+| **Tools Manager** | Panneau de contrôle centralisé | [apps/prolex-tools-manager/README.md](apps/prolex-tools-manager/README.md) |
+
+### 🔧 Outils disponibles
+
+| Outil | Description | Documentation |
+|-------|-------------|---------------|
+| **Windows Registry Tools** | Masquer/restaurer les dossiers par défaut de Windows | [tools/windows-registry/README.md](tools/windows-registry/README.md) |
+| **Filter Workflows** | Script Python pour filtrer les workflows n8n | [Voir ci-dessus](#outil-de-filtrage--toolsfilter_workflowspy) |
+
+### 🚀 Installation complète
+
+Pour installer tous les outils automatiquement :
+
+```bash
+# Windows
+.\install-tools.bat
+
+# Le script va :
+# 1. Vérifier Node.js
+# 2. Installer le Tools Manager
+# 3. Installer toutes les applications
+# 4. Créer un raccourci bureau
+# 5. Proposer de lancer le Tools Manager
+```
+
+### 📖 Documentation individuelle
+
+Chaque application et outil possède sa propre documentation complète dans son dossier respectif. Consultez les fichiers `README.md` dans chaque dossier pour :
+
+- Instructions d'installation détaillées
+- Guide d'utilisation
+- Configuration
+- Dépannage
+- Exemples d'utilisation
 
 5. Observabilité & logs (Google Sheets)
 Les événements liés à la synchro GitHub → n8n sont enregistrés dans un Google Sheet dédié.
