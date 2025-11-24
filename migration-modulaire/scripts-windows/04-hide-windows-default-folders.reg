@@ -1,0 +1,78 @@
+Windows Registry Editor Version 5.00
+
+; =====================================================================
+; REGISTRY SCRIPT: Hide Windows Default Folders
+; =====================================================================
+; Description: Masque les dossiers Windows par défaut de l'explorateur
+; Author: Claude Code Assistant
+; Date: 2025-11-24
+; Version: 1.0
+;
+; ATTENTION: Ce fichier modifie le registre Windows
+; Créer un point de restauration système avant d'exécuter!
+;
+; Usage:
+;   1. Double-cliquer sur ce fichier
+;   2. Accepter la modification du registre
+;   3. Redémarrer l'explorateur Windows (ou redémarrer le PC)
+; =====================================================================
+
+; Masquer "Objets 3D" (3D Objects)
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{31C0DD25-9439-4F12-BF41-7FF4EDA38722}\PropertyBag]
+"ThisPCPolicy"="Hide"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{31C0DD25-9439-4F12-BF41-7FF4EDA38722}\PropertyBag]
+"ThisPCPolicy"="Hide"
+
+; Masquer "Musique" (Music)
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{a0c69a99-21c8-4671-8703-7934162fcf1d}\PropertyBag]
+"ThisPCPolicy"="Hide"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{a0c69a99-21c8-4671-8703-7934162fcf1d}\PropertyBag]
+"ThisPCPolicy"="Hide"
+
+; Masquer "Vidéos" (Videos)
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{35286a68-3c57-41a1-bbb1-0eae73d76c95}\PropertyBag]
+"ThisPCPolicy"="Hide"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{35286a68-3c57-41a1-bbb1-0eae73d76c95}\PropertyBag]
+"ThisPCPolicy"="Hide"
+
+; Masquer "Images" (Pictures) - OPTIONNEL (commenté par défaut)
+; Décommenter si vous n'utilisez pas ce dossier
+;[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{0ddd015d-b06c-45d5-8c4c-f59713854639}\PropertyBag]
+;"ThisPCPolicy"="Hide"
+;
+;[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{0ddd015d-b06c-45d5-8c4c-f59713854639}\PropertyBag]
+;"ThisPCPolicy"="Hide"
+
+; Masquer "Documents" - OPTIONNEL (commenté par défaut)
+; Décommenter si vous n'utilisez pas ce dossier
+;[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{f42ee2d3-909f-4907-8871-4c22fc0bf756}\PropertyBag]
+;"ThisPCPolicy"="Hide"
+;
+;[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Explorer\FolderDescriptions\{f42ee2d3-909f-4907-8871-4c22fc0bf756}\PropertyBag]
+;"ThisPCPolicy"="Hide"
+
+; =====================================================================
+; NOTES
+; =====================================================================
+;
+; Après application de ce fichier:
+; 1. Les dossiers sont masqués de "Ce PC" dans l'explorateur
+; 2. Les dossiers existent toujours physiquement
+; 3. Vous pouvez y accéder via le chemin complet
+; 4. Redémarrer l'explorateur Windows pour voir les changements:
+;    - Ctrl + Shift + Esc → Gestionnaire des tâches
+;    - Processus → Windows Explorer → Redémarrer
+;
+; Pour annuler:
+; 1. Changer "Hide" en "Show" dans ce fichier
+; 2. Ré-exécuter le fichier
+; 3. Redémarrer l'explorateur
+;
+; Backup du registre:
+; Avant toute modification, créer un point de restauration:
+; Panneau de configuration → Système → Protection système
+; → Créer un point de restauration
+; =====================================================================
