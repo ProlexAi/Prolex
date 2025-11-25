@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ShellExecute",
+  "description": "Execute shell commands on local system with timeout",
+  "type": "object",
+  "properties": {
+    "cmd": {
+      "type": "string",
+      "description": "The shell command to execute (bash on Unix, PowerShell on Windows)",
+      "minLength": 1,
+      "maxLength": 10000,
+      "examples": [
+        "ls -la",
+        "Get-ChildItem",
+        "echo Hello",
+        "df -h"
+      ]
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "description": "Maximum execution time in seconds",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 30
+    },
+    "working_directory": {
+      "type": "string",
+      "description": "Optional working directory for command execution",
+      "examples": [
+        "/home/user/projects",
+        "C:\\Users\\Name\\Documents"
+      ]
+    }
+  },
+  "required": ["cmd"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "cmd": "ls -la /var/log",
+      "timeout_seconds": 10
+    },
+    {
+      "cmd": "Get-Process | Sort-Object CPU -Descending | Select-Object -First 10",
+      "timeout_seconds": 5
+    },
+    {
+      "cmd": "git status",
+      "timeout_seconds": 15,
+      "working_directory": "/home/user/prolex-core"
+    }
+  ]
+}
