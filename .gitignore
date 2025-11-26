@@ -37,3 +37,6 @@ mcp/n8n-server/package-lock.json
 mcp/n8n-server/.env.example
 mcp/n8n-server/.gitignore
 
+
+# Archive MCP modulaire (trop lourde avec node_modules)
+mcp/_archive-n8n-mcp-modulaire/
