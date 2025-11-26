@@ -1,4 +1,4 @@
-# config/autonomy.yml — Version finale Prolex v4.2 (niveau 4 permanent)
+# CONFIGURATION AUTONOMIE PROLEX v4
 # Ce fichier définit le niveau d'autonomie actuel de Prolex
 # et les capacités associées à chaque niveau
 
@@ -6,34 +6,12 @@
 # NIVEAU D'AUTONOMIE ACTUEL
 # ====================================================================
 
-# Niveau actuel : 0, 1, 2, 3, 
+# Niveau actuel : 0, 1, 2, ou 3
 # À ajuster selon l'environnement et la confiance
-prolex_current_autonomy_level: 4
-
-# Configuration niveau 4
-autonomy_config:
-  current: 4
-  max: 4
-  mode: full-autonomous
-  human_in_the_loop: false
-  notification_policy:
-    critical_only: true          # > 5000 €, modification rag/rules/, nouveau workflow
-    channel: telegram
-    admin_id: 123456789          # ID Telegram Matthieu
+prolex_current_autonomy_level: 2
 
 # ====================================================================
-# SÉCURITÉS NIVEAU 4
-# ====================================================================
-
-safety:
-  max_daily_invoices: 50
-  forbidden_paths:
-    - "infra/vps-prod/docker-compose.yml"
-    - ".env"
-    - "mcp/n8n-server/.env"
-
-# ====================================================================
-# DÉFINITION DES NIVEAUX (0-4)
+# DÉFINITION DES NIVEAUX
 # ====================================================================
 
 autonomy_levels:
@@ -159,80 +137,34 @@ autonomy_levels:
       max_tools_per_plan: 10
       sandbox_only_for_n8n: true     # Workflows n8n en sandbox uniquement
 
-  # ------------------------------------------------------------------
-  # NIVEAU 4 : AUTONOMIE COMPLÈTE (NOUVEAU)
-  # ------------------------------------------------------------------
-  4:
-    name: "Autonomie complète"
-    description: |
-      Prolex est en autonomie totale sans validation humaine.
-      Niveau de production pour 
-      Alertes critiques seulement (>5000€, modification règles, nouveaux workflows).
-
-    allowed_actions:
-      - all_level_3                  # Toutes actions niveau 3
-      - N8N_WORKFLOW_PROMOTE         # Promotion production AUTO
-      - CLIENT_INVOICE_CREATE        # Création factures clients AUTO
-      - RAG_RULES_UPDATE             # Modification règles RAG AUTO
-      - N8N_WORKFLOW_DEPLOY_PROD     # Déploiement direct en production
-      - GIT_OPERATIONS_PRODUCTION    # Git sur prod AUTO
-      - BACKUP_RESTORE               # Restauration backups AUTO (avec alertes)
-
-    forbidden_actions:
-      - MODIFY_DOCKER_COMPOSE        # Interdiction docker-compose.yml
-      - MODIFY_ENV_FILES             # Interdiction fichiers .env
-      - DELETE_PRODUCTION_DATA       # Interdiction suppression données prod
-
-    use_cases:
-      - "Production complète sans intervention humaine"
-      - "Gestion business autonome 24/7"
-      - "Opérations critiques avec alertes seulement"
-
-    constraints:
-      max_cost_per_request_usd: 10.00
-      max_tools_per_plan: 20
-      sandbox_only_for_n8n: false    # Workflows n8n directement en prod
-      max_daily_invoices: 50         # Limite factures quotidiennes
-      alert_threshold_amount: 5000   # Alerte si montant > 5000€
-
 # ====================================================================
 # GARDE-FOUS GLOBAUX
 # ====================================================================
 
 global_safeguards:
-  # Outils nécessitant TOUJOURS alerte (même niveau 4)
-  always_alert_on:
-    - AMOUNT_OVER_5000_EUR
-    - RAG_RULES_MODIFICATION
-    - NEW_WORKFLOW_CREATION
-    - BACKUP_RESTORE
+  # Outils nécessitant TOUJOURS confirmation explicite (même niveau 3)
+  always_require_confirmation:
+    - N8N_WORKFLOW_PROMOTE
+    - RESTORE_BACKUP
     - GIT_OPERATIONS_ON_MAIN_BRANCH
 
-  # Fichiers interdits de modification (même niveau 4)
-  forbidden_file_modifications:
-    - "infra/vps-prod/docker-compose.yml"
-    - ".env"
-    - "mcp/n8n-server/.env"
-    - "config/system.yml"
-
-  # Limites journalières (niveau 4)
+  # Limites journalières
   daily_limits:
-    BACKUP_RUN: 10
-    WEB_SEARCH: 200
-    CLIENT_WORKFLOW_RUN: 100
-    CLIENT_INVOICE_CREATE: 50
+    BACKUP_RUN: 5
+    WEB_SEARCH: 100
+    CLIENT_WORKFLOW_RUN: 50
 
   # Environnements autorisés par type d'outil
   environment_restrictions:
     n8n_workflows:
       level_2: ["sandbox"]
       level_3: ["sandbox", "staging"]
-      level_4: ["sandbox", "staging", "production"]  # Production directe
+      manual_only: ["production"]
 
     git_operations:
       level_2: []
       level_3: ["dev", "staging"]
-      level_4: ["dev", "staging", "production"]      # Production directe
+      manual_only: ["production"]
 
 # ====================================================================
 # CONFIGURATION PAR ENVIRONNEMENT
@@ -245,47 +177,38 @@ environments:
     log_all_decisions: true
 
   staging:
-    default_autonomy_level: 3
+    default_autonomy_level: 2
     allow_experimental_tools: false
     log_all_decisions: true
 
   production:
-    default_autonomy_level: 4  # NIVEAU 4 ACTIVÉ EN PRODUCTION
+    default_autonomy_level: 2  # ou 3 après validation
     allow_experimental_tools: false
     log_all_decisions: true
-    require_double_confirmation_for_high_risk: false  # Plus de confirmation
+    require_double_confirmation_for_high_risk: true
 
 # ====================================================================
-# ESCALADE VERS HUMAIN (NIVEAU 4)
+# ESCALADE VERS HUMAIN
 # ====================================================================
 
 human_escalation:
-  # Alertes uniquement (pas de blocage)
+  # Situations nécessitant validation humaine
   triggers:
-    - "Montant facture > 5000 EUR"
-    - "Modification fichiers dans rag/rules/"
-    - "Création nouveau workflow n8n"
-    - "Restauration backup"
-    - "Opération Git sur branch main en production"
-    - "Erreur répétée > 5 fois sur même action"
+    - "Outil high-risk non autorisé au niveau actuel"
+    - "Coût estimé > max_cost_per_request_usd"
+    - "Erreur répétée > 3 fois sur même action"
+    - "Données sensibles (sensitivity: high) détectées"
+    - "Demande ambiguë (confidence < 0.70)"
 
-  # Canal de notification (alertes uniquement, pas de validation)
-  notification_channel: "telegram"
+  # Canal de notification
+  notification_channel: "email"  # ou "slack", "telegram"
   notification_recipient: "matthieu@automatt.ai"
-  telegram_chat_id: 123456789
-  block_execution: false  # Alertes seulement, pas de blocage
 
 # ====================================================================
 # HISTORIQUE DES CHANGEMENTS
 # ====================================================================
 
 changelog:
-  - date: "2025-11-22"
-    version: "4.2"
-    change: "Ajout niveau 4 - Autonomie complète sans validation humaine"
-    author: "Matthieu"
-    impact: "Prolex peut désormais créer factures, modifier RAG, déployer workflows en production sans validation"
-
   - date: "2025-11-22"
     version: "4.0"
     change: "Ajout niveaux 0-3 + outils N8N_* + garde-fous"

@@ -96,9 +96,6 @@ Prolex/
 │   ├── rules/
 │   │   └── 01_REGLES_PRINCIPALES.md
 │   ├── examples/
-│   │   └── lead-example.json           # 📋 Exemple de lead pour offres
-│   ├── offres/
-│   │   └── proposition-v1.md           # 📝 Template offre commerciale v4.3
 │   └── context/
 │       └── 02_VARIABLES_ET_CONTEXTE.md
 │
@@ -110,7 +107,6 @@ Prolex/
 │   ├── 010_sync-github-to-n8n.json
 │   ├── 020_example-hello-world.json
 │   ├── 030_github-dev-log-to-sheets.json
-│   ├── 250_proposal_auto.json          # 💰 Offre commerciale automatique
 │   └── README.md
 │
 ├── mcp/                                # Serveurs MCP
@@ -214,136 +210,6 @@ kimmy:
 
 ---
 
-## 📁 Organisation des Fichiers (Context Orchestrator)
-
-### Vue d'ensemble
-
-**Principe** : **GitHub Prolex = Source de vérité unique**
-
-Tous les fichiers de contexte (RAG, MCP, logs, configs) sont organisés dans une seule structure cohérente, versionnée dans Git et synchronisée sur tous les environnements.
-
-### Document principal
-
-| Document | Rôle |
-|----------|------|
-| [CONTEXT_ORCHESTRATOR.md](docs/CONTEXT_ORCHESTRATOR.md) | **Documentation complète** du système de routage des fichiers |
-
-### Configuration
-
-| Fichier | Rôle |
-|---------|------|
-| [config/context-routing.json](config/context-routing.json) | **Configuration de routage** : catégories, patterns, webhooks |
-
-### Structure des dossiers
-
-```
-Prolex/
-├── rag/
-│   ├── sources/          # 📄 Documents sources pour RAG (versionnés)
-│   ├── index/            # 🔍 Index vectoriels (générés, non versionnés)
-│   ├── context/          # 📋 Contextes système (existant)
-│   ├── rules/            # 📐 Règles Prolex (existant)
-│   └── tools/            # 🛠️ Catalogue outils (existant)
-│
-├── docs/
-│   └── contextes/        # 💬 Prompts & instructions Kimmy/Prolex/Opex
-│
-├── mcp/
-│   ├── */src/            # Code source MCP (versionnés)
-│   ├── build/            # 🔨 Builds compilés (non versionnés)
-│   └── config/           # ⚙️ Configs MCP (.example versionnés, .env non)
-│
-├── logs/
-│   ├── tech/             # 🐛 Logs techniques (non versionnés)
-│   └── system/           # 💻 Logs infrastructure (non versionnés)
-│
-└── inbox/
-    └── unknown/          # 📥 Fichiers non classifiés (buffer temporaire)
-```
-
-### Catégories principales
-
-| Catégorie | Path | Git | Rôle |
-|-----------|------|-----|------|
-| `rag_source` | `rag/sources/` | ✅ | Documents sources pour RAG |
-| `rag_index` | `rag/index/` | ❌ | Index vectoriels générés |
-| `contexte_system` | `docs/contextes/` | ✅ | Prompts système LLM |
-| `mcp_source` | `mcp/` | ✅ | Code TypeScript/JS |
-| `mcp_build` | `mcp/build/` | ❌ | Fichiers compilés |
-| `mcp_config` | `mcp/config/` | ⚠️ | Configs (secrets ignorés) |
-| `logs_tech` | `logs/tech/` | ❌ | Logs applicatifs |
-| `logs_system` | `logs/system/` | ❌ | Logs infrastructure |
-| `unknown` | `inbox/unknown/` | ❌ | Non classifiés → notification |
-
-### Workflow automatique
-
-```
-Fichier reçu → Classification (context-routing.json)
-    ↓
-Routage vers dossier approprié
-    ↓
-Si "unknown" → Notification webhook n8n
-    ↓
-(Optionnel) Trigger workflows downstream
-    (ex: RAG indexing si rag_source)
-```
-
-### Commandes CLI (à venir)
-
-```bash
-# Classer un fichier
-prolexctl context route /path/to/file.md
-
-# Lister les catégories
-prolexctl context categories
-
-# Valider la config
-prolexctl context validate-config
-```
-
----
-
-## 🔒 Sécurité et Restrictions
-
-### 🚨 ZONE INTERDITE : Cash Workflows
-
-**Date de verrouillage** : 2025-11-22
-
-Prolex est **STRICTEMENT INTERDIT** de toucher aux workflows générateurs de revenus.
-
-**Document principal** : [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md)
-
-**Workflows protégés** :
-- `200_leadgen_li_mail.json` - Génération de leads
-- `250_proposal_auto.json` - **CRITIQUE** - Propositions commerciales
-- `300_content_machine.json` - Machine à contenu
-- `400_invoice_stripe_auto.json` - **CRITIQUE** - Facturation Stripe
-- `450_relances_impayes.json` - **CRITIQUE** - Relances impayés
-- `999_master_tracker.json` - **CRITIQUE** - Tracker cash
-
-**Actions interdites** :
-- ❌ Créer (workflows avec patterns interdits)
-- ❌ Modifier (workflows cash existants)
-- ❌ Supprimer
-- ❌ Déclencher manuellement
-- ❌ Réparer
-- ❌ Analyser
-- ❌ Proposer des améliorations
-
-**Verrou technique** :
-- Code: `mcp/n8n-server/src/security/cashWorkflowGuard.ts`
-- Config: `config/cash_workflows_forbidden.yml`
-- Appliqué dans: `createWorkflow()`, `updateWorkflow()`, `triggerWorkflow()`
-
-**En cas de violation** :
-1. ⛔ Arrêt immédiat de l'opération
-2. 📱 Alerte Telegram à Matthieu
-3. 📝 Log SystemJournal (severity: CRITICAL)
-
-**Seul autorisé** : Matthieu
-
----
-
 ## 🛠️ Outils disponibles
 
 ### Catalogue complet
@@ -354,7 +220,7 @@ Voir [rag/tools/tools.yml](rag/tools/tools.yml)
 | Catégorie | Nombre | Exemples |
 |-----------|--------|----------|
 | **Productivité** | 5 | TASK_CREATE, CAL_EVENT_CREATE, DOC_CREATE_NOTE |
-| **Documentation** | 3 | DOC_CREATE_NOTE, DOC_UPDATE, CREATE_GOOGLE_DOC |
+| **Documentation** | 2 | DOC_CREATE_NOTE, DOC_UPDATE |
 | **Logging** | 1 | LOG_APPEND |
 | **Recherche** | 1 | WEB_SEARCH |
 | **DevOps** | 4 | GIT_CLONE, GIT_SYNC, GITHUB_OPEN_PR |
@@ -363,11 +229,9 @@ Voir [rag/tools/tools.yml](rag/tools/tools.yml)
 | **Backup** | 2 | BACKUP_RUN, RESTORE_BACKUP |
 | **Reporting** | 3 | COST_REPORT_RUN, WEEKLY_SUMMARY |
 | **N8N Management** | 5 | N8N_WORKFLOW_DESIGN, N8N_WORKFLOW_UPSERT, N8N_WORKFLOW_TEST |
-| **Automation** | 1 | TRIGGER_WORKFLOW |
-| **Communication** | 2 | SEND_EMAIL, SEND_TELEGRAM_MESSAGE |
 | **Core** | 2 | PROXY_EXEC, TODO_CREATE |
 
-**Total** : 34 outils
+**Total** : 30+ outils
 
 ### Outils v4+ (nouveauté)
 
@@ -507,11 +371,8 @@ R: Utiliser `N8N_WORKFLOW_TEST` sur sandbox, puis `N8N_WORKFLOW_PROMOTE` avec co
 - ✨ Intégration Kimmy + Prolex + Opex
 - ✨ Gestion autonome workflows n8n
 - ✨ 4 niveaux d'autonomie
-- ✨ 34 outils disponibles
+- ✨ 30+ outils disponibles
 - ✨ Documentation complète
-- 💰 **Nouveau**: Workflow 250 - Offre commerciale automatique (lead → proposition → email)
-- 💰 **Nouveau**: 4 outils Sales & Automation (TRIGGER_WORKFLOW, SEND_EMAIL, SEND_TELEGRAM_MESSAGE, CREATE_GOOGLE_DOC)
-- 📝 **Nouveau**: Template offre Prolex v4.3 à 6 900 € HT
 
 ---
 

@@ -553,8 +553,7 @@ Cas d'usage résolus pour apprentissage.
 | `/webhook/kimmy-intake` | Texte brut utilisateur | KimmyPayload JSON ou réponse directe | Analyse et classification |
 | `/webhook/prolex-intake` | KimmyPayload JSON | ProlexOutput JSON | Planification stratégique |
 | `/webhook/proxy-exec` | ProlexOutput JSON | Routage vers workflows | Validation et exécution |
-| `/webhook/github-to-n8n` | GitHub push event | Création/MAJ workflows n8n | Sync automatique GitHub → n8n |
-| `/webhook/prolex-git-pull` | Repo path + branch | Git pull status | Sync automatique git pull sur serveur |
+| `/webhook/github-sync` | GitHub push event | Création/MAJ workflows n8n | Sync automatique |
 
 ---
 

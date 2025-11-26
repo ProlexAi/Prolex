@@ -1,12 +1,33 @@
-# Prolex v4.2 — Automatt.ai
+<<<<<< claude/n8n-mcp-server-01Rq2sQFqRYYFXx2RPEigtpH
+# Prolex
+Projet Multi-task AAI
 
-**Statut actuel : Autonomie niveau 4 activée le 22 novembre 2025** 🚀
+## Serveurs MCP
 
-> L'IA prend toutes les décisions business et techniques seule.
+Ce depot contient des serveurs MCP (Model Context Protocol) pour etendre les capacites de Claude Desktop.
 
-**Plus de validation humaine** · **Factures auto** · **RAG auto-refresh** · **Déploiements instantanés**
+### n8n MCP Server
 
----
+Serveur MCP pour piloter votre instance n8n depuis Claude.
+
+**Emplacement** : `mcp/n8n-server/`
+
+**Fonctionnalites** :
+- Liste tous vos workflows n8n
+- Declenche l'execution de workflows avec payload personnalise
+
+**Documentation complete** : [mcp/n8n-server/README.md](./mcp/n8n-server/README.md)
+
+**Demarrage rapide** :
+```bash
+cd mcp/n8n-server
+npm install
+cp .env.example .env
+# Editez .env avec vos credentials n8n
+npm run dev
+```
+======
+# Prolex v4 🧠
 
 > **Cerveau IA orchestrateur** d'Automatt.ai avec autonomie étendue et gestion de workflows n8n
 
@@ -77,99 +98,8 @@ Prolex est le **cerveau IA orchestrateur** de l'entreprise Automatt.ai.
 | **Kimmy** | Filtre d'entrée | GPT-4 Turbo / Claude Haiku + n8n |
 | **Prolex** | Cerveau orchestrateur | Claude 3.5 Sonnet + AnythingLLM |
 | **Opex** | Bras exécutif | n8n workflows + Proxy Master |
-| **PostgreSQL** | **Logs centralisés (PRIORITÉ)** | **PostgreSQL 16 + table `app_logs`** |
-| **SystemJournal** | Mémoire d'exécution (legacy) | Google Sheets |
+| **SystemJournal** | Mémoire d'exécution | Google Sheets |
 | **RAG** | Base de connaissance | Google Drive + docs structurés |
-
----
-
-## 📊 Logging centralisé (PostgreSQL)
-
-### Vue d'ensemble
-
-⚠️ **NOUVEAU (v4.2+)** : PostgreSQL est désormais le **système de logging PRIORITAIRE** pour Prolex.
-
-**Tous les composants** (n8n, MCP servers, Prolex agent) loguent leurs événements dans une **table PostgreSQL centralisée** (`app_logs`) pour :
-
-✅ **Performance** : Écriture/lecture ultra-rapides
-✅ **Requêtes puissantes** : SQL pour analyses complexes
-✅ **Scalabilité** : Millions de logs sans problème
-✅ **Indexation** : Recherche optimisée (source, niveau, date)
-✅ **Détails JSON** : Métadonnées flexibles avec JSONB
-✅ **Future RAG** : Préparation pour LogRAG et AIOps (phase 2)
-
-### Architecture
-
-```
-┌─────────────────────────────────────┐
-│ n8n, MCP servers, Prolex Agent     │
-└─────────────┬───────────────────────┘
-              │ logEvent()
-              ▼
-     ┌────────────────┐
-     │  dbClient.ts   │  ← Pool PostgreSQL (pg)
-     └────────┬───────┘
-              │
-              ▼
-     ┌────────────────┐
-     │  PostgreSQL    │
-     │  app_logs      │  ← Table centrale
-     └────────────────┘
-```
-
-### Table `app_logs`
-
-```sql
-CREATE TABLE app_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  source TEXT NOT NULL,              -- "mcp_n8n", "prolex_agent", etc.
-  level TEXT NOT NULL,                -- "debug", "info", "warn", "error"
-  message TEXT NOT NULL,              -- Message principal
-  details JSONB DEFAULT '{}'::jsonb  -- Métadonnées flexibles
-);
-```
-
-### Outil MCP `log_event`
-
-**Nouveau tool MCP** (niveau 0+) pour permettre aux agents IA de s'auto-logger :
-
-```typescript
-// Exemple d'utilisation
-{
-  "source": "prolex_agent",
-  "level": "info",
-  "message": "Workflow design completed",
-  "details": {
-    "workflow_id": "abc123",
-    "duration_ms": 1250
-  }
-}
-```
-
-### Documentation complète
-
-📚 **[docs/LOGS_POSTGRES.md](docs/LOGS_POSTGRES.md)** → Documentation complète avec :
-- Installation & configuration
-- Guide d'utilisation du client TypeScript
-- Requêtes SQL utiles
-- Monitoring & maintenance
-- Roadmap LogRAG/AIOps
-
-### Quick Start
-
-```bash
-# 1. Démarrer PostgreSQL
-cd infra/vps-prod
-docker-compose up -d postgres
-
-# 2. Exécuter les migrations
-cd ../db
-./migrate.sh
-
-# 3. Vérifier la table
-docker exec -it prolex-postgres psql -U prolex_user -d prolex_db -c "\d app_logs"
-```
 
 ---
 
@@ -210,17 +140,6 @@ Prolex/
 │   ├── 010_sync-github-to-n8n.json
 │   ├── 020_example-hello-world.json
 │   └── 030_github-dev-log-to-sheets.json
-│
-├── apps/                                   # Applications Electron et Node.js
-│   ├── atmtt-viewer/                       # Visualiseur Markdown/texte
-│   ├── automatt-docker-panel/              # Panneau Docker
-│   ├── prolex-run-logger/                  # Logger centralisé
-│   ├── prolex-web-scraper/                 # Web scraper
-│   └── prolex-tools-manager/               # 🛠️ Gestionnaire d'outils central
-│
-├── tools/                                  # Outils et scripts utilitaires
-│   ├── windows-registry/                   # Outils registre Windows
-│   └── filter_workflows.py                 # Script filtrage workflows
 │
 ├── mcp/                                    # Serveurs MCP
 │   └── n8n-server/                         # MCP pour piloter n8n
@@ -549,7 +468,7 @@ GitHub to n8n Sync
 
 Fonctionnement :
 
-GitHub envoie un webhook push vers n8n (/webhook/github-to-n8n).
+GitHub envoie un webhook push vers n8n (/webhook/github-sync).
 
 Le workflow GitHub to n8n Sync :
 
@@ -575,80 +494,6 @@ n8n = copie exécutable de cette vérité.
 
 Tous les détails (architecture des nœuds, tests, dépannage…) sont dans n8n-workflows/README.md.
 Pour une mise en route rapide, utiliser n8n-workflows/QUICK_START.md.
-
----
-
-## 🛠️ Applications et Outils
-
-Prolex inclut une suite d'applications et d'outils pour faciliter le développement, la gestion et l'utilisation du système.
-
-### 🎯 Tools Manager - Panneau de Contrôle Central
-
-Le **Prolex Tools Manager** est un panneau de contrôle centralisé (application Electron) qui permet de gérer tous les outils et applications en un seul endroit.
-
-📂 **Emplacement** : `apps/prolex-tools-manager/`
-
-**Fonctionnalités** :
-- 📱 Gestion centralisée de tous les outils
-- 📦 Installation automatique en un clic
-- ▶️ Lancement rapide des applications
-- 🔄 Actualisation du statut en temps réel
-- 🎯 Filtres par catégorie (Apps / Outils)
-- 📊 Statistiques d'installation
-
-**Installation rapide** :
-```bash
-# Depuis la racine du projet
-.\install-tools.bat
-
-# OU manuellement
-cd apps/prolex-tools-manager
-npm install
-npm start
-```
-
-### 📱 Applications disponibles
-
-| Application | Description | Documentation |
-|-------------|-------------|---------------|
-| **AtmttViewer** | Visualiseur et éditeur de fichiers Markdown et texte | [apps/atmtt-viewer/README.md](apps/atmtt-viewer/README.md) |
-| **Docker Panel** | Panneau de contrôle Docker pour Automatt | [apps/automatt-docker-panel/README.md](apps/automatt-docker-panel/README.md) |
-| **Prolex Run Logger** | Logger centralisé pour Prolex | [apps/prolex-run-logger/README.md](apps/prolex-run-logger/README.md) |
-| **Web Scraper** | Outil de scraping web pour Prolex | [apps/prolex-web-scraper/README.md](apps/prolex-web-scraper/README.md) |
-| **Tools Manager** | Panneau de contrôle centralisé | [apps/prolex-tools-manager/README.md](apps/prolex-tools-manager/README.md) |
-
-### 🔧 Outils disponibles
-
-| Outil | Description | Documentation |
-|-------|-------------|---------------|
-| **Windows Registry Tools** | Masquer/restaurer les dossiers par défaut de Windows | [tools/windows-registry/README.md](tools/windows-registry/README.md) |
-| **Filter Workflows** | Script Python pour filtrer les workflows n8n | [Voir ci-dessus](#outil-de-filtrage--toolsfilter_workflowspy) |
-
-### 🚀 Installation complète
-
-Pour installer tous les outils automatiquement :
-
-```bash
-# Windows
-.\install-tools.bat
-
-# Le script va :
-# 1. Vérifier Node.js
-# 2. Installer le Tools Manager
-# 3. Installer toutes les applications
-# 4. Créer un raccourci bureau
-# 5. Proposer de lancer le Tools Manager
-```
-
-### 📖 Documentation individuelle
-
-Chaque application et outil possède sa propre documentation complète dans son dossier respectif. Consultez les fichiers `README.md` dans chaque dossier pour :
-
-- Instructions d'installation détaillées
-- Guide d'utilisation
-- Configuration
-- Dépannage
-- Exemples d'utilisation
 
 5. Observabilité & logs (Google Sheets)
 Les événements liés à la synchro GitHub → n8n sont enregistrés dans un Google Sheet dédié.
@@ -812,3 +657,7 @@ Prolex/
     SYSTEMJOURNAL_MODELE.md
     CLIENT_TEMPLATE_AUTOMATT.md
   INDEX_PROLEX.md   <- fichier index central
+
+
+
+>>>>>> main

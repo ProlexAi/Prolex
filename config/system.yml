@@ -274,8 +274,7 @@ webhooks:
     kimmy_intake: "/webhook/kimmy-intake"
     prolex_intake: "/webhook/prolex-intake"
     proxy_exec: "/webhook/proxy-exec"
-    github_to_n8n: "/webhook/github-to-n8n"
-    prolex_git_pull: "/webhook/prolex-git-pull"
+    github_sync: "/webhook/github-sync"
 
 # ====================================================================
 # RAG CONFIGURATION

@@ -24,15 +24,8 @@ core_proxy:
     file: "010_sync-github-to-n8n.json"
     name: "GitHub to n8n Sync"
     role: "Synchro workflows depuis GitHub"
-    webhook: "/webhook/github-to-n8n"
+    webhook: "/webhook/github-sync"
     tool_id: null
-
-  - id: "012"
-    file: "012_prolex-git-pull.json"
-    name: "Prolex Git Pull"
-    role: "Git pull réel sur serveur"
-    webhook: "/webhook/prolex-git-pull"
-    tool_id: "GIT_SYNC"
 
   - id: "020"
     file: "020_proxy_master_exec.json"
@@ -175,20 +168,6 @@ monitoring_backup:
     role: "Alerte sur erreurs critiques"
     tool_id: "GLOBAL_ERROR_ALERT"
     autonomy_levels: [1, 2, 3]
-
-  - id: "415"
-    file: "415_postgres_logs_cleanup.json"
-    name: "PostgreSQL Logs Cleanup"
-    role: "Purge automatique logs PostgreSQL > 90 jours + VACUUM"
-    tool_id: "POSTGRES_LOGS_CLEANUP"
-    autonomy_levels: [2, 3]
-    schedule: "Daily at 2AM (cron: 0 2 * * *)"
-    features:
-      - "Suppression logs > 90 jours"
-      - "VACUUM ANALYZE automatique"
-      - "Statistiques détaillées"
-      - "Notification Telegram"
-      - "Log SystemJournal"
 
   - id: "420"
     file: "420_security_alerts.json"
@@ -450,20 +429,8 @@ workflows:
     scope: "internal"
     priority: 5
     tags: ["github", "sync", "deployment"]
-    webhook: "/webhook/github-to-n8n"
+    webhook: "/webhook/github-sync"
     notes: "Synchro automatique des workflows n8n depuis GitHub. Workflow critique pour le déploiement."
-
-  - id: 12
-    file: "012_prolex-git-pull.json"
-    name: "Prolex Git Pull"
-    category: "core"
-    biz_area: "SYS"
-    status: "prod"
-    scope: "internal"
-    priority: 5
-    tags: ["github", "git-pull", "server-sync"]
-    webhook: "/webhook/prolex-git-pull"
-    notes: "Git pull réel sur le serveur. Permet de synchroniser le code du serveur avec GitHub."
 
   - id: 20
     file: "020_example-hello-world.json"
