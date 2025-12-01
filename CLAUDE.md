@@ -1,322 +1,326 @@
-# CLAUDE.md - AI Assistant Guide for Prolex v4
+# CLAUDE.md - Guide pour Assistants IA travaillant sur le codebase Prolex V5
 
-> **Comprehensive guide for AI assistants working on the Prolex codebase**
-> **Last Updated**: 2025-11-22
-> **Version**: 4.0
+> **Guide complet pour les assistants IA travaillant sur le codebase Prolex**
+> **Dernière mise à jour**: 2025-12-01
+> **Version**: 5.1.0
 
 ---
 
-## 📋 Table of Contents
+## 📋 Table des matières
 
-1. [Quick Start](#quick-start)
-2. [Project Overview](#project-overview)
+1. [Démarrage rapide](#démarrage-rapide)
+2. [Vue d'ensemble du projet](#vue-densemble-du-projet)
 3. [Architecture](#architecture)
-4. [Repository Structure](#repository-structure)
-5. [Development Workflows](#development-workflows)
-6. [Key Conventions](#key-conventions)
-7. [File Organization Principles](#file-organization-principles)
-8. [Common Tasks](#common-tasks)
-9. [Important Files Reference](#important-files-reference)
-10. [Safety & Security](#safety--security)
-11. [Testing & Validation](#testing--validation)
-12. [Tips for Effective Work](#tips-for-effective-work)
+4. [Structure du dépôt](#structure-du-dépôt)
+5. [Workflows de développement](#workflows-de-développement)
+6. [Conventions principales](#conventions-principales)
+7. [Principes d'organisation des fichiers](#principes-dorganisation-des-fichiers)
+8. [Tâches courantes](#tâches-courantes)
+9. [Référence des fichiers importants](#référence-des-fichiers-importants)
+10. [Sécurité & Sûreté](#sécurité--sûreté)
+11. [Tests & Validation](#tests--validation)
+12. [Conseils pour un travail efficace](#conseils-pour-un-travail-efficace)
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Démarrage rapide
 
-### First Time Here?
+### Première visite ?
 
-1. **Read this section first** to understand the project context
-2. **Review [INDEX_PROLEX.md](INDEX_PROLEX.md)** - Central navigation document
-3. **Check [README.md](README.md)** - Project overview and public-facing documentation
-4. **Understand the architecture** from [docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)
+1. **Lisez cette section en premier** pour comprendre le contexte du projet
+2. **Consultez [INDEX_PROLEX.md](INDEX_PROLEX.md)** - Document de navigation central
+3. **Vérifiez [README.md](README.md)** - Vue d'ensemble du projet et documentation publique
+4. **Comprenez l'architecture** depuis [ARCHITECTURE_COMPLETE_V5.md](ARCHITECTURE_COMPLETE_V5.md) - Analyse complète V5
 
-### Essential Context
+### Contexte essentiel
 
-**Prolex** is an AI orchestrator brain for Automatt.ai that:
-- Processes natural language requests through a 3-tier architecture (Kimmy → Prolex → Opex)
-- Autonomously designs, creates, and modifies n8n workflows
-- Maintains complete traceability of all operations via SystemJournal (Google Sheets)
-- Operates with 4 levels of autonomy (0-3) for granular control
+**Prolex** est un cerveau orchestrateur IA pour Automatt.ai qui :
+- Traite les requêtes en langage naturel via une architecture 3 tiers (Kimmy → Prolex → Opex)
+- Conçoit, crée et modifie de manière autonome des workflows n8n
+- Maintient une traçabilité complète de toutes les opérations via SystemJournal (Google Sheets)
+- Opère avec 4 niveaux d'autonomie (0-3) pour un contrôle granulaire
 
-**Current State**: v4.0 - Production-ready architecture with autonomous workflow management
+**État actuel**: v5.1.0 - Architecture production-ready multi-dépôts avec 42 outils MCP
 
 ---
 
-## 🎯 Project Overview
+## 🎯 Vue d'ensemble du projet
 
-### What is Prolex?
+### Qu'est-ce que Prolex ?
 
-Prolex is the **orchestrator AI brain** for Automatt.ai with three main components:
+Prolex est le **cerveau orchestrateur IA** pour Automatt.ai avec trois composants principaux :
 
 ```
 ┌──────────────────────────────────┐
-│ KIMMY (Entry Filter)             │
-│ - Classifies intent              │  ← LLM + n8n
-│ - Evaluates complexity           │
-│ - Produces KimmyPayload          │
+│ KIMMY (Filtre d'entrée)          │
+│ - Classifie l'intention          │  ← LLM + n8n
+│ - Évalue la complexité           │
+│ - Produit KimmyPayload           │
 └──────────┬───────────────────────┘
            ↓ KimmyPayload (JSON)
 ┌──────────────────────────────────┐
-│ PROLEX (Orchestrator Brain)      │
-│ - Reasons & plans                │  ← Claude 3.5 Sonnet + RAG
-│ - Selects tools                  │
-│ - Produces ProlexOutput          │
+│ PROLEX (Cerveau orchestrateur)   │
+│ - Raisonne & planifie            │  ← Claude 3.5 Sonnet + RAG
+│ - Sélectionne les outils         │
+│ - Produit ProlexOutput           │
 └──────────┬───────────────────────┘
            ↓ ProlexOutput (JSON)
 ┌──────────────────────────────────┐
-│ OPEX (Execution Arm)             │
-│ - Validates (Proxy Master)       │  ← n8n workflows
-│ - Executes workflows             │
-│ - Logs to SystemJournal          │
+│ OPEX (Bras d'exécution)          │
+│ - Valide (Proxy Master)          │  ← workflows n8n
+│ - Exécute les workflows          │
+│ - Journalise dans SystemJournal  │
 └──────────────────────────────────┘
 ```
 
-### Key Technologies
+### Technologies principales
 
 - **LLMs**: Claude 3.5 Sonnet (Prolex), GPT-4 Turbo/Claude Haiku (Kimmy)
-- **Workflow Engine**: n8n (self-hosted)
-- **RAG**: AnythingLLM with Google Drive integration
-- **Logging**: Google Sheets (SystemJournal)
+- **Moteur de workflow**: n8n (auto-hébergé)
+- **RAG**: AnythingLLM avec intégration Google Drive
+- **Journalisation**: Google Sheets (SystemJournal)
 - **Infrastructure**: Docker, Traefik, PostgreSQL, Redis
-- **Version Control**: GitHub (source of truth for workflows)
-- **MCP Servers**: Custom Model Context Protocol servers for integrations
+- **Contrôle de version**: GitHub (source de vérité pour les workflows)
+- **Serveurs MCP**: Serveurs Model Context Protocol personnalisés pour les intégrations
 
-### Core Capabilities (v4+)
+### Capacités principales (V5)
 
-- ✨ **Autonomous workflow design**: `N8N_WORKFLOW_DESIGN`
-- ✨ **Workflow creation/modification**: `N8N_WORKFLOW_UPSERT` (sandbox)
-- ✨ **Workflow testing**: `N8N_WORKFLOW_TEST`
-- ✨ **4 autonomy levels**: Fine-grained permission control (0-3)
-- ✨ **30+ tools**: Productivity, DevOps, clients, monitoring, etc.
-- ✨ **Complete traceability**: Every action logged to SystemJournal
+- ✨ **42 outils MCP**: n8n (6), Google Workspace (23), GitHub (8), System (5)
+- ✨ **Architecture multi-dépôts**: 8 dépôts spécialisés pour séparation des responsabilités
+- ✨ **4 niveaux d'autonomie**: Contrôle de permissions granulaire (0-3)
+- ✨ **Production Ready**: Cache, retry, rate limiting, streaming logs
+- ✨ **Intégration Claude Desktop**: Via protocole MCP 1.0.4
+- ✨ **Traçabilité complète**: Chaque action journalisée dans SystemJournal
 
 ---
 
 ## 🏗️ Architecture
 
-### Three-Tier Pipeline
+### Pipeline à trois tiers
 
-#### 1. Kimmy (Entry Filter)
-- **Role**: Filter and structure incoming requests
-- **Technology**: LLM + n8n workflow
-- **Input**: Natural language (always French)
-- **Output**: `KimmyPayload` (JSON)
-- **Key Functions**:
-  - Intent classification (13 types)
-  - Complexity evaluation
-  - Quick actions for simple tasks
-  - Escalation to Prolex for complex tasks
+#### 1. Kimmy (Filtre d'entrée)
+- **Rôle**: Filtrer et structurer les requêtes entrantes
+- **Technologie**: LLM + workflow n8n
+- **Entrée**: Langage naturel (toujours en français)
+- **Sortie**: `KimmyPayload` (JSON)
+- **Fonctions principales**:
+  - Classification d'intention (13 types)
+  - Évaluation de complexité
+  - Actions rapides pour tâches simples
+  - Escalade vers Prolex pour tâches complexes
 
-#### 2. Prolex (Orchestrator Brain)
-- **Role**: Reasoning, planning, and tool selection
-- **Technology**: Claude 3.5 Sonnet + AnythingLLM RAG
-- **Input**: `KimmyPayload` (JSON)
-- **Output**: `ProlexOutput` (JSON)
-- **Key Functions**:
-  - Multi-step planning
-  - Tool selection from 30+ available tools
-  - Autonomy level enforcement
-  - Context-aware decision making
+#### 2. Prolex (Cerveau orchestrateur)
+- **Rôle**: Raisonnement, planification et sélection d'outils
+- **Technologie**: Claude 3.5 Sonnet + AnythingLLM RAG
+- **Entrée**: `KimmyPayload` (JSON)
+- **Sortie**: `ProlexOutput` (JSON)
+- **Fonctions principales**:
+  - Planification multi-étapes
+  - Sélection d'outils parmi 30+ outils disponibles
+  - Application des niveaux d'autonomie
+  - Prise de décision contextuelle
 
-#### 3. Opex (Execution Arm)
-- **Role**: Validate and execute actions
-- **Technology**: n8n workflows + Proxy Master
-- **Input**: `ProlexOutput` (JSON)
-- **Output**: Execution results → SystemJournal
-- **Key Functions**:
-  - Validation via Proxy Master (guard rails)
-  - Workflow execution
-  - Logging to SystemJournal
-  - Error handling and alerts
+#### 3. Opex (Bras d'exécution)
+- **Rôle**: Valider et exécuter les actions
+- **Technologie**: workflows n8n + Proxy Master
+- **Entrée**: `ProlexOutput` (JSON)
+- **Sortie**: Résultats d'exécution → SystemJournal
+- **Fonctions principales**:
+  - Validation via Proxy Master (garde-fous)
+  - Exécution de workflows
+  - Journalisation dans SystemJournal
+  - Gestion d'erreurs et alertes
 
-### Autonomy Levels
+### Niveaux d'autonomie
 
-| Level | Name | Capabilities | Use Case |
-|-------|------|--------------|----------|
-| **0** | Read-only | Read docs, analyze logs, answer questions | Initial validation, audit |
-| **1** | Read + Logs | Level 0 + logging, notes, web search | Staging, training |
-| **2** | Low-risk actions | Level 1 + tasks, calendar, workflow design | Daily personal use |
-| **3** | Advanced actions | Level 2 + client workflows, n8n management | Production with validated workflows |
+| Niveau | Nom | Capacités | Cas d'usage |
+|-------|------|-----------|-------------|
+| **0** | Lecture seule | Lire docs, analyser logs, répondre aux questions | Validation initiale, audit |
+| **1** | Lecture + Logs | Niveau 0 + journalisation, notes, recherche web | Staging, formation |
+| **2** | Actions à faible risque | Niveau 1 + tâches, calendrier, conception de workflows | Utilisation personnelle quotidienne |
+| **3** | Actions avancées | Niveau 2 + workflows clients, gestion n8n | Production avec workflows validés |
 
-**Current Level**: 2 (configurable in `config/autonomy.yml`)
+**Niveau actuel**: 2 (configurable dans `config/autonomy.yml`)
 
-### Data Flow
+### Flux de données
 
-1. **User Request** → Kimmy (via chat/WhatsApp/email)
-2. **KimmyPayload** → Prolex (via n8n webhook)
+1. **Requête utilisateur** → Kimmy (via chat/WhatsApp/email)
+2. **KimmyPayload** → Prolex (via webhook n8n)
 3. **ProlexOutput** → Proxy Master (validation)
-4. **Validated Action** → n8n Workflow Execution
-5. **Results** → SystemJournal (Google Sheets)
-6. **Response** → User
+4. **Action validée** → Exécution de workflow n8n
+5. **Résultats** → SystemJournal (Google Sheets)
+6. **Réponse** → Utilisateur
 
 ---
 
-## 📂 Repository Structure
+## 📂 Structure du dépôt
+
+**Note**: Prolex V5 utilise une architecture multi-dépôts. Ce dépôt (prolex-master) est le hub central de documentation.
 
 ```
-Prolex/
-├── README.md                               # Public-facing overview
-├── INDEX_PROLEX.md                         # Central navigation (START HERE)
-├── CLAUDE.md                               # This file (AI assistant guide)
+ProlexV5/ (Workspace racine)
+├── prolex-master/                          # Ce dépôt - Hub central
+│   ├── README.md                           # Vue d'ensemble publique
+│   ├── INDEX_PROLEX.md                     # Navigation centrale (COMMENCEZ ICI)
+│   ├── CLAUDE.md                           # Ce fichier (guide pour assistant IA)
+│   ├── ARCHITECTURE_COMPLETE_V5.md         # Architecture complète analysée
 │
-├── docs/                                   # All documentation
+├── docs/                                   # Toute la documentation
 │   ├── architecture/
-│   │   └── ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md  # Master architecture doc
+│   │   └── ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md  # Document d'architecture maître
 │   ├── specifications/
-│   │   ├── SPEC_KIMMY_V4.md               # Kimmy specification
-│   │   ├── SPEC_PROLEX_V4.md              # Prolex specification
-│   │   └── SPEC_OPEX_V4.md                # Opex specification
+│   │   ├── SPEC_KIMMY_V4.md               # Spécification Kimmy
+│   │   ├── SPEC_PROLEX_V4.md              # Spécification Prolex
+│   │   └── SPEC_OPEX_V4.md                # Spécification Opex
 │   └── guides/
-│       ├── ANALYSE_CRITIQUE_V4.md         # Expert analysis
-│       └── GUIDE_CLIENTS.md               # Client-facing guide
+│       ├── ANALYSE_CRITIQUE_V4.md         # Analyse d'expert
+│       └── GUIDE_CLIENTS.md               # Guide destiné aux clients
 │
-├── schemas/                                # JSON Schema definitions
-│   ├── kimmy_payload.schema.json          # Kimmy → Prolex payload
-│   ├── prolex_output.schema.json          # Prolex → Opex output
-│   ├── system_journal.schema.json         # SystemJournal log format
-│   ├── autonomy_levels.yml                # Autonomy level definitions
-│   ├── payloads/                          # Tool payload schemas
-│   ├── logs/                              # Logging schemas
-│   └── tools/                             # Tool definition schemas
+├── schemas/                                # Définitions de schémas JSON
+│   ├── kimmy_payload.schema.json          # Payload Kimmy → Prolex
+│   ├── prolex_output.schema.json          # Sortie Prolex → Opex
+│   ├── system_journal.schema.json         # Format de log SystemJournal
+│   ├── autonomy_levels.yml                # Définitions des niveaux d'autonomie
+│   ├── payloads/                          # Schémas de payloads d'outils
+│   ├── logs/                              # Schémas de journalisation
+│   └── tools/                             # Schémas de définition d'outils
 │
-├── config/                                 # System configuration
-│   ├── autonomy.yml                       # ⚙️ Autonomy levels & permissions
-│   ├── system.yml                         # ⚙️ Global system config
-│   ├── kimmy_config.yml                   # Kimmy-specific config
-│   ├── prolex_config.yml                  # Prolex-specific config
-│   └── opex_workflows.yml                 # Workflow catalog (source of truth)
+├── config/                                 # Configuration système
+│   ├── autonomy.yml                       # ⚙️ Niveaux d'autonomie & permissions
+│   ├── system.yml                         # ⚙️ Configuration système globale
+│   ├── kimmy_config.yml                   # Configuration spécifique Kimmy
+│   ├── prolex_config.yml                  # Configuration spécifique Prolex
+│   └── opex_workflows.yml                 # Catalogue de workflows (source de vérité)
 │
-├── rag/                                    # Knowledge base for Prolex RAG
+├── rag/                                    # Base de connaissances pour RAG Prolex
 │   ├── tools/
-│   │   └── tools.yml                      # 📋 Complete tool catalog (30+)
+│   │   └── tools.yml                      # 📋 Catalogue complet d'outils (30+)
 │   ├── rules/
-│   │   └── 01_REGLES_PRINCIPALES.md       # Core rules
-│   ├── examples/                          # Usage examples
+│   │   └── 01_REGLES_PRINCIPALES.md       # Règles principales
+│   ├── examples/                          # Exemples d'utilisation
 │   └── context/
-│       └── 02_VARIABLES_ET_CONTEXTE.md    # Context variables
+│       └── 02_VARIABLES_ET_CONTEXTE.md    # Variables de contexte
 │
-├── n8n-workflows/                          # n8n workflow definitions (JSON)
-│   ├── 010_sync-github-to-n8n.json        # GitHub → n8n sync workflow
-│   ├── 020_example-hello-world.json       # Example workflow
-│   ├── 030_github-dev-log-to-sheets.json  # Dev log workflow
+├── n8n-workflows/                          # Définitions de workflows n8n (JSON)
+│   ├── 010_sync-github-to-n8n.json        # Workflow de sync GitHub → n8n
+│   ├── 020_example-hello-world.json       # Workflow d'exemple
+│   ├── 030_github-dev-log-to-sheets.json  # Workflow de log dev
 │   ├── 050_daily_full_maintenance_prolex_v4.json  # Maintenance
-│   └── README.md                          # Workflow sync documentation
+│   └── README.md                          # Documentation de sync des workflows
 │
-├── mcp/                                    # MCP (Model Context Protocol) servers
-│   └── n8n-server/                        # ✅ n8n MCP server (existing)
+├── mcp/                                    # Serveurs MCP (Model Context Protocol)
+│   └── n8n-server/                        # ✅ Serveur MCP n8n (existant)
 │       ├── src/
-│       │   ├── index.ts                   # MCP server entry point
-│       │   ├── n8nClient.ts               # n8n API client
-│       │   ├── tools/                     # MCP tool definitions
-│       │   └── types.ts                   # TypeScript types
-│       ├── scripts/                       # Utility scripts
+│       │   ├── index.ts                   # Point d'entrée du serveur MCP
+│       │   ├── n8nClient.ts               # Client API n8n
+│       │   ├── tools/                     # Définitions d'outils MCP
+│       │   └── types.ts                   # Types TypeScript
+│       ├── scripts/                       # Scripts utilitaires
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── README.md
 │
-├── services/                               # Backend services
-│   └── prolex-sandbox/                    # ✅ Prolex Sandbox (test environment)
+├── services/                               # Services backend
+│   └── prolex-sandbox/                    # ✅ Prolex Sandbox (environnement de test)
 │       ├── src/
-│       │   ├── index.ts                   # Service entry point
-│       │   ├── server.ts                  # Express server
+│       │   ├── index.ts                   # Point d'entrée du service
+│       │   ├── server.ts                  # Serveur Express
 │       │   ├── config.ts                  # Configuration
-│       │   ├── db.ts                      # Database layer
-│       │   ├── services/                  # Core services
-│       │   │   ├── sandboxService.ts      # Main sandbox orchestrator
-│       │   │   ├── n8nSimulator.ts        # n8n workflow simulator
-│       │   │   ├── mcpSimulator.ts        # MCP call simulator
-│       │   │   └── gardeFousSandbox.ts    # Risk evaluation
-│       │   ├── routes/                    # API routes
-│       │   │   ├── scenariosRoutes.ts     # Scenario endpoints
-│       │   │   └── runsRoutes.ts          # Run endpoints
-│       │   └── types/                     # TypeScript types
-│       ├── scripts/                       # Utility scripts
+│       │   ├── db.ts                      # Couche base de données
+│       │   ├── services/                  # Services principaux
+│       │   │   ├── sandboxService.ts      # Orchestrateur sandbox principal
+│       │   │   ├── n8nSimulator.ts        # Simulateur de workflow n8n
+│       │   │   ├── mcpSimulator.ts        # Simulateur d'appels MCP
+│       │   │   └── gardeFousSandbox.ts    # Évaluation des risques
+│       │   ├── routes/                    # Routes API
+│       │   │   ├── scenariosRoutes.ts     # Endpoints de scénarios
+│       │   │   └── runsRoutes.ts          # Endpoints d'exécution
+│       │   └── types/                     # Types TypeScript
+│       ├── scripts/                       # Scripts utilitaires
 │       │   └── creer-scenario-workflow-n8n.ts
 │       ├── package.json
 │       ├── tsconfig.json
-│       └── README.md                      # Complete documentation
+│       └── README.md                      # Documentation complète
 │
 ├── infra/                                  # Infrastructure as code
-│   └── vps-prod/                          # Production VPS config
-│       ├── docker-compose.yml             # Docker stack definition
+│   └── vps-prod/                          # Configuration VPS production
+│       ├── docker-compose.yml             # Définition de stack Docker
 │       ├── scripts/
-│       │   ├── bootstrap_vps.sh           # VPS initial setup
-│       │   └── rebuild-n8n.sh             # n8n rebuild script
+│       │   ├── bootstrap_vps.sh           # Configuration initiale VPS
+│       │   └── rebuild-n8n.sh             # Script de rebuild n8n
 │       └── docs/
 │
-├── tools/                                  # Utility tools
-│   └── filter_workflows.py                # Workflow catalog filtering
+├── tools/                                  # Outils utilitaires
+│   └── filter_workflows.py                # Filtrage du catalogue de workflows
 │
-├── .github/                                # GitHub workflows
+├── .github/                                # Workflows GitHub
 │   └── workflows/
-│       ├── ci.yml                         # Main CI pipeline
-│       ├── pr-validation.yml              # PR validation
-│       ├── security.yml                   # Security scanning
-│       └── yamllint.yml                   # YAML linting
+│       ├── ci.yml                         # Pipeline CI principal
+│       ├── pr-validation.yml              # Validation des PR
+│       ├── security.yml                   # Analyse de sécurité
+│       └── yamllint.yml                   # Linting YAML
 │
-└── .markdownlint.json                      # Markdown linting config
-└── .yamllint.yml                           # YAML linting config
+└── .markdownlint.json                      # Configuration de linting Markdown
+└── .yamllint.yml                           # Configuration de linting YAML
 ```
 
-### Key Directory Purposes
+### Objectifs des répertoires principaux
 
-| Directory | Purpose | When to Modify |
-|-----------|---------|----------------|
-| `docs/` | All documentation | Adding/updating docs |
-| `schemas/` | JSON Schema definitions | Changing data structures |
-| `config/` | System configuration | Changing behavior/settings |
-| `rag/` | Prolex knowledge base | Adding tools, rules, context |
-| `n8n-workflows/` | Workflow definitions | Creating/modifying workflows |
-| `mcp/` | MCP servers | Adding integrations |
-| `services/` | Backend services | Adding/modifying services |
-| `infra/` | Infrastructure code | Deployment changes |
+| Répertoire | Objectif | Quand le modifier |
+|-----------|---------|------------------|
+| `docs/` | Toute la documentation | Ajout/mise à jour de docs |
+| `schemas/` | Définitions de schémas JSON | Changement de structures de données |
+| `config/` | Configuration système | Changement de comportement/paramètres |
+| `rag/` | Base de connaissances Prolex | Ajout d'outils, règles, contexte |
+| `n8n-workflows/` | Définitions de workflows | Création/modification de workflows |
+| `mcp/` | Serveurs MCP | Ajout d'intégrations |
+| `services/` | Services backend | Ajout/modification de services |
+| `infra/` | Code d'infrastructure | Changements de déploiement |
 
 ---
 
-## 🔄 Development Workflows
+## 🔄 Workflows de développement
 
-### 1. Working with n8n Workflows
+### 1. Travailler avec les workflows n8n
 
-#### Workflow Lifecycle
+#### Cycle de vie d'un workflow
 
 ```
-Design in n8n UI → Export JSON → Add to n8n-workflows/ →
-Git commit + push → GitHub webhook → Auto-sync to n8n
+Conception dans UI n8n → Export JSON → Ajout dans n8n-workflows/ →
+Git commit + push → Webhook GitHub → Auto-sync vers n8n
 ```
 
-#### Creating a New Workflow
+#### Créer un nouveau workflow
 
-1. **Design** in n8n UI (http://localhost:5678)
-2. **Export** as JSON
-3. **Name** following convention: `<num>_<descriptive-name>.json`
-   - `000-099`: core workflows
-   - `100-199`: productivity
+1. **Concevoir** dans l'UI n8n (http://localhost:5678)
+2. **Exporter** en JSON
+3. **Nommer** selon la convention : `<num>_<nom-descriptif>.json`
+   - `000-099`: workflows principaux
+   - `100-199`: productivité
    - `200-299`: dev/DevOps
    - `300-399`: clients
-   - `400-499`: monitoring
+   - `400-499`: surveillance
    - `500-599`: reporting
-   - `600-699`: n8n admin
-   - `900-999`: examples/tests
-4. **Add** to `n8n-workflows/` directory
-5. **Update** `config/opex_workflows.yml` with metadata
-6. **Commit** and push to GitHub
-7. **Verify** auto-sync via `010_sync-github-to-n8n.json` workflow
+   - `600-699`: admin n8n
+   - `900-999`: exemples/tests
+4. **Ajouter** au répertoire `n8n-workflows/`
+5. **Mettre à jour** `config/opex_workflows.yml` avec les métadonnées
+6. **Commiter** et pusher sur GitHub
+7. **Vérifier** l'auto-sync via le workflow `010_sync-github-to-n8n.json`
 
-#### Modifying an Existing Workflow
+#### Modifier un workflow existant
 
-1. **Read** current JSON from `n8n-workflows/`
-2. **Edit** JSON directly OR modify in n8n UI and re-export
-3. **Update** version/timestamps in metadata
-4. **Commit** changes
-5. **Auto-sync** will update n8n instance
+1. **Lire** le JSON actuel depuis `n8n-workflows/`
+2. **Éditer** le JSON directement OU modifier dans l'UI n8n et ré-exporter
+3. **Mettre à jour** version/timestamps dans les métadonnées
+4. **Commiter** les changements
+5. **L'auto-sync** mettra à jour l'instance n8n
 
-### 2. Adding a New Tool
+### 2. Ajouter un nouvel outil
 
-#### Step-by-Step Process
+#### Processus étape par étape
 
-1. **Define in tools catalog** (`rag/tools/tools.yml`):
+1. **Définir dans le catalogue d'outils** (`rag/tools/tools.yml`) :
    ```yaml
    - id: NEW_TOOL_ID
      name: "Tool Name"
@@ -331,7 +335,7 @@ Git commit + push → GitHub webhook → Auto-sync to n8n
      payload_schema: "schemas/payloads/new_tool.schema.json"
    ```
 
-2. **Create payload schema** (`schemas/payloads/new_tool.schema.json`):
+2. **Créer le schéma de payload** (`schemas/payloads/new_tool.schema.json`) :
    ```json
    {
      "$schema": "http://json-schema.org/draft-07/schema#",
@@ -344,34 +348,34 @@ Git commit + push → GitHub webhook → Auto-sync to n8n
    }
    ```
 
-3. **Create n8n workflow** (name: `<num>_new_tool.json`)
-   - Webhook trigger
-   - Validation logic
-   - External API calls
-   - Response formatting
-   - SystemJournal logging
+3. **Créer le workflow n8n** (nom : `<num>_new_tool.json`)
+   - Déclencheur webhook
+   - Logique de validation
+   - Appels API externes
+   - Formatage de réponse
+   - Journalisation SystemJournal
 
-4. **Update Proxy Master** to route the new tool
+4. **Mettre à jour Proxy Master** pour router le nouvel outil
 
-5. **Test thoroughly**:
-   - Schema validation
-   - Workflow execution
-   - Error handling
-   - Logging
+5. **Tester minutieusement** :
+   - Validation de schéma
+   - Exécution de workflow
+   - Gestion d'erreurs
+   - Journalisation
 
-6. **Document** in relevant specification docs
+6. **Documenter** dans les docs de spécification pertinentes
 
-### 3. Modifying Configuration
+### 3. Modifier la configuration
 
-#### Autonomy Level Changes
+#### Changements de niveau d'autonomie
 
-**File**: `config/autonomy.yml`
+**Fichier** : `config/autonomy.yml`
 
 ```yaml
-# Change current level (0-3)
+# Changer le niveau actuel (0-3)
 prolex_current_autonomy_level: 2
 
-# Modify permissions for a level
+# Modifier les permissions pour un niveau
 autonomy_levels:
   2:
     allowed_actions:
@@ -379,30 +383,30 @@ autonomy_levels:
       - NEW_TOOL_ID  # Add new tool
 ```
 
-**Impact**: Affects which tools Prolex can auto-execute
+**Impact** : Affecte quels outils Prolex peut auto-exécuter
 
-#### System Configuration Changes
+#### Changements de configuration système
 
-**File**: `config/system.yml`
+**Fichier** : `config/system.yml`
 
-Common modifications:
-- Change environment (`development` → `staging` → `production`)
-- Adjust cost limits
-- Modify API rate limits
-- Update monitoring settings
-- Change Kimmy mode (`safe` vs `quick_actions`)
+Modifications courantes :
+- Changer l'environnement (`development` → `staging` → `production`)
+- Ajuster les limites de coûts
+- Modifier les limites de taux d'API
+- Mettre à jour les paramètres de surveillance
+- Changer le mode Kimmy (`safe` vs `quick_actions`)
 
-### 4. Git Workflow
+### 4. Workflow Git
 
-#### Branch Naming Convention
+#### Convention de nommage des branches
 
-- `main` - Production-ready code
-- `feature/**` - New features
-- `claude/**` - Claude-generated branches (auto-created)
-- `fix/**` - Bug fixes
-- `docs/**` - Documentation updates
+- `main` - Code prêt pour la production
+- `feature/**` - Nouvelles fonctionnalités
+- `claude/**` - Branches générées par Claude (auto-créées)
+- `fix/**` - Corrections de bugs
+- `docs/**` - Mises à jour de documentation
 
-#### Commit Message Format
+#### Format des messages de commit
 
 ```
 <type>(<scope>): <subject>
@@ -412,9 +416,9 @@ Common modifications:
 <footer>
 ```
 
-**Types**: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
+**Types** : `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
 
-**Examples**:
+**Exemples** :
 ```
 feat(n8n): add client onboarding workflow
 
@@ -423,81 +427,81 @@ docs(architecture): update v4 specification
 fix(mcp): resolve n8n connection timeout issue
 ```
 
-#### Pull Request Process
+#### Processus de Pull Request
 
-1. **Create branch** from `main`
-2. **Make changes** following conventions
-3. **Test locally** (see Testing section)
-4. **Commit** with descriptive messages
-5. **Push** to GitHub
-6. **Create PR** with:
-   - Clear title and description
-   - Reference to issues if applicable
-   - Test results
-   - Screenshots if UI changes
-7. **CI validation** must pass:
-   - JSON schema validation
-   - YAML validation
-   - Markdown linting
-   - Reference checking
-   - Workflow JSON validation
-8. **Merge** after review
+1. **Créer une branche** depuis `main`
+2. **Faire les changements** en suivant les conventions
+3. **Tester localement** (voir section Tests)
+4. **Commiter** avec des messages descriptifs
+5. **Pusher** vers GitHub
+6. **Créer une PR** avec :
+   - Titre et description clairs
+   - Référence aux issues si applicable
+   - Résultats de tests
+   - Captures d'écran si changements d'UI
+7. **La validation CI** doit passer :
+   - Validation de schémas JSON
+   - Validation YAML
+   - Linting Markdown
+   - Vérification des références
+   - Validation JSON des workflows
+8. **Merger** après revue
 
 ---
 
-## 🎨 Key Conventions
+## 🎨 Conventions principales
 
-### 1. Naming Conventions
+### 1. Conventions de nommage
 
-#### Files
+#### Fichiers
 
-- **Workflows**: `<num>_<descriptive-kebab-case>.json`
-  - Example: `010_sync-github-to-n8n.json`
-- **Documentation**: `SCREAMING_SNAKE_CASE.md` for important docs
-  - Example: `SPEC_PROLEX_V4.md`, `INDEX_PROLEX.md`
-- **Config files**: `lowercase_snake_case.yml`
-  - Example: `autonomy.yml`, `system.yml`
-- **Schemas**: `lowercase_snake_case.schema.json`
-  - Example: `kimmy_payload.schema.json`
+- **Workflows** : `<num>_<descriptif-kebab-case>.json`
+  - Exemple : `010_sync-github-to-n8n.json`
+- **Documentation** : `SCREAMING_SNAKE_CASE.md` pour les docs importants
+  - Exemple : `SPEC_PROLEX_V4.md`, `INDEX_PROLEX.md`
+- **Fichiers de config** : `lowercase_snake_case.yml`
+  - Exemple : `autonomy.yml`, `system.yml`
+- **Schémas** : `lowercase_snake_case.schema.json`
+  - Exemple : `kimmy_payload.schema.json`
 
-#### Tools
+#### Outils
 
-- **Tool IDs**: `SCREAMING_SNAKE_CASE`
-  - Example: `TASK_CREATE`, `N8N_WORKFLOW_DESIGN`
-- **Categories**: `lowercase` single word
-  - Example: `productivity`, `devops`, `monitoring`
+- **IDs d'outils** : `SCREAMING_SNAKE_CASE`
+  - Exemple : `TASK_CREATE`, `N8N_WORKFLOW_DESIGN`
+- **Catégories** : `lowercase` mot unique
+  - Exemple : `productivity`, `devops`, `monitoring`
 
 #### Variables
 
-- **YAML config**: `snake_case`
-  - Example: `prolex_current_autonomy_level`
-- **JSON schema**: `camelCase`
-  - Example: `requestId`, `userId`
+- **Config YAML** : `snake_case`
+  - Exemple : `prolex_current_autonomy_level`
+- **Schéma JSON** : `camelCase`
+  - Exemple : `requestId`, `userId`
 
-### 2. Documentation Conventions
+### 2. Conventions de documentation
 
-#### Markdown Structure
+#### Structure Markdown
 
 ```markdown
-# Title (H1 - only one per document)
+# Titre (H1 - un seul par document)
 
 ## Section (H2)
 
-### Subsection (H3)
+### Sous-section (H3)
 
-#### Detail (H4)
+#### Détail (H4)
 ```
 
-#### Links
+#### Liens
 
-- **Internal**: Use relative paths
-  - `[Link](./docs/file.md)` or `[Link](docs/file.md)`
-- **External**: Use full URLs
+- **Internes** : Utiliser des chemins relatifs
+  - `[Link](./docs/file.md)` ou `[Link](docs/file.md)`
+- **Externes** : Utiliser des URLs complètes
   - `[Link](https://example.com)`
 
-#### Code Blocks
+#### Blocs de code
 
-Always specify language:
+Toujours spécifier le langage :
 ```yaml
 # config.yml
 key: value
@@ -513,15 +517,15 @@ key: value
 const example = "value";
 ```
 
-### 3. Schema Conventions
+### 3. Conventions de schémas
 
-- **JSON Schema version**: Draft 07
-- **Required fields**: Always specify
-- **Descriptions**: Mandatory for all properties
-- **Examples**: Include where helpful
-- **Validation**: Use `pattern`, `enum`, `minimum`, etc.
+- **Version JSON Schema** : Draft 07
+- **Champs requis** : Toujours spécifier
+- **Descriptions** : Obligatoires pour toutes les propriétés
+- **Exemples** : Inclure quand c'est utile
+- **Validation** : Utiliser `pattern`, `enum`, `minimum`, etc.
 
-Example:
+Exemple :
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -544,28 +548,28 @@ Example:
 }
 ```
 
-### 4. Workflow Conventions
+### 4. Conventions de workflows
 
-#### n8n Workflow Structure
+#### Structure de workflow n8n
 
-1. **Webhook trigger** (always first node)
-2. **Validation** (validate payload against schema)
-3. **Business logic** (main workflow operations)
-4. **Error handling** (catch and log errors)
-5. **Response formatting** (standardized response)
-6. **SystemJournal logging** (always log execution)
+1. **Déclencheur webhook** (toujours le premier nœud)
+2. **Validation** (valider le payload contre le schéma)
+3. **Logique métier** (opérations principales du workflow)
+4. **Gestion d'erreurs** (capturer et journaliser les erreurs)
+5. **Formatage de réponse** (réponse standardisée)
+6. **Journalisation SystemJournal** (toujours journaliser l'exécution)
 
-#### Workflow Metadata
+#### Métadonnées de workflow
 
-Include in workflow JSON:
-- `name`: Descriptive name
-- `tags`: Category tags (e.g., `["productivity", "tasks"]`)
-- `active`: Boolean (true/false)
-- `settings`: Execution settings
+Inclure dans le JSON du workflow :
+- `name` : Nom descriptif
+- `tags` : Tags de catégorie (ex : `["productivity", "tasks"]`)
+- `active` : Booléen (true/false)
+- `settings` : Paramètres d'exécution
 
-### 5. Error Handling
+### 5. Gestion d'erreurs
 
-#### Standard Error Response Format
+#### Format de réponse d'erreur standard
 
 ```json
 {
@@ -579,220 +583,220 @@ Include in workflow JSON:
 }
 ```
 
-#### Error Codes
+#### Codes d'erreur
 
-- `VALIDATION_ERROR`: Schema/input validation failed
-- `PERMISSION_ERROR`: Insufficient autonomy level
-- `EXECUTION_ERROR`: Workflow execution failed
-- `EXTERNAL_API_ERROR`: External service error
-- `TIMEOUT_ERROR`: Operation timed out
+- `VALIDATION_ERROR` : Échec de validation de schéma/entrée
+- `PERMISSION_ERROR` : Niveau d'autonomie insuffisant
+- `EXECUTION_ERROR` : Échec d'exécution de workflow
+- `EXTERNAL_API_ERROR` : Erreur de service externe
+- `TIMEOUT_ERROR` : Délai d'opération expiré
 
 ---
 
-## 📁 File Organization Principles
+## 📁 Principes d'organisation des fichiers
 
-### 1. Configuration Files
+### 1. Fichiers de configuration
 
-**Location**: `config/`
+**Emplacement** : `config/`
 
-- ✅ **DO**: Keep environment-specific configs separate
-- ✅ **DO**: Use YAML for human-editable configs
-- ✅ **DO**: Include comments explaining each setting
-- ❌ **DON'T**: Commit secrets or API keys
-- ❌ **DON'T**: Use hard-coded values that should be configurable
+- ✅ **À FAIRE** : Séparer les configs spécifiques à l'environnement
+- ✅ **À FAIRE** : Utiliser YAML pour les configs éditables par humains
+- ✅ **À FAIRE** : Inclure des commentaires expliquant chaque paramètre
+- ❌ **NE PAS FAIRE** : Commiter des secrets ou clés API
+- ❌ **NE PAS FAIRE** : Utiliser des valeurs codées en dur qui devraient être configurables
 
 ### 2. Documentation
 
-**Location**: `docs/`
+**Emplacement** : `docs/`
 
-- ✅ **DO**: Organize by type (architecture, specifications, guides)
-- ✅ **DO**: Include a clear hierarchy
-- ✅ **DO**: Cross-reference related documents
-- ❌ **DON'T**: Duplicate content (link instead)
-- ❌ **DON'T**: Let docs get stale (update with code changes)
+- ✅ **À FAIRE** : Organiser par type (architecture, spécifications, guides)
+- ✅ **À FAIRE** : Inclure une hiérarchie claire
+- ✅ **À FAIRE** : Croiser les références entre documents liés
+- ❌ **NE PAS FAIRE** : Dupliquer du contenu (faire des liens à la place)
+- ❌ **NE PAS FAIRE** : Laisser les docs devenir obsolètes (mettre à jour avec les changements de code)
 
-### 3. Schemas
+### 3. Schémas
 
-**Location**: `schemas/`
+**Emplacement** : `schemas/`
 
-- ✅ **DO**: Validate all schemas in CI
-- ✅ **DO**: Version schemas when making breaking changes
-- ✅ **DO**: Include examples in schema docs
-- ❌ **DON'T**: Make breaking changes without migration plan
-- ❌ **DON'T**: Skip required field documentation
+- ✅ **À FAIRE** : Valider tous les schémas en CI
+- ✅ **À FAIRE** : Versionner les schémas lors de changements cassants
+- ✅ **À FAIRE** : Inclure des exemples dans les docs de schémas
+- ❌ **NE PAS FAIRE** : Faire des changements cassants sans plan de migration
+- ❌ **NE PAS FAIRE** : Sauter la documentation des champs requis
 
 ### 4. Workflows
 
-**Location**: `n8n-workflows/`
+**Emplacement** : `n8n-workflows/`
 
-- ✅ **DO**: Export from n8n with clean formatting
-- ✅ **DO**: Follow numeric naming convention
-- ✅ **DO**: Include README explaining sync process
-- ❌ **DON'T**: Manually edit complex node structures
-- ❌ **DON'T**: Commit without testing in n8n first
+- ✅ **À FAIRE** : Exporter depuis n8n avec formatage propre
+- ✅ **À FAIRE** : Suivre la convention de nommage numérique
+- ✅ **À FAIRE** : Inclure un README expliquant le processus de sync
+- ❌ **NE PAS FAIRE** : Éditer manuellement les structures de nœuds complexes
+- ❌ **NE PAS FAIRE** : Commiter sans tester dans n8n d'abord
 
 ---
 
-## ✅ Common Tasks
+## ✅ Tâches courantes
 
-### Task 1: Add a New Tool to Prolex
+### Tâche 1 : Ajouter un nouvel outil à Prolex
 
 ```bash
-# 1. Define tool in catalog
+# 1. Définir l'outil dans le catalogue
 vim rag/tools/tools.yml
-# Add tool definition with ID, category, risk_level, etc.
+# Ajouter la définition de l'outil avec ID, category, risk_level, etc.
 
-# 2. Create payload schema
+# 2. Créer le schéma de payload
 vim schemas/payloads/my_new_tool.schema.json
-# Define JSON Schema for tool input
+# Définir le schéma JSON pour l'entrée de l'outil
 
-# 3. Create n8n workflow
-# - Design in n8n UI
-# - Export as JSON
-# - Save to n8n-workflows/XXX_my_new_tool.json
+# 3. Créer le workflow n8n
+# - Concevoir dans l'UI n8n
+# - Exporter en JSON
+# - Sauvegarder dans n8n-workflows/XXX_my_new_tool.json
 
-# 4. Update workflow catalog
+# 4. Mettre à jour le catalogue de workflows
 vim config/opex_workflows.yml
-# Add workflow metadata
+# Ajouter les métadonnées du workflow
 
-# 5. Test and validate
+# 5. Tester et valider
 npm install -g ajv-cli
 ajv compile -s schemas/payloads/my_new_tool.schema.json
 
-# 6. Commit changes
+# 6. Commiter les changements
 git add .
 git commit -m "feat(tools): add MY_NEW_TOOL for <purpose>"
 git push
 ```
 
-### Task 2: Change Prolex Autonomy Level
+### Tâche 2 : Changer le niveau d'autonomie de Prolex
 
 ```bash
-# 1. Edit autonomy configuration
+# 1. Éditer la configuration d'autonomie
 vim config/autonomy.yml
 
-# Change line:
-# prolex_current_autonomy_level: 2  # Change to desired level (0-3)
+# Changer la ligne :
+# prolex_current_autonomy_level: 2  # Changer au niveau désiré (0-3)
 
-# 2. Review what changes this enables
-# Check allowed_actions for the new level
+# 2. Vérifier ce que ce changement active
+# Vérifier allowed_actions pour le nouveau niveau
 
-# 3. Commit the change
+# 3. Commiter le changement
 git add config/autonomy.yml
 git commit -m "config(autonomy): change level to <X> for <reason>"
 git push
 
-# 4. Verify in Prolex behavior
-# Test that tools are properly allowed/blocked
+# 4. Vérifier le comportement de Prolex
+# Tester que les outils sont correctement autorisés/bloqués
 ```
 
-### Task 3: Create a New n8n Workflow
+### Tâche 3 : Créer un nouveau workflow n8n
 
 ```bash
-# 1. Design workflow in n8n UI (http://localhost:5678)
+# 1. Concevoir le workflow dans l'UI n8n (http://localhost:5678)
 
-# 2. Test workflow execution
+# 2. Tester l'exécution du workflow
 
-# 3. Export workflow as JSON from n8n
+# 3. Exporter le workflow en JSON depuis n8n
 
-# 4. Determine workflow number
+# 4. Déterminer le numéro du workflow
 ls n8n-workflows/*.json | tail -5
-# Find next available number in appropriate range
+# Trouver le prochain numéro disponible dans la plage appropriée
 
-# 5. Save workflow
+# 5. Sauvegarder le workflow
 mv ~/Downloads/My_Workflow.json n8n-workflows/350_my_workflow.json
 
-# 6. Update workflow catalog
+# 6. Mettre à jour le catalogue de workflows
 vim config/opex_workflows.yml
-# Add workflow entry with metadata
+# Ajouter l'entrée du workflow avec métadonnées
 
-# 7. Commit and push
+# 7. Commiter et pusher
 git add n8n-workflows/350_my_workflow.json config/opex_workflows.yml
 git commit -m "feat(n8n): add workflow for <purpose>"
 git push
 
-# 8. Verify auto-sync
-# Check n8n instance to confirm workflow appears
+# 8. Vérifier l'auto-sync
+# Vérifier l'instance n8n pour confirmer que le workflow apparaît
 ```
 
-### Task 4: Update Documentation
+### Tâche 4 : Mettre à jour la documentation
 
 ```bash
-# 1. Identify document to update
-# Check INDEX_PROLEX.md for document location
+# 1. Identifier le document à mettre à jour
+# Vérifier INDEX_PROLEX.md pour l'emplacement du document
 
-# 2. Read current version
+# 2. Lire la version actuelle
 cat docs/specifications/SPEC_PROLEX_V4.md
 
-# 3. Make changes
+# 3. Faire les changements
 vim docs/specifications/SPEC_PROLEX_V4.md
 
-# 4. Validate markdown
+# 4. Valider le markdown
 npm install -g markdownlint-cli
 markdownlint docs/specifications/SPEC_PROLEX_V4.md
 
-# 5. Update index if needed
+# 5. Mettre à jour l'index si nécessaire
 vim INDEX_PROLEX.md
 
-# 6. Commit changes
+# 6. Commiter les changements
 git add docs/specifications/SPEC_PROLEX_V4.md
 git commit -m "docs(spec): update Prolex specification for <change>"
 git push
 ```
 
-### Task 5: Debug a Workflow Issue
+### Tâche 5 : Déboguer un problème de workflow
 
 ```bash
-# 1. Check SystemJournal logs
-# Open: https://docs.google.com/spreadsheets/d/1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk
-# Tab: SystemJournal
-# Filter by workflow_id or request_id
+# 1. Vérifier les logs SystemJournal
+# Ouvrir : https://docs.google.com/spreadsheets/d/1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk
+# Onglet : SystemJournal
+# Filtrer par workflow_id ou request_id
 
-# 2. Check workflow definition
+# 2. Vérifier la définition du workflow
 cat n8n-workflows/<workflow_file>.json | jq .
 
-# 3. Test workflow in n8n UI
-# Manual execution with test payload
+# 3. Tester le workflow dans l'UI n8n
+# Exécution manuelle avec payload de test
 
-# 4. Check n8n execution logs
-# n8n UI → Executions → Find failed execution
+# 4. Vérifier les logs d'exécution n8n
+# UI n8n → Executions → Trouver l'exécution échouée
 
-# 5. Fix issue (in n8n UI or JSON)
+# 5. Corriger le problème (dans l'UI n8n ou JSON)
 
-# 6. Re-export and update if needed
-# Follow "Create a New n8n Workflow" steps above
+# 6. Ré-exporter et mettre à jour si nécessaire
+# Suivre les étapes "Créer un nouveau workflow n8n" ci-dessus
 
-# 7. Re-test and verify
+# 7. Re-tester et vérifier
 ```
 
-### Task 6: Add a New MCP Server
+### Tâche 6 : Ajouter un nouveau serveur MCP
 
 ```bash
-# 1. Create MCP server directory
+# 1. Créer le répertoire du serveur MCP
 mkdir -p mcp/my-new-server/src
 
-# 2. Initialize Node.js project
+# 2. Initialiser le projet Node.js
 cd mcp/my-new-server
 npm init -y
 
-# 3. Install MCP SDK
+# 3. Installer le SDK MCP
 npm install @modelcontextprotocol/sdk
 
-# 4. Create server implementation
-# See mcp/n8n-server/src/index.ts as reference
+# 4. Créer l'implémentation du serveur
+# Voir mcp/n8n-server/src/index.ts comme référence
 
-# 5. Add TypeScript config
+# 5. Ajouter la config TypeScript
 cp ../n8n-server/tsconfig.json .
 
-# 6. Build and test
+# 6. Builder et tester
 npm run build
 node dist/index.js
 
-# 7. Update main README
+# 7. Mettre à jour le README principal
 vim ../../README.md
-# Add new MCP server section
+# Ajouter la section du nouveau serveur MCP
 
-# 8. Commit
+# 8. Commiter
 git add mcp/my-new-server
 git commit -m "feat(mcp): add my-new-server for <integration>"
 git push
@@ -800,135 +804,135 @@ git push
 
 ---
 
-## 📚 Important Files Reference
+## 📚 Référence des fichiers importants
 
-### Must-Read Documents (Priority Order)
+### Documents à lire absolument (par ordre de priorité)
 
-1. **[INDEX_PROLEX.md](INDEX_PROLEX.md)** - Central navigation, start here
-2. **[README.md](README.md)** - Project overview
-3. **[docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)** - Master architecture document (824 lines)
-4. **[CLAUDE.md](CLAUDE.md)** - This file (AI assistant guide)
+1. **[INDEX_PROLEX.md](INDEX_PROLEX.md)** - Navigation centrale, commencez ici
+2. **[README.md](README.md)** - Vue d'ensemble du projet
+3. **[docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md)** - Document d'architecture maître (824 lignes)
+4. **[CLAUDE.md](CLAUDE.md)** - Ce fichier (guide pour assistant IA)
 
-### Specifications (Detail Level)
+### Spécifications (niveau de détail)
 
-1. **[docs/specifications/SPEC_KIMMY_V4.md](docs/specifications/SPEC_KIMMY_V4.md)** - Kimmy component spec
-2. **[docs/specifications/SPEC_PROLEX_V4.md](docs/specifications/SPEC_PROLEX_V4.md)** - Prolex component spec
-3. **[docs/specifications/SPEC_OPEX_V4.md](docs/specifications/SPEC_OPEX_V4.md)** - Opex component spec
+1. **[docs/specifications/SPEC_KIMMY_V4.md](docs/specifications/SPEC_KIMMY_V4.md)** - Spécification du composant Kimmy
+2. **[docs/specifications/SPEC_PROLEX_V4.md](docs/specifications/SPEC_PROLEX_V4.md)** - Spécification du composant Prolex
+3. **[docs/specifications/SPEC_OPEX_V4.md](docs/specifications/SPEC_OPEX_V4.md)** - Spécification du composant Opex
 
-### Configuration (Runtime Behavior)
+### Configuration (comportement à l'exécution)
 
-1. **[config/autonomy.yml](config/autonomy.yml)** - Autonomy levels and permissions
-2. **[config/system.yml](config/system.yml)** - Global system configuration
-3. **[config/opex_workflows.yml](config/opex_workflows.yml)** - Workflow catalog
-4. **[rag/tools/tools.yml](rag/tools/tools.yml)** - Complete tool catalog
+1. **[config/autonomy.yml](config/autonomy.yml)** - Niveaux d'autonomie et permissions
+2. **[config/system.yml](config/system.yml)** - Configuration système globale
+3. **[config/opex_workflows.yml](config/opex_workflows.yml)** - Catalogue de workflows
+4. **[rag/tools/tools.yml](rag/tools/tools.yml)** - Catalogue complet d'outils
 
-### Schemas (Data Structures)
+### Schémas (structures de données)
 
 1. **[schemas/kimmy_payload.schema.json](schemas/kimmy_payload.schema.json)** - Kimmy → Prolex
 2. **[schemas/prolex_output.schema.json](schemas/prolex_output.schema.json)** - Prolex → Opex
-3. **[schemas/system_journal.schema.json](schemas/system_journal.schema.json)** - Logging format
-4. **[schemas/tools/tool_definition.schema.json](schemas/tools/tool_definition.schema.json)** - Tool schema
+3. **[schemas/system_journal.schema.json](schemas/system_journal.schema.json)** - Format de journalisation
+4. **[schemas/tools/tool_definition.schema.json](schemas/tools/tool_definition.schema.json)** - Schéma d'outil
 
-### Workflows (Key Examples)
+### Workflows (exemples clés)
 
-1. **[n8n-workflows/010_sync-github-to-n8n.json](n8n-workflows/010_sync-github-to-n8n.json)** - GitHub sync
-2. **[n8n-workflows/020_example-hello-world.json](n8n-workflows/020_example-hello-world.json)** - Simple example
+1. **[n8n-workflows/010_sync-github-to-n8n.json](n8n-workflows/010_sync-github-to-n8n.json)** - Sync GitHub
+2. **[n8n-workflows/020_example-hello-world.json](n8n-workflows/020_example-hello-world.json)** - Exemple simple
 3. **[n8n-workflows/050_daily_full_maintenance_prolex_v4.json](n8n-workflows/050_daily_full_maintenance_prolex_v4.json)** - Maintenance
 
-### Quick Reference Tables
+### Tableaux de référence rapide
 
-#### When to Read What
+#### Quand lire quoi
 
-| Task | Read These Files |
+| Tâche | Lire ces fichiers |
 |------|------------------|
-| Understanding the project | INDEX_PROLEX.md, README.md, ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md |
-| Adding a tool | rag/tools/tools.yml, SPEC_OPEX_V4.md, tool schema examples |
-| Creating workflow | n8n-workflows/README.md, SPEC_OPEX_V4.md, example workflows |
-| Changing autonomy | config/autonomy.yml, SPEC_PROLEX_V4.md |
-| Debugging | SystemJournal (Google Sheets), relevant workflow JSON, system.yml |
-| Understanding data flow | All three SPEC_*.md files, schema files |
+| Comprendre le projet | INDEX_PROLEX.md, README.md, ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md |
+| Ajouter un outil | rag/tools/tools.yml, SPEC_OPEX_V4.md, exemples de schémas d'outils |
+| Créer un workflow | n8n-workflows/README.md, SPEC_OPEX_V4.md, workflows d'exemple |
+| Changer l'autonomie | config/autonomy.yml, SPEC_PROLEX_V4.md |
+| Déboguer | SystemJournal (Google Sheets), JSON du workflow pertinent, system.yml |
+| Comprendre le flux de données | Tous les trois fichiers SPEC_*.md, fichiers de schémas |
 
-#### File Modification Frequency
+#### Fréquence de modification des fichiers
 
-| Files | Modification Frequency | Version Control |
+| Fichiers | Fréquence de modification | Contrôle de version |
 |-------|------------------------|-----------------|
-| `config/*.yml` | Medium | Track changes carefully |
-| `rag/tools/tools.yml` | Medium | Update when adding tools |
-| `n8n-workflows/*.json` | High | Auto-sync from n8n |
-| `docs/*.md` | Low-Medium | Keep in sync with code |
-| `schemas/*.json` | Low | Version breaking changes |
+| `config/*.yml` | Moyenne | Suivre les changements avec soin |
+| `rag/tools/tools.yml` | Moyenne | Mettre à jour lors de l'ajout d'outils |
+| `n8n-workflows/*.json` | Élevée | Auto-sync depuis n8n |
+| `docs/*.md` | Faible-Moyenne | Garder en sync avec le code |
+| `schemas/*.json` | Faible | Versionner les changements cassants |
 
 ---
 
-## 🔒 Safety & Security
+## 🔒 Sécurité & Sûreté
 
-### Critical Safety Rules
+### Règles de sécurité critiques
 
-1. **NEVER commit secrets**
-   - ❌ API keys
-   - ❌ Passwords
+1. **NE JAMAIS commiter de secrets**
+   - ❌ Clés API
+   - ❌ Mots de passe
    - ❌ Tokens
-   - ❌ Credentials
-   - ✅ Use environment variables
-   - ✅ Use `.env` files (gitignored)
+   - ❌ Identifiants
+   - ✅ Utiliser des variables d'environnement
+   - ✅ Utiliser des fichiers `.env` (gitignorés)
 
-2. **ALWAYS validate inputs**
-   - Every webhook must validate against schema
-   - Use JSON Schema validation
-   - Sanitize user inputs
-   - Check autonomy levels before execution
+2. **TOUJOURS valider les entrées**
+   - Chaque webhook doit valider contre le schéma
+   - Utiliser la validation JSON Schema
+   - Assainir les entrées utilisateur
+   - Vérifier les niveaux d'autonomie avant exécution
 
-3. **NEVER bypass Proxy Master**
-   - All tool executions go through Proxy Master
-   - No direct n8n workflow triggers from external sources
-   - Proxy validates autonomy levels and permissions
+3. **NE JAMAIS contourner Proxy Master**
+   - Toutes les exécutions d'outils passent par Proxy Master
+   - Pas de déclenchements directs de workflows n8n depuis des sources externes
+   - Proxy valide les niveaux d'autonomie et permissions
 
-4. **ALWAYS log to SystemJournal**
-   - Every action must be logged
-   - Include: timestamp, agent, action, result, cost
-   - Log errors with full context
+4. **TOUJOURS journaliser dans SystemJournal**
+   - Chaque action doit être journalisée
+   - Inclure : timestamp, agent, action, résultat, coût
+   - Journaliser les erreurs avec contexte complet
 
-5. **🚨 NEVER touch CASH workflows 🚨**
-   - ❌ FORBIDDEN to create, modify, delete, trigger, repair, or analyze
-   - ❌ Workflows: `200_`, `250_`, `300_`, `400_`, `450_`, `999_master_*`
-   - ❌ Keywords: `leadgen`, `proposal`, `invoice`, `stripe`, `relance`, `cash`
-   - ✅ Technical lock automatically blocks these operations
-   - ✅ Violation triggers immediate alert to Matthieu
-   - 📖 See: [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md) for complete details
+5. **🚨 NE JAMAIS toucher aux workflows CASH 🚨**
+   - ❌ INTERDIT de créer, modifier, supprimer, déclencher, réparer ou analyser
+   - ❌ Workflows : `200_`, `250_`, `300_`, `400_`, `450_`, `999_master_*`
+   - ❌ Mots-clés : `leadgen`, `proposal`, `invoice`, `stripe`, `relance`, `cash`
+   - ✅ Verrouillage technique bloque automatiquement ces opérations
+   - ✅ Violation déclenche une alerte immédiate à Matthieu
+   - 📖 Voir : [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md) pour les détails complets
 
-### Cash Workflow Protection (CRITICAL)
+### Protection des workflows Cash (CRITIQUE)
 
 **⚠️ ZONE INTERDITE — Date de verrouillage: 2025-11-22**
 
-Prolex is **ABSOLUTELY FORBIDDEN** from:
-- Creating workflows with forbidden patterns
-- Modifying existing cash workflows
-- Triggering cash workflows manually
-- Analyzing or proposing improvements to cash workflows
+Prolex est **ABSOLUMENT INTERDIT** de :
+- Créer des workflows avec des patterns interdits
+- Modifier des workflows cash existants
+- Déclencher manuellement des workflows cash
+- Analyser ou proposer des améliorations aux workflows cash
 
-**Protected workflows:**
-- `200_leadgen_li_mail.json` - Lead generation
-- `250_proposal_auto.json` - **CRITICAL** - Commercial proposals
-- `300_content_machine.json` - Content automation
-- `400_invoice_stripe_auto.json` - **CRITICAL** - Invoicing & Stripe
-- `450_relances_impayes.json` - **CRITICAL** - Payment reminders
-- `999_master_tracker.json` - **CRITICAL** - Cash metrics tracking
+**Workflows protégés :**
+- `200_leadgen_li_mail.json` - Génération de leads
+- `250_proposal_auto.json` - **CRITIQUE** - Propositions commerciales
+- `300_content_machine.json` - Automatisation de contenu
+- `400_invoice_stripe_auto.json` - **CRITIQUE** - Facturation & Stripe
+- `450_relances_impayes.json` - **CRITIQUE** - Relances de paiement
+- `999_master_tracker.json` - **CRITIQUE** - Suivi des métriques cash
 
-**Technical enforcement:**
-- Location: `mcp/n8n-server/src/security/cashWorkflowGuard.ts`
-- Applied in: `createWorkflow()`, `updateWorkflow()`, `triggerWorkflow()`
-- Violation: Immediate error + Telegram alert to Matthieu + SystemJournal log
+**Application technique :**
+- Emplacement : `mcp/n8n-server/src/security/cashWorkflowGuard.ts`
+- Appliqué dans : `createWorkflow()`, `updateWorkflow()`, `triggerWorkflow()`
+- Violation : Erreur immédiate + alerte Telegram à Matthieu + log SystemJournal
 
-**If you detect a cash workflow:**
-1. **STOP** immediately ✋
-2. **REFUSE** the operation with error message
-3. **ALERT** Matthieu via Telegram 📱
-4. **LOG** incident to SystemJournal (severity: CRITICAL)
-5. **MOVE ON** to other tasks ➡️
+**Si vous détectez un workflow cash :**
+1. **STOP** immédiatement ✋
+2. **REFUSER** l'opération avec message d'erreur
+3. **ALERTER** Matthieu via Telegram 📱
+4. **JOURNALISER** l'incident dans SystemJournal (severity: CRITICAL)
+5. **PASSER** aux autres tâches ➡️
 
-**Complete documentation:** [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md)
+**Documentation complète :** [CASH_WORKFLOWS_LOCK.md](CASH_WORKFLOWS_LOCK.md)
 
-### Prolex Sandbox - Safe Testing Environment
+### Prolex Sandbox - Environnement de test sécurisé
 
 **⚙️ SERVICE COMPLÉMENTAIRE - Disponible depuis: 2025-11-23**
 
@@ -967,405 +971,412 @@ curl -X POST http://localhost:3001/api/run \
 
 **Documentation complète** : [services/prolex-sandbox/README.md](services/prolex-sandbox/README.md)
 
-### Autonomy Level Safety
+### Sécurité des niveaux d'autonomie
 
-| Level | Safety Measures |
+| Niveau | Mesures de sécurité |
 |-------|----------------|
-| **0** | Read-only, no actions possible |
-| **1** | Logging only, no external modifications |
-| **2** | Personal/low-risk only, cost limits enforced |
-| **3** | Advanced, sandbox-only for n8n workflows |
+| **0** | Lecture seule, aucune action possible |
+| **1** | Journalisation uniquement, pas de modifications externes |
+| **2** | Personnel/faible risque uniquement, limites de coûts appliquées |
+| **3** | Avancé, sandbox uniquement pour workflows n8n |
 
-### High-Risk Operations
+### Opérations à haut risque
 
-**Always require manual confirmation** (even at level 3):
+**Nécessitent toujours une confirmation manuelle** (même au niveau 3) :
 - `N8N_WORKFLOW_PROMOTE` (sandbox → production)
-- `RESTORE_BACKUP` (data restoration)
-- `GIT_OPERATIONS_ON_MAIN_BRANCH` (production code)
+- `RESTORE_BACKUP` (restauration de données)
+- `GIT_OPERATIONS_ON_MAIN_BRANCH` (code de production)
 
-### Data Sensitivity
+### Sensibilité des données
 
-**Sensitivity Levels** (defined in tool definitions):
-- `low`: Public information, logs
-- `medium`: Internal data, non-PII
-- `high`: Client data, PII, credentials
+**Niveaux de sensibilité** (définis dans les définitions d'outils) :
+- `low` : Information publique, logs
+- `medium` : Données internes, non-PII
+- `high` : Données clients, PII, identifiants
 
-**Rules**:
-- `high` sensitivity → Always escalate to human
-- Log `low` and `medium` only
-- NEVER log sensitive credentials
+**Règles** :
+- Sensibilité `high` → Toujours escalader vers un humain
+- Journaliser uniquement `low` et `medium`
+- NE JAMAIS journaliser les identifiants sensibles
 
-### Environment Restrictions
+### Restrictions d'environnement
 
-| Environment | Allowed Operations |
+| Environnement | Opérations autorisées |
 |-------------|-------------------|
-| `development` | All, including experimental |
-| `staging` | Validated workflows only |
-| `production` | Approved workflows, high-risk requires confirmation |
+| `development` | Toutes, y compris expérimentales |
+| `staging` | Workflows validés uniquement |
+| `production` | Workflows approuvés, haut risque nécessite confirmation |
 
-### Security Checklist for New Code
+### Checklist de sécurité pour nouveau code
 
-- [ ] No hard-coded credentials
-- [ ] Input validation present
-- [ ] Schema validation implemented
-- [ ] Error handling robust
-- [ ] Logging to SystemJournal
-- [ ] Autonomy level checks
-- [ ] Rate limiting considered
-- [ ] Timeout handling
-- [ ] Sanitized user inputs
-- [ ] No SQL injection vectors
-- [ ] No command injection vectors
-- [ ] API keys in environment variables
+- [ ] Pas d'identifiants codés en dur
+- [ ] Validation d'entrée présente
+- [ ] Validation de schéma implémentée
+- [ ] Gestion d'erreurs robuste
+- [ ] Journalisation dans SystemJournal
+- [ ] Vérifications de niveau d'autonomie
+- [ ] Limitation de taux considérée
+- [ ] Gestion de timeout
+- [ ] Entrées utilisateur assainies
+- [ ] Pas de vecteurs d'injection SQL
+- [ ] Pas de vecteurs d'injection de commandes
+- [ ] Clés API dans variables d'environnement
 
 ---
 
-## 🧪 Testing & Validation
+## 🧪 Tests & Validation
 
-### Automated Testing (CI/CD)
+### Tests automatisés (CI/CD)
 
-**GitHub Actions** (`.github/workflows/`):
+**GitHub Actions** (`.github/workflows/`) :
 
-1. **ci.yml** - Main CI pipeline
-   - JSON schema validation
-   - YAML validation (yamllint)
-   - Markdown linting (markdownlint)
-   - Reference checking (broken links)
-   - Workflow JSON validation
+1. **ci.yml** - Pipeline CI principal
+   - Validation de schémas JSON
+   - Validation YAML (yamllint)
+   - Linting Markdown (markdownlint)
+   - Vérification de références (liens cassés)
+   - Validation JSON des workflows
 
-2. **pr-validation.yml** - Pull request validation
-   - Schema compliance
-   - Naming conventions
-   - Documentation updates
+2. **pr-validation.yml** - Validation des pull requests
+   - Conformité aux schémas
+   - Conventions de nommage
+   - Mises à jour de documentation
 
-3. **security.yml** - Security scanning
-   - Dependency vulnerabilities
-   - Secret detection
+3. **security.yml** - Analyse de sécurité
+   - Vulnérabilités de dépendances
+   - Détection de secrets
 
-4. **yamllint.yml** - YAML-specific validation
+4. **yamllint.yml** - Validation spécifique YAML
 
-### Manual Testing Workflows
+### Workflows de tests manuels
 
-#### Test a New Tool
+#### Tester un nouvel outil
 
 ```bash
-# 1. Validate schema
+# 1. Valider le schéma
 ajv compile -s schemas/payloads/my_tool.schema.json
 
-# 2. Test workflow in n8n UI
-# - Use test payload
-# - Check execution logs
-# - Verify response format
+# 2. Tester le workflow dans l'UI n8n
+# - Utiliser un payload de test
+# - Vérifier les logs d'exécution
+# - Vérifier le format de réponse
 
-# 3. Test via MCP (if applicable)
-# - Use Claude Desktop
-# - Trigger tool
-# - Verify results
+# 3. Tester via MCP (si applicable)
+# - Utiliser Claude Desktop
+# - Déclencher l'outil
+# - Vérifier les résultats
 
-# 4. Check SystemJournal
-# - Confirm log entry created
-# - Verify all fields populated
+# 4. Vérifier SystemJournal
+# - Confirmer que l'entrée de log a été créée
+# - Vérifier que tous les champs sont remplis
 
-# 5. Test error cases
-# - Invalid payload
-# - Missing required fields
-# - External API failures
+# 5. Tester les cas d'erreur
+# - Payload invalide
+# - Champs requis manquants
+# - Échecs d'API externe
 ```
 
-#### Test Autonomy Level Changes
+#### Tester les changements de niveau d'autonomie
 
 ```bash
-# 1. Change level in config/autonomy.yml
+# 1. Changer le niveau dans config/autonomy.yml
 prolex_current_autonomy_level: 1
 
-# 2. Test allowed actions
-# Try tool that should work at level 1
+# 2. Tester les actions autorisées
+# Essayer un outil qui devrait fonctionner au niveau 1
 
-# 3. Test forbidden actions
-# Try tool that requires level 2+
-# Should receive permission error
+# 3. Tester les actions interdites
+# Essayer un outil qui nécessite le niveau 2+
+# Devrait recevoir une erreur de permission
 
-# 4. Verify logging
-# Check that permission errors logged to SystemJournal
+# 4. Vérifier la journalisation
+# Vérifier que les erreurs de permission sont journalisées dans SystemJournal
 ```
 
-#### Test Workflow Sync
+#### Tester la synchronisation de workflow
 
 ```bash
-# 1. Create/modify workflow in n8n-workflows/
+# 1. Créer/modifier un workflow dans n8n-workflows/
 echo '{"name": "test"}' > n8n-workflows/999_test.json
 
-# 2. Commit and push
+# 2. Commiter et pusher
 git add n8n-workflows/999_test.json
 git commit -m "test: workflow sync"
 git push
 
-# 3. Check GitHub webhook delivery
+# 3. Vérifier la livraison du webhook GitHub
 # GitHub → Settings → Webhooks → Recent Deliveries
 
-# 4. Check n8n execution
-# n8n UI → Workflow "GitHub to n8n Sync" → Executions
+# 4. Vérifier l'exécution n8n
+# UI n8n → Workflow "GitHub to n8n Sync" → Executions
 
-# 5. Verify in n8n
-# n8n UI → Workflows → Find "test"
+# 5. Vérifier dans n8n
+# UI n8n → Workflows → Trouver "test"
 
-# 6. Check SystemJournal logs
-# Google Sheets → events tab
+# 6. Vérifier les logs SystemJournal
+# Google Sheets → onglet events
 
-# 7. Cleanup
+# 7. Nettoyer
 git revert HEAD
 git push
 ```
 
-### Validation Commands
+### Commandes de validation
 
 ```bash
-# Validate all JSON schemas
+# Valider tous les schémas JSON
 for schema in schemas/**/*.schema.json; do
   ajv compile -s "$schema" --strict=false
 done
 
-# Validate YAML files
+# Valider les fichiers YAML
 yamllint config/
 yamllint schemas/
 
-# Lint markdown
+# Linter le markdown
 markdownlint docs/**/*.md --config .markdownlint.json
 
-# Validate JSON files (workflows)
+# Valider les fichiers JSON (workflows)
 for workflow in n8n-workflows/*.json; do
   jq empty "$workflow" || echo "Invalid: $workflow"
 done
 
-# Check for broken references
+# Vérifier les références cassées
 grep -r "schemas/" docs/ | grep -oP 'schemas/[a-zA-Z0-9_/\.]+' | while read ref; do
   [ ! -f "$ref" ] && echo "Broken: $ref"
 done
 ```
 
-### Test Coverage Expectations
+### Attentes de couverture de tests
 
-| Component | Test Coverage |
+| Composant | Couverture de tests |
 |-----------|---------------|
-| Schemas | 100% - All schemas must be valid |
-| Workflows | Manual - Test in n8n UI |
-| Tools | Manual - Test each tool endpoint |
-| Documentation | Lint - No broken links |
-| Configuration | Validation - YAML syntax |
+| Schémas | 100% - Tous les schémas doivent être valides |
+| Workflows | Manuel - Tester dans l'UI n8n |
+| Outils | Manuel - Tester chaque endpoint d'outil |
+| Documentation | Lint - Pas de liens cassés |
+| Configuration | Validation - Syntaxe YAML |
 
 ---
 
-## 💡 Tips for Effective Work
+## 💡 Conseils pour un travail efficace
 
-### For Claude Code Assistants
+### Pour les assistants Claude Code
 
-1. **Always start with context**
-   - Read INDEX_PROLEX.md first
-   - Check current autonomy level in config/autonomy.yml
-   - Review relevant specification docs
+1. **Toujours commencer par le contexte**
+   - Lire INDEX_PROLEX.md en premier
+   - Vérifier le niveau d'autonomie actuel dans config/autonomy.yml
+   - Consulter les docs de spécification pertinentes
 
-2. **Follow the architecture**
-   - Don't bypass the 3-tier pipeline (Kimmy → Prolex → Opex)
-   - Don't skip Proxy Master validation
-   - Respect autonomy level restrictions
+2. **Suivre l'architecture**
+   - Ne pas contourner le pipeline 3 tiers (Kimmy → Prolex → Opex)
+   - Ne pas sauter la validation Proxy Master
+   - Respecter les restrictions de niveau d'autonomie
 
-3. **Maintain consistency**
-   - Follow naming conventions exactly
-   - Use existing patterns from similar files
-   - Match coding style in existing code
+3. **Maintenir la cohérence**
+   - Suivre exactement les conventions de nommage
+   - Utiliser les patterns existants de fichiers similaires
+   - Respecter le style de code dans le code existant
 
-4. **Document everything**
-   - Update relevant docs when changing code
-   - Add comments for complex logic
-   - Include examples in schemas
+4. **Tout documenter**
+   - Mettre à jour les docs pertinentes lors de changements de code
+   - Ajouter des commentaires pour la logique complexe
+   - Inclure des exemples dans les schémas
 
-5. **Think about safety**
-   - Validate all inputs
-   - Handle errors gracefully
-   - Log all significant actions
-   - Never hard-code secrets
+5. **Penser à la sécurité**
+   - Valider toutes les entrées
+   - Gérer les erreurs avec élégance
+   - Journaliser toutes les actions significatives
+   - Ne jamais coder en dur les secrets
 
-6. **Test before committing**
-   - Run validation commands
-   - Test in local n8n instance
-   - Verify schema compliance
-   - Check CI will pass
+6. **Tester avant de commiter**
+   - Exécuter les commandes de validation
+   - Tester dans l'instance n8n locale
+   - Vérifier la conformité aux schémas
+   - Vérifier que la CI passera
 
-### Common Pitfalls to Avoid
+### Pièges courants à éviter
 
-❌ **Don't**:
-- Modify workflows directly in n8n without exporting to Git
-- Skip schema validation
-- Hard-code configuration values
-- Create tools without proper risk assessment
-- Bypass autonomy level checks
-- Ignore error handling
-- Forget to log to SystemJournal
-- Make breaking changes to schemas without migration
-- Commit secrets or API keys
-- Use inconsistent naming conventions
+❌ **Ne pas** :
+- Modifier les workflows directement dans n8n sans exporter vers Git
+- Sauter la validation de schéma
+- Coder en dur les valeurs de configuration
+- Créer des outils sans évaluation de risque appropriée
+- Contourner les vérifications de niveau d'autonomie
+- Ignorer la gestion d'erreurs
+- Oublier de journaliser dans SystemJournal
+- Faire des changements cassants aux schémas sans migration
+- Commiter des secrets ou clés API
+- Utiliser des conventions de nommage incohérentes
 
-✅ **Do**:
-- Export workflows from n8n after testing
-- Validate schemas in CI
-- Use config files for all settings
-- Assess risk level for new tools
-- Enforce autonomy levels via Proxy Master
-- Implement robust error handling
-- Log all actions to SystemJournal
-- Version schemas and provide migration paths
-- Use environment variables for secrets
-- Follow established naming conventions
+✅ **Faire** :
+- Exporter les workflows depuis n8n après test
+- Valider les schémas en CI
+- Utiliser des fichiers de config pour tous les paramètres
+- Évaluer le niveau de risque pour les nouveaux outils
+- Appliquer les niveaux d'autonomie via Proxy Master
+- Implémenter une gestion d'erreurs robuste
+- Journaliser toutes les actions dans SystemJournal
+- Versionner les schémas et fournir des chemins de migration
+- Utiliser des variables d'environnement pour les secrets
+- Suivre les conventions de nommage établies
 
-### Debugging Strategy
+### Stratégie de débogage
 
-1. **Check SystemJournal first**
-   - Google Sheets: Automatt_Logs
-   - Filter by `request_id` or `workflow_id`
-   - Look for error messages
+1. **Vérifier SystemJournal en premier**
+   - Google Sheets : Automatt_Logs
+   - Filtrer par `request_id` ou `workflow_id`
+   - Chercher les messages d'erreur
 
-2. **Review workflow execution in n8n**
-   - n8n UI → Executions
-   - Find failed execution
-   - Inspect node outputs
+2. **Consulter l'exécution du workflow dans n8n**
+   - UI n8n → Executions
+   - Trouver l'exécution échouée
+   - Inspecter les sorties de nœuds
 
-3. **Validate data structures**
-   - Check payload against schema
-   - Verify all required fields present
-   - Ensure types match
+3. **Valider les structures de données**
+   - Vérifier le payload contre le schéma
+   - Vérifier que tous les champs requis sont présents
+   - S'assurer que les types correspondent
 
-4. **Check autonomy permissions**
-   - Verify current level in config/autonomy.yml
-   - Check if tool is allowed at current level
-   - Review Proxy Master logs
+4. **Vérifier les permissions d'autonomie**
+   - Vérifier le niveau actuel dans config/autonomy.yml
+   - Vérifier si l'outil est autorisé au niveau actuel
+   - Consulter les logs Proxy Master
 
-5. **Test incrementally**
-   - Isolate the failing component
-   - Test with minimal payload
-   - Add complexity gradually
+5. **Tester de manière incrémentale**
+   - Isoler le composant défaillant
+   - Tester avec un payload minimal
+   - Ajouter de la complexité graduellement
 
-### Performance Considerations
+### Considérations de performance
 
-1. **Cost Optimization**
-   - Use Haiku for simple Kimmy tasks
-   - Cache frequent RAG queries
-   - Limit web search requests
-   - Monitor daily cost limits
+1. **Optimisation des coûts**
+   - Utiliser Haiku pour les tâches Kimmy simples
+   - Mettre en cache les requêtes RAG fréquentes
+   - Limiter les requêtes de recherche web
+   - Surveiller les limites de coûts quotidiens
 
-2. **Latency Optimization**
-   - Minimize workflow steps
-   - Use async where possible
-   - Cache external API responses
-   - Optimize n8n node configurations
+2. **Optimisation de latence**
+   - Minimiser les étapes de workflow
+   - Utiliser async où possible
+   - Mettre en cache les réponses d'API externes
+   - Optimiser les configurations de nœuds n8n
 
-3. **Rate Limiting**
-   - Respect external API limits
-   - Implement backoff strategies
-   - Monitor rate limit headers
-   - Log rate limit errors
+3. **Limitation de taux**
+   - Respecter les limites d'API externes
+   - Implémenter des stratégies de backoff
+   - Surveiller les en-têtes de limite de taux
+   - Journaliser les erreurs de limite de taux
 
-### Best Practices Summary
+### Résumé des bonnes pratiques
 
-| Area | Best Practice |
+| Domaine | Bonne pratique |
 |------|---------------|
-| **Code** | Follow existing patterns, validate inputs, handle errors |
-| **Configuration** | Use YAML, include comments, version control |
-| **Documentation** | Keep in sync with code, cross-reference, include examples |
-| **Workflows** | Test in UI, export to Git, log executions |
-| **Security** | Validate inputs, check permissions, log actions, no secrets |
-| **Testing** | Validate schemas, test workflows, check logs, verify CI |
-| **Git** | Descriptive commits, test before push, follow conventions |
+| **Code** | Suivre les patterns existants, valider les entrées, gérer les erreurs |
+| **Configuration** | Utiliser YAML, inclure des commentaires, contrôle de version |
+| **Documentation** | Garder en sync avec le code, croiser les références, inclure des exemples |
+| **Workflows** | Tester dans UI, exporter vers Git, journaliser les exécutions |
+| **Sécurité** | Valider les entrées, vérifier les permissions, journaliser les actions, pas de secrets |
+| **Tests** | Valider les schémas, tester les workflows, vérifier les logs, vérifier la CI |
+| **Git** | Commits descriptifs, tester avant push, suivre les conventions |
 
 ---
 
-## 📝 Additional Resources
+## 📝 Ressources additionnelles
 
-### External Documentation
+### Documentation externe
 
-- **n8n**: https://docs.n8n.io/
-- **MCP Protocol**: https://modelcontextprotocol.io/
-- **JSON Schema**: https://json-schema.org/
-- **AnythingLLM**: https://docs.anythingllm.com/
+- **n8n** : https://docs.n8n.io/
+- **Protocole MCP** : https://modelcontextprotocol.io/
+- **JSON Schema** : https://json-schema.org/
+- **AnythingLLM** : https://docs.anythingllm.com/
 
-### Internal Resources
+### Ressources internes
 
-- **SystemJournal**: https://docs.google.com/spreadsheets/d/1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk
-- **n8n Instance**: https://n8n.automatt.ai (production)
-- **n8n Local**: http://localhost:5678 (development)
+- **SystemJournal** : https://docs.google.com/spreadsheets/d/1xEEtkiRFLYvOc0lmK2V6xJyw5jUeye80rqcqjQ2vTpk
+- **Instance n8n** : https://n8n.automatt.ai (production)
+- **n8n Local** : http://localhost:5678 (développement)
 
-### Support Contacts
+### Contacts support
 
-- **Maintainer**: Matthieu (Automatt.ai)
-- **Email**: matthieu@automatt.ai
-- **GitHub**: https://github.com/ProlexAi/Prolex
+- **Mainteneur** : Matthieu (Automatt.ai)
+- **Email** : matthieu@automatt.ai
+- **GitHub** : https://github.com/ProlexAi/Prolex
 
 ---
 
 ## 🔄 Changelog
 
+### v5.1.0 (2025-12-01)
+- 🚀 Mise à jour pour Prolex V5 (architecture multi-dépôts)
+- 📦 42 outils MCP (n8n, Google Workspace, GitHub, System)
+- 🏗️ Documentation de l'architecture V5 complète
+- 📋 Structure 8 dépôts spécialisés
+- ✅ Production Ready avec cache, retry, rate limiting
+
 ### v4.0 (2025-11-22)
-- ✨ Initial creation of CLAUDE.md
-- 📚 Comprehensive guide for AI assistants
-- 🏗️ Documented complete v4 architecture
-- 📋 Added development workflows and conventions
-- 🔒 Included safety and security guidelines
-- ✅ Documented testing and validation procedures
+- ✨ Création initiale de CLAUDE.md
+- 📚 Guide complet pour les assistants IA
+- 🏗️ Documentation de l'architecture v4 complète
+- 📋 Ajout des workflows de développement et conventions
+- 🔒 Inclusion des directives de sécurité et sûreté
+- ✅ Documentation des procédures de tests et validation
 
 ---
 
-**Document Maintained By**: AI Assistants + Matthieu
-**Last Updated**: 2025-11-22
-**Version**: 4.0
-**Status**: Living Document (update as architecture evolves)
+**Document maintenu par** : Assistants IA + Matthieu
+**Dernière mise à jour** : 2025-12-01
+**Version** : 5.1.0
+**Statut** : Document vivant (mettre à jour au fur et à mesure de l'évolution de l'architecture)
 
 ---
 
-## Quick Reference Card
+## Carte de référence rapide
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ QUICK REFERENCE - PROLEX v4                                 │
+│ RÉFÉRENCE RAPIDE - PROLEX V5.1.0                            │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│ START HERE: INDEX_PROLEX.md                                 │
+│ COMMENCEZ ICI : INDEX_PROLEX.md                             │
 │                                                              │
-│ ARCHITECTURE:                                               │
-│   Kimmy (Filter) → Prolex (Brain) → Opex (Execution)       │
+│ ARCHITECTURE :                                              │
+│   Kimmy (Filtre) → Prolex (Cerveau) → Opex (Exécution)     │
 │                                                              │
-│ KEY FILES:                                                  │
-│   • config/autonomy.yml    - Autonomy levels                │
-│   • config/system.yml      - System config                  │
-│   • rag/tools/tools.yml    - Tool catalog                   │
+│ FICHIERS CLÉS :                                             │
+│   • config/autonomy.yml    - Niveaux d'autonomie            │
+│   • config/system.yml      - Config système                 │
+│   • rag/tools/tools.yml    - Catalogue d'outils             │
 │                                                              │
-│ WORKFLOWS:                                                  │
-│   • Design in n8n UI                                        │
-│   • Export JSON                                             │
-│   • Add to n8n-workflows/                                   │
+│ WORKFLOWS :                                                 │
+│   • Concevoir dans UI n8n                                   │
+│   • Exporter JSON                                           │
+│   • Ajouter dans n8n-workflows/                             │
 │   • Commit → Auto-sync                                      │
 │                                                              │
-│ TESTING:                                                    │
+│ TESTS :                                                     │
 │   ajv compile -s schemas/*.schema.json                      │
 │   yamllint config/                                          │
 │   markdownlint docs/**/*.md                                 │
 │                                                              │
-│ DEBUGGING:                                                  │
-│   1. Check SystemJournal (Google Sheets)                    │
-│   2. Check n8n executions                                   │
-│   3. Validate schemas                                       │
-│   4. Check autonomy permissions                             │
+│ DÉBOGAGE :                                                  │
+│   1. Vérifier SystemJournal (Google Sheets)                 │
+│   2. Vérifier exécutions n8n                                │
+│   3. Valider schémas                                        │
+│   4. Vérifier permissions d'autonomie                       │
 │                                                              │
-│ AUTONOMY LEVELS:                                            │
-│   0 = Read-only                                             │
-│   1 = Read + Logs                                           │
-│   2 = Low-risk actions (current)                            │
-│   3 = Advanced actions                                      │
+│ NIVEAUX D'AUTONOMIE :                                       │
+│   0 = Lecture seule                                         │
+│   1 = Lecture + Logs                                        │
+│   2 = Actions à faible risque (actuel)                      │
+│   3 = Actions avancées                                      │
 │                                                              │
-│ SAFETY RULES:                                               │
-│   ✓ Validate all inputs                                     │
-│   ✓ Log to SystemJournal                                    │
-│   ✓ Respect autonomy levels                                 │
-│   ✗ Never commit secrets                                    │
-│   ✗ Never bypass Proxy Master                               │
+│ RÈGLES DE SÉCURITÉ :                                        │
+│   ✓ Valider toutes les entrées                             │
+│   ✓ Journaliser dans SystemJournal                         │
+│   ✓ Respecter les niveaux d'autonomie                      │
+│   ✗ Ne jamais commiter de secrets                          │
+│   ✗ Ne jamais contourner Proxy Master                      │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
