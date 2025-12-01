@@ -23,7 +23,7 @@
 |-----------|------|-------------|
 | **Kimmy** | Filtre d'entrée intelligent | LLM + n8n |
 | **Prolex** | Cerveau orchestrateur | Claude 3.5 Sonnet (AnythingLLM) |
-| **Opex** | Bras exécutif | n8n workflows + Proxy Master |
+| **Opex** | Bras | n8n workflows + Proxy Master |
 | **SystemJournal** | Mémoire d'exécution | Google Sheets + MCP |
 | **RAG** | Base de connaissance | Google Drive + docs structurés |
 
