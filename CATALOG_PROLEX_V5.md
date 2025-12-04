@@ -127,7 +127,7 @@ CREATE TABLE logs_events (
 
 ### **11. Architecture GitHub – Branches + Risk Level** ✅
 **Status**: Documenté  
-**Repository**: `ProlexAi/prolex-master`  
+**Repository**: `ProlexAi/index-prolex`  
 **Path**: `ARCHITECTURE.md`, Branch rules dans GitHub  
 **Branches**: `feature/*`, `dev`, `main`  
 **Merge Rules**:
@@ -137,7 +137,7 @@ CREATE TABLE logs_events (
 
 ### **12. Plan d'Organisation Drive + GitHub + Local + VPS** ✅
 **Status**: Documenté  
-**Repository**: `ProlexAi/prolex-master`  
+**Repository**: `ProlexAi/index-prolex`  
 **Path**: `docs/ORGANIZATION_PLAN.md` (À créer)  
 **Covers**:
 - Google Drive structure (Contexts, RAG, Prompts, Logs)
@@ -147,7 +147,7 @@ CREATE TABLE logs_events (
 
 ### **13. Système Risk-LEVEL (%) pour Merges** ✅
 **Status**: À implémenter  
-**Repository**: `ProlexAi/prolex-master`  
+**Repository**: `ProlexAi/index-prolex`  
 **Path**: `docs/RISK_LEVELS.md`  
 **Scoring**:
 - 0-20% → Auto-merge allowed
@@ -211,7 +211,7 @@ C:\Automatt\
 
 | Dépôt | Purpose | Status | Last Updated |
 |-------|---------|--------|--------------|
-| **prolex-master** | Architecture spec & planning | ✅ | 2025-11-26 |
+| **index-prolex** | Architecture spec & planning | ✅ | 2025-11-26 |
 | **prolex-core** | Base types, models, services | ✅ | 2025-11-26 |
 | **prolex-mcp** | MCP servers (n8n, Google Workspace, GitHub) | ✅ Active | 2025-11-29 |
 | **prolex-kimmy** | Client assistant / lightweight workflows | ✅ | 2025-11-26 |
