@@ -1,381 +1,182 @@
-# 📚 INDEX PROLEX v4 – NAVIGATION COMPLÈTE
+# 📚 INDEX PROLEX V5 – Bibliothèque vivante du projet
 
-> **Point d'entrée central** pour toute la documentation Prolex v4
-> **Date** : 2025-11-22
-> **Version** : 4.0
-
----
-
-## 🎯 Démarrage rapide
-
-### Pour comprendre le système en 5 minutes
-1. Lire [Vue d'ensemble](#vue-densemble) (ci-dessous)
-2. Lire [Architecture globale](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#2-architecture-cible-v4--vue-globale)
-3. Consulter le [schéma Pipeline v4](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#21-pipeline-complet)
-
-### Pour développer / modifier
-1. Lire [Spécifications techniques](#spécifications-techniques)
-2. Consulter [Catalogue d'outils](rag/tools/tools.yml)
-3. Voir [Configuration système](config/system.yml)
-
-### Pour déployer
-1. Lire [Guide de déploiement](#déploiement-à-venir)
-2. Vérifier [Checklist pré-déploiement](#checklist-pré-déploiement)
+> **Point d'entrée central** pour toute la documentation publique Prolex V5  
+> **Date** : 2025-12-04  
+> **Version** : 5.1.0  
+> **Statut** : Index Public (bibliothèque vivante)
 
 ---
 
-## 📖 Vue d'ensemble
+## 🎯 À propos de cet index
 
-### Qu'est-ce que Prolex ?
+**Index-Prolex** est le **référentiel public** de documentation, d'architecture et de procédures pour l'écosystème Prolex V5. Il sert de bibliothèque vivante accessible aux développeurs, aux contributeurs et aux utilisateurs du système.
 
-**Prolex** est le cerveau IA orchestrateur d'Automatt.ai, capable de :
-- Comprendre les demandes en langage naturel
-- Décider automatiquement des actions à entreprendre
-- Designer, créer et modifier des workflows n8n de manière autonome
-- Maintenir une traçabilité complète de toutes les opérations
+### Rôle d'Index-Prolex
 
-### Architecture en 3 couches
+- 📖 **Documentation centrale** : architecture, spécifications, guides
+- 🗺️ **Cartographie** : organisation des 8 repos de l'écosystème V5
+- 📋 **Procédures** : workflows de développement, déploiement, contribution
+- 📐 **Règles** : conventions, standards, bonnes pratiques
+- 🔍 **Navigation** : point d'entrée pour comprendre le système
 
-```
-┌──────────────────────────────────┐
-│ KIMMY                            │  ← Filtre d'entrée
-│ (LLM + n8n)                      │
-└──────────┬───────────────────────┘
-           ↓ KimmyPayload (JSON)
-┌──────────────────────────────────┐
-│ PROLEX                           │  ← Cerveau orchestrateur
-│ (Claude 3.5 Sonnet + RAG)        │
-└──────────┬───────────────────────┘
-           ↓ ProlexOutput (JSON)
-┌──────────────────────────────────┐
-│ OPEX                             │  ← Bras exécutif
-│ (n8n workflows + Proxy Master)   │
-└──────────────────────────────────┘
-```
-
-### Nouveautés v4+
-
-- ✨ Prolex peut **designer des workflows n8n** (`N8N_WORKFLOW_DESIGN`)
-- ✨ Prolex peut **créer/modifier des workflows** en sandbox (`N8N_WORKFLOW_UPSERT`)
-- ✨ Prolex peut **tester des workflows** avant déploiement (`N8N_WORKFLOW_TEST`)
-- ✨ **4 niveaux d'autonomie** (0-3) pour contrôler les permissions
-- ✨ **Garde-fous multiples** pour sécurité maximale
+> ⚠️ **Note** : Les détails d'implémentation avancés, configurations sensibles et logiques internes sont documentés dans **Prolex-Système** (référentiel privé).
 
 ---
 
-## 📂 Structure du repository
+## 🏗️ Architecture Prolex V5
+
+### Vue d'ensemble
+
+**Prolex V5** est une plateforme sophistiquée d'automatisation intelligente et d'orchestration multi-repos, construite sur TypeScript/Node.js et intégrée avec Claude Desktop via le Model Context Protocol (MCP).
 
 ```
-Prolex/
-├── README.md                           # Point d'entrée GitHub
-├── INDEX_PROLEX.md                     # Ce fichier (index central)
-│
-├── docs/                               # Documentation
-│   ├── architecture/
-│   │   └── ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md  # 📘 Doc maîtresse
-│   ├── specifications/
-│   │   ├── SPEC_KIMMY_V4.md            # Spec Kimmy
-│   │   ├── SPEC_PROLEX_V4.md           # Spec Prolex
-│   │   └── SPEC_OPEX_V4.md             # Spec Opex
-│   └── guides/
-│       ├── ANALYSE_CRITIQUE_V4.md      # Analyse experte
-│       └── GUIDE_CLIENTS.md            # Guide pour clients
-│
-├── schemas/                            # Schémas JSON
-│   ├── payloads/
-│   │   ├── kimmy_payload.schema.json
-│   │   └── prolex_output.schema.json
-│   ├── logs/
-│   │   └── systemjournal_entry.schema.json
-│   └── tools/
-│       └── tool_definition.schema.json
-│
-├── rag/                                # Base de connaissance Prolex
-│   ├── tools/
-│   │   └── tools.yml                   # 📋 Catalogue d'outils complet
-│   ├── rules/
-│   │   └── 01_REGLES_PRINCIPALES.md
-│   ├── examples/
-│   └── context/
-│       └── 02_VARIABLES_ET_CONTEXTE.md
-│
-├── config/                             # Configuration système
-│   ├── autonomy.yml                    # ⚙️ Niveaux d'autonomie
-│   └── system.yml                      # ⚙️ Config globale
-│
-├── n8n-workflows/                      # Workflows n8n (source de vérité)
-│   ├── 010_sync-github-to-n8n.json
-│   ├── 020_example-hello-world.json
-│   ├── 030_github-dev-log-to-sheets.json
+┌────────────────────────────────────────────────────────────┐
+│             CLAUDE DESKTOP                                  │
+│          (Interface chat & Entrée utilisateur)              │
+└──────────────────────┬─────────────────────────────────────┘
+                       │
+                       │ Model Context Protocol (MCP)
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+        ▼                             ▼
+┌──────────────────┐          ┌──────────────────┐
+│  GitHub MCP      │          │  prolex-mcp v5.1 │ ⭐ NOYAU
+│  (Officiel)      │          │  (42 outils)     │
+└──────────────────┘          └────────┬─────────┘
+                                       │
+                    ┌──────────────────┼──────────────────┐
+                    │                  │                  │
+                    ▼                  ▼                  ▼
+            ┌──────────┐        ┌──────────┐     ┌──────────┐
+            │   n8n    │        │  Google  │     │  GitHub  │
+            │Workflows │        │ Workspace│     │   APIs   │
+            └──────────┘        └──────────┘     └──────────┘
+```
+
+### Organisation multi-repos
+
+Prolex V5 est organisé en **8 dépôts spécialisés** :
+
+| Dépôt | Rôle | Statut | GitHub |
+|-------|------|--------|--------|
+| **index-prolex** | Index public, bibliothèque vivante | ✅ Actif | ProlexAi/index-prolex |
+| **prolex-systeme** | Index privé, orchestrateur runtime | 🔧 En création | ProlexAi/prolex-systeme |
+| **prolex-mcp** | Serveur MCP principal (42 outils) | ✅ Production v5.1.0 | ProlexAi/prolex-mcp |
+| **prolex-core** | Modules communs, libs transversales | 🔧 En activation | ProlexAi/prolex-core |
+| **prolex-tools** | Scripts CLI, helpers, utilitaires | 🔧 En activation | ProlexAi/prolex-tools |
+| **prolex-vector** | Moteur RAG / Vectorisation | 🔧 En activation | ProlexAi/prolex-vector |
+| **n8n-workflows** | Workflows n8n (source de vérité) | ✅ Actif | ProlexAi/n8n-workflows |
+| **opex-cli** | Outils Opex (opérations, finance) | 🔧 En activation | ProlexAi/opex-cli |
+
+> 📝 **Note historique** : Ce dépôt s'appelait auparavant `prolex-master`. Il a été renommé `index-prolex` pour mieux refléter son rôle d'index public et de bibliothèque vivante du projet.
+
+---
+
+## 📂 Structure de cet index
+
+### Organisation des dossiers
+
+```
+index-prolex/
+├── ARCHITECTURE/           # Documentation architecture système
 │   └── README.md
-│
-├── mcp/                                # Serveurs MCP
-│   ├── n8n-server/                     # ✅ Existant
-│   ├── google-sheets/                  # 🔜 À créer
-│   ├── google-drive/                   # 🔜 À créer
-│   └── systemjournal/                  # 🔜 À créer
-│
-├── infra/                              # Infrastructure
-│   └── vps-prod/                       # 🔜 À compléter
-│       ├── docker-compose.yml
-│       ├── scripts/
-│       └── docs/
-│
-└── cli/                                # CLI (futur)
-    └── prolexctl/                      # 🔜 À créer
+├── PROCEDURES/             # Procédures de développement et déploiement
+│   └── README.md
+├── RULES/                  # Règles, conventions, standards
+│   └── README.md
+├── docs/                   # Documentation détaillée
+│   ├── architecture/
+│   ├── specifications/
+│   ├── guides/
+│   └── contextes/
+├── schemas/                # Schémas JSON
+├── config/                 # Configuration système (publique)
+├── rag/                    # Base de connaissance RAG
+├── scripts/                # Scripts utilitaires
+└── INDEX_PROLEX.md         # Ce fichier
 ```
 
----
-
-## 📘 Documentation architecture
-
-### Document maître
-| Document | Rôle | Quand le lire |
-|----------|------|---------------|
-| [ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md) | **Document principal** : vision complète du système | Premier doc à lire pour comprendre Prolex v4 |
-
-### Sections clés du document maître
-1. [Résumé exécutif](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#0-résumé-exécutif) - Vision 1000 pieds
-2. [Pipeline complet](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#21-pipeline-complet) - Flux de bout en bout
-3. [Kimmy v4](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#3-détails-v4--kimmy) - Filtre d'entrée
-4. [Prolex v4](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#4-détails-v4--prolex-cerveau-orchestrateur) - Cerveau
-5. [Opex v4](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#5-détails-v4--opex-n8n--proxy) - Exécution
-6. [Autonomie](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#6-autonomie--variables-de-configuration-v4) - Niveaux 0-3
-7. [Plan d'action](docs/architecture/ARCHITECTURE_SYSTEME_V4_PLUS_AUTONOMIE.md#8-plan-daction-v4-avec-workflows-éditables) - Roadmap
-
----
-
-## 📋 Spécifications techniques
-
-### Spécifications par composant
-| Document | Composant | Contenu |
-|----------|-----------|---------|
-| [SPEC_KIMMY_V4.md](docs/specifications/SPEC_KIMMY_V4.md) | Kimmy | Filtre d'entrée, intents, KimmyPayload, modes safe/quick_actions |
-| [SPEC_PROLEX_V4.md](docs/specifications/SPEC_PROLEX_V4.md) | Prolex | Cerveau orchestrateur, ProlexOutput, raisonnement, autonomie |
-| [SPEC_OPEX_V4.md](docs/specifications/SPEC_OPEX_V4.md) | Opex | Workflows n8n, Proxy Master, gestion workflows, MCP |
-
-### Points clés par spec
-
-#### SPEC_KIMMY_V4
-- 13 intents possibles (task_create, question_systeme, dev_workflow, etc.)
-- Règles de routage vers Prolex
-- Format KimmyPayload JSON
-- Modes : `safe` vs `quick_actions`
-
-#### SPEC_PROLEX_V4
-- 4 types de sorties (answer, tool_call, multi_tool_plan, clarification)
-- 4 niveaux d'autonomie (0-3)
-- Variables de contexte
-- Outils N8N_* pour gestion workflows
-
-#### SPEC_OPEX_V4
-- Catalogue de workflows (100+)
-- Proxy Master (garde-fou)
-- Bonnes pratiques développement workflows
-- Sécurité et logging
-
----
-
-## ⚙️ Configuration
-
-### Fichiers de configuration
-
-| Fichier | Rôle | Quand le modifier |
-|---------|------|-------------------|
-| [config/autonomy.yml](config/autonomy.yml) | Niveaux d'autonomie Prolex | Changer niveau, ajuster permissions |
-| [config/system.yml](config/system.yml) | Config globale système | Changer limites, APIs, monitoring |
-| [rag/tools/tools.yml](rag/tools/tools.yml) | Catalogue d'outils | Ajouter/modifier un outil |
-
-### Variables clés
-
-#### Autonomie
-```yaml
-# config/autonomy.yml
-prolex_current_autonomy_level: 2  # 0, 1, 2, ou 3
-```
-
-#### Projet
-```yaml
-# config/system.yml
-current_project: "Automatt.ai"
-current_environment: "development"
-```
-
-#### Kimmy
-```yaml
-# config/system.yml
-kimmy:
-  mode: "quick_actions"  # ou "safe"
-```
-
----
-
-## 🛠️ Outils disponibles
-
-### Catalogue complet
-Voir [rag/tools/tools.yml](rag/tools/tools.yml)
-
-### Catégories d'outils
-
-| Catégorie | Nombre | Exemples |
-|-----------|--------|----------|
-| **Productivité** | 5 | TASK_CREATE, CAL_EVENT_CREATE, DOC_CREATE_NOTE |
-| **Documentation** | 2 | DOC_CREATE_NOTE, DOC_UPDATE |
-| **Logging** | 1 | LOG_APPEND |
-| **Recherche** | 1 | WEB_SEARCH |
-| **DevOps** | 4 | GIT_CLONE, GIT_SYNC, GITHUB_OPEN_PR |
-| **Client** | 3 | CLIENT_WORKFLOW_RUN, CLIENT_ONBOARDING |
-| **Monitoring** | 2 | HEALTHCHECK_RUN, GLOBAL_ERROR_ALERT |
-| **Backup** | 2 | BACKUP_RUN, RESTORE_BACKUP |
-| **Reporting** | 3 | COST_REPORT_RUN, WEEKLY_SUMMARY |
-| **N8N Management** | 5 | N8N_WORKFLOW_DESIGN, N8N_WORKFLOW_UPSERT, N8N_WORKFLOW_TEST |
-| **Core** | 2 | PROXY_EXEC, TODO_CREATE |
-
-**Total** : 30+ outils
-
-### Outils v4+ (nouveauté)
-
-| Outil | Niveau requis | Rôle |
-|-------|---------------|------|
-| `N8N_WORKFLOW_DESIGN` | 2+ | Concevoir un workflow n8n |
-| `N8N_WORKFLOW_UPSERT` | 3 | Créer/modifier workflow (sandbox) |
-| `N8N_WORKFLOW_TEST` | 3 | Tester un workflow |
-| `N8N_WORKFLOW_PROMOTE` | Manuel | Promouvoir vers production |
-
----
-
-## 📊 Schémas JSON
-
-### Schémas principaux
-
-| Schéma | Fichier | Utilisé par |
-|--------|---------|-------------|
-| **KimmyPayload** | [schemas/payloads/kimmy_payload.schema.json](schemas/payloads/kimmy_payload.schema.json) | Kimmy → Prolex |
-| **ProlexOutput** | [schemas/payloads/prolex_output.schema.json](schemas/payloads/prolex_output.schema.json) | Prolex → Proxy |
-| **SystemJournalEntry** | [schemas/logs/systemjournal_entry.schema.json](schemas/logs/systemjournal_entry.schema.json) | Tous → SystemJournal |
-| **ToolDefinition** | [schemas/tools/tool_definition.schema.json](schemas/tools/tool_definition.schema.json) | Définition d'outils |
-
----
-
-## 🚀 Déploiement (à venir)
-
-### Checklist pré-déploiement
-
-#### Infrastructure
-- [ ] VPS configuré
-- [ ] Docker + Docker Compose installés
-- [ ] Domaines configurés (n8n.automatt.ai, anythingllm.automatt.ai)
-- [ ] Certificats SSL (Let's Encrypt)
-
-#### Services
-- [ ] Traefik déployé et testé
-- [ ] n8n déployé et configuré
-- [ ] AnythingLLM déployé et configuré
-- [ ] PostgreSQL + Redis opérationnels
-
-#### Configuration
-- [ ] Credentials n8n configurées (Google, GitHub, etc.)
-- [ ] RAG Prolex importé dans AnythingLLM
-- [ ] Workflows n8n déployés depuis GitHub
-- [ ] SystemJournal créé (Google Sheets)
-
-#### Tests
-- [ ] Test workflow sync GitHub → n8n
-- [ ] Test Kimmy → Prolex → Opex (end-to-end)
-- [ ] Test création workflow auto (N8N_WORKFLOW_DESIGN → UPSERT → TEST)
-- [ ] Test logging SystemJournal
-
----
-
-## 📚 Guides pratiques
-
-### Pour développeurs
-
-#### Ajouter un nouvel outil
-1. Définir dans [rag/tools/tools.yml](rag/tools/tools.yml)
-2. Créer schéma payload `schemas/payloads/<tool>.schema.json`
-3. Créer workflow n8n `n8n-workflows/<num>_<tool>.json`
-4. Mettre à jour Proxy Master pour router l'outil
-5. Tester + documenter
-
-#### Créer un nouveau workflow n8n
-1. Designer dans n8n UI
-2. Exporter JSON
-3. Ajouter dans `n8n-workflows/` avec numéro approprié
-4. Commit + push → sync auto via webhook GitHub
-
-#### Modifier le niveau d'autonomie
-1. Éditer `config/autonomy.yml`
-2. Changer `prolex_current_autonomy_level`
-3. Vérifier impacts sur outils autorisés
-
-### Pour utilisateurs
-
-#### Utiliser Prolex au quotidien
-1. Envoyer demande via chat/WhatsApp/email
-2. Kimmy filtre et structure
-3. Prolex planifie et exécute (selon autonomie)
-4. Vérifier résultat dans SystemJournal
-
-#### Interpréter les logs
-- Consulter Google Sheet `Automatt_Logs`, onglet `SystemJournal`
-- Colonnes clés : `timestamp`, `agent`, `action_type`, `result.status`
-- Filtrer par `request_id` pour tracer une demande
-
----
-
-## 🔍 Analyse & amélioration
-
-### Documents d'analyse
+### Documents clés
 
 | Document | Rôle |
 |----------|------|
-| [ANALYSE_CRITIQUE_V4.md](docs/guides/ANALYSE_CRITIQUE_V4.md) | Analyse experte : forces, faiblesses, risques, recommandations |
-| [GUIDE_CLIENTS.md](docs/guides/GUIDE_CLIENTS.md) | Documentation pour futurs clients Automatt.ai |
-
-### Métriques à surveiller
-
-- **Taux d'escalade Kimmy → Prolex** : 40-60% idéal
-- **Taux de succès Prolex** : > 90%
-- **Coût moyen par requête** : < $0.05
-- **Latence moyenne** : < 5s
+| **INDEX_PROLEX.md** | Point d'entrée central |
+| **README.md** | Vue d'ensemble du projet |
+| **ARCHITECTURE_COMPLETE_V5.md** | Architecture complète analysée |
+| **CATALOG_PROLEX_V5.md** | Catalogue des composants |
+| **CLAUDE.md** | Guide pour assistants IA |
+| **INSTALLATION.md** | Guide d'installation |
 
 ---
 
-## 🆘 Aide & support
+## 🚀 Démarrage rapide
 
-### Questions fréquentes
+### Pour comprendre Prolex V5
 
-**Q: Comment changer le niveau d'autonomie de Prolex ?**
-R: Éditer `config/autonomy.yml`, modifier `prolex_current_autonomy_level`.
+1. **Lire** : README.md - Vue d'ensemble
+2. **Consulter** : ARCHITECTURE/ - Architecture système
+3. **Explorer** : docs/architecture/ - Documentation détaillée
 
-**Q: Comment ajouter un nouvel outil ?**
-R: Voir [Guides pratiques](#pour-développeurs) > Ajouter un nouvel outil.
+### Pour développer
 
-**Q: Où voir les logs d'exécution ?**
-R: Google Sheet `Automatt_Logs`, onglet `SystemJournal`.
+1. **Cloner** : Tous les repos V5 dans le même workspace
+2. **Installer** : Suivre INSTALLATION.md
+3. **Configurer** : Consulter config/
 
-**Q: Comment tester un workflow avant prod ?**
-R: Utiliser `N8N_WORKFLOW_TEST` sur sandbox, puis `N8N_WORKFLOW_PROMOTE` avec confirmation.
+### Pour contribuer
 
-### Contact
+1. **Lire** : PROCEDURES/ - Workflows de contribution
+2. **Suivre** : RULES/ - Conventions et standards
+3. **Référencer** : docs/guides/ - Guides pratiques
 
-- **Matthieu** (Automatt.ai) : matthieu@automatt.ai
-- **Repo GitHub** : [ProlexAi/Prolex](https://github.com/ProlexAi/Prolex)
+---
+
+## 🛠️ Technologies principales
+
+| Couche | Technologie | Version |
+|--------|-------------|---------|
+| **Runtime** | Node.js | ≥18.0.0 |
+| **Langage** | TypeScript | 5.6.0 - 5.7.2 |
+| **Protocole** | MCP | 1.0.4 |
+| **Automatisation** | n8n | Latest |
+| **Infrastructure** | Docker | Latest |
+
+---
+
+## 🔗 Liens vers les autres repos
+
+- **prolex-mcp** - Serveur MCP principal (42 outils)
+- **prolex-core** - Bibliothèques partagées
+- **prolex-tools** - Outils CLI & GUI
+- **prolex-vector** - Moteur RAG
+- **n8n-workflows** - Workflows n8n
+- **opex-cli** - Outils opérationnels
+
+### Relation avec Prolex-Système
+
+**Prolex-Système** (référentiel privé) contient :
+- L'index privé du projet
+- Les détails d'implémentation avancés
+- Les configurations sensibles
+- La logique d'orchestration runtime
+
+> 📋 **Index-Prolex** (ce repo) ↔️ **Prolex-Système** (privé)  
+> Documentation publique ↔️ Implémentation privée
 
 ---
 
 ## 📅 Changelog
 
-### v4.0 (2025-11-22)
-- ✨ Intégration Kimmy + Prolex + Opex
-- ✨ Gestion autonome workflows n8n
-- ✨ 4 niveaux d'autonomie
-- ✨ 30+ outils disponibles
-- ✨ Documentation complète
+### v5.1.0 (2025-12-04)
+- 🏗️ Restructuration : prolex-master → index-prolex
+- 📂 Création des dossiers ARCHITECTURE/, PROCEDURES/, RULES/
+- 📝 Mise à jour de l'index pour le rôle public
+- 🔐 Séparation public/privé (index-prolex / prolex-systeme)
 
 ---
 
-**Maintenu par** : Matthieu (Automatt.ai)
-**Dernière mise à jour** : 2025-11-22
-**Version** : 4.0
+**Maintenu par** : Organisation ProlexAi  
+**Dernière mise à jour** : 2025-12-04  
+**Version** : 5.1.0  
+**Statut** : Index Public - Bibliothèque vivante
