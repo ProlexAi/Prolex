@@ -1,5 +1,0 @@
-{
-  "runsLogFile": "./logs/prolex_runs.jsonl",
-  "errorsLogFile": "./logs/prolex_errors.jsonl",
-  "maxPreviewChars": 2000
-}

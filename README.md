@@ -1,12 +1,14 @@
-# Prolex Master v5 🧠
+# Index-Prolex v5 📚
 
-> **Cerveau documentaire et configuration centrale** pour l'écosystème Prolex V5 (Automatt.ai)
+> **Index public et bibliothèque vivante** pour l'écosystème Prolex V5 (Automatt.ai)
 
 ---
 
 ## 🎯 Vue d'ensemble
 
-**Prolex Master** est le dépôt central de documentation, configuration et architecture pour l'écosystème Prolex V5. Il contient toute la connaissance système nécessaire au fonctionnement de l'infrastructure multi-dépôts.
+**Index-Prolex** est le référentiel public de documentation, configuration et architecture pour l'écosystème Prolex V5. Il contient toute la connaissance système publique nécessaire au fonctionnement de l'infrastructure multi-dépôts.
+
+> 📝 **Note historique** : Ce dépôt s'appelait auparavant `prolex-master`. Il a été renommé `index-prolex` pour mieux refléter son rôle d'index public et de bibliothèque vivante du projet.
 
 ### Architecture V5 - Multi-dépôts
 
@@ -14,7 +16,8 @@ Prolex V5 est organisé en **8 dépôts spécialisés** :
 
 | Dépôt | Rôle | Statut |
 |-------|------|--------|
-| **prolex-master** | Documentation centrale, config, RAG, schemas | ✅ Actif |
+| **index-prolex** | Index public, bibliothèque vivante | ✅ Actif |
+| **prolex-systeme** | Index privé, orchestrateur runtime | 🔧 En création |
 | **prolex-mcp** | Serveur MCP principal (42 outils : n8n, Google, GitHub) | ✅ Production v5.1.0 |
 | **prolex-core** | Modules communs, libs transversales, types | 🔧 En activation |
 | **prolex-tools** | Scripts CLI, helpers, utilitaires | 🔧 En activation |
@@ -25,10 +28,10 @@ Prolex V5 est organisé en **8 dépôts spécialisés** :
 
 ---
 
-## 📂 Structure prolex-master
+## 📂 Structure index-prolex
 
 ```
-prolex-master/
+index-prolex/
 ├── docs/                      # Documentation complète V5
 │   ├── architecture/          # Architecture système
 │   ├── specifications/        # Specs par composant
@@ -151,7 +154,7 @@ prolex-master/
 ```bash
 # 1. Cloner tous les dépôts V5
 cd C:\Users\Matth\Workspace\ProlexV5
-git clone https://github.com/ProlexAi/prolex-master.git
+git clone https://github.com/ProlexAi/index-prolex.git
 git clone https://github.com/ProlexAi/prolex-mcp.git
 git clone https://github.com/ProlexAi/prolex-core.git
 # ... (autres dépôts)
@@ -197,7 +200,7 @@ MIT - Automatt.ai
 
 - **Mainteneur** : Matthieu (Automatt.ai)
 - **Email** : matthieu@automatt.ai
-- **Repo GitHub** : [ProlexAi/prolex-master](https://github.com/ProlexAi/prolex-master)
+- **Repo GitHub** : [ProlexAi/index-prolex](https://github.com/ProlexAi/index-prolex)
 
 ---
 
