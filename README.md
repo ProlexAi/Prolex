@@ -12,7 +12,7 @@
 
 ### Architecture V5 - Multi-dépôts
 
-Prolex V5 est organisé en **8 dépôts spécialisés** :
+Prolex V5 est organisé en **7 dépôts spécialisés** :
 
 | Dépôt | Rôle | Statut |
 |-------|------|--------|
@@ -20,12 +20,10 @@ Prolex V5 est organisé en **8 dépôts spécialisés** :
 | **prolex-systeme** | Index privé, orchestrateur runtime | 🔧 En création |
 | **prolex-mcp** | Serveur MCP principal (42 outils : n8n, Google, GitHub) | ✅ Production v5.1.0 |
 | **prolex-core** | Modules communs, libs transversales, types | 🔧 En activation |
-| **prolex-tools** | Scripts CLI, helpers, utilitaires | 🔧 En activation |
+| **prolex-tools** | Outillage local (GUI, CLI, scripts, Env Manager) | ✅ Actif |
 | **prolex-vector** | Moteur RAG / Vectorisation (AnythingLLM) | 🔧 En activation |
 | **prolex-kimmy** | Agent Kimmy (secrétaire/client-facing) | 🔧 En activation |
 | **n8n-workflows** | Workflows n8n (source de vérité) | ✅ Actif |
-| **opex-cli** | Outils Opex (opérations, finance, reporting) | 🔧 En activation |
-
 ---
 
 ## 📂 Structure index-prolex

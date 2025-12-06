@@ -216,10 +216,8 @@ C:\Automatt\
 | **prolex-mcp** | MCP servers (n8n, Google Workspace, GitHub) | ✅ Active | 2025-11-29 |
 | **prolex-kimmy** | Client assistant / lightweight workflows | ✅ | 2025-11-26 |
 | **prolex-vector** | Vectorization, embeddings, RAG | ✅ | 2025-11-26 |
-| **prolex-tools** | Monitoring scripts, CLI, utilities | ✅ | 2025-11-26 |
+| **prolex-tools** | Outillage local (GUI, CLI, scripts, Env Manager) | ✅ | 2025-11-26 |
 | **n8n-workflows** | n8n workflow definitions (JSON) | 🔄 Cleaned | 2025-11-30 |
-| **opex-cli** | Operations CLI (billing, analysis) | ✅ | 2025-11-26 |
-
 ---
 
 ## 🚀 Next Steps (Prioritized)
@@ -263,16 +261,16 @@ C:\Automatt\
 | AtmttViewer | Desktop App | ❌ TODO | TBD | - |
 | MCP n8n | MCP Server | ✅ Active | prolex-mcp | README.md |
 | MCP Google | MCP Tools | ⚠️ Partial | prolex-mcp | .env needed |
-| Monitoring Scripts | Tools | 📝 Draft | prolex-tools | TBD |
+| prolex-tools | Outillage local (GUI, CLI, scripts, Env Manager) | ✅ | prolex-tools | ARCHITECTURE.md |
 | PostgreSQL logs_events | DB Table | 📝 Schema | VPS | ARCHITECTURE.md |
 | Workflow INFRA | n8n | 📝 Template | n8n-workflows | ARCHITECTURE.md |
 | Workflow APPS | n8n | 📝 Template | n8n-workflows | ARCHITECTURE.md |
 | Workflow ERRORS | n8n | 📝 Template | n8n-workflows | ARCHITECTURE.md |
 | ranger_natifs.ps1 | PowerShell | 📝 Spec | prolex-tools | TBD |
 | nettoyage_ce_pc.reg | Registry | 📝 Spec | prolex-tools | TBD |
-| GitHub Branches | CI/CD | ✅ Documented | prolex-master | ARCHITECTURE.md |
-| Org Plan | Documentation | 📝 Draft | prolex-master | TBD |
-| Risk-LEVEL System | Process | 📝 Spec | prolex-master | TBD |
+| GitHub Branches | CI/CD | ✅ Documented | index-prolex | ARCHITECTURE.md |
+| Org Plan | Documentation | 📝 Draft | index-prolex | TBD |
+| Risk-LEVEL System | Process | 📝 Spec | index-prolex | TBD |
 | MONITOR-ENGINEER Prompt | AI System | 📝 Spec | prolex-core | TBD |
 | SYSTEM-ORGANIZER Prompt | AI System | 📝 Spec | prolex-core | TBD |
 | C:\Automatt Structure | Local FS | ✅ Defined | Local | N/A |
@@ -285,7 +283,7 @@ C:\Automatt\
 - **n8n-workflows/ARCHITECTURE.md** ← Start here for monitoring workflows
 - **n8n-workflows/README.md** ← Setup & configuration
 - **prolex-mcp/.env** ← Configuration (N8N_API_KEY, etc.)
-- **prolex-master/ARCHITECTURE.md** (TBD) ← System architecture
+- **index-prolex/ARCHITECTURE.md** (TBD) ← System architecture
 
 ---
 

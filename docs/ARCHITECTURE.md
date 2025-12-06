@@ -1,5 +1,4 @@
-# ARCHITECTURE DU PROJET PROLEX v4+
-
+# ARCHITECTURE DU PROJET PROLEX v5
 > Documentation de la structure complète du système Automatt.ai
 > Dernière mise à jour : 22 novembre 2025
 
@@ -21,7 +20,7 @@
 
 ### Concept général
 
-**Prolex v4+** est un système d'orchestration IA multi-couches conçu pour automatiser les tâches de productivité, développement et gestion client.
+**Prolex v5** est un système d'orchestration IA multi-couches conçu pour automatiser les tâches de productivité, développement et gestion client.
 
 ### Architecture 3 couches
 
@@ -50,6 +49,8 @@
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  OPEX - Couche d'exécution                                  │
+│  • opex-cli (CLI opérationnelle)                            │
+│  • Opex Deployer (GUI DevOps)                               │
 │  • Proxy Master (garde-fou)                                 │
 │  • Workflows n8n (30+ workflows métier)                     │
 │  • MCP Servers (connecteurs externes)                       │
@@ -626,7 +627,7 @@ Voir fichier : `config/autonomy.yml`
 
 ---
 
-## INNOVATIONS v4+
+## INNOVATIONS v5
 
 ### 1. Gestion autonome workflows n8n
 - Prolex peut **designer** des workflows n8n à partir d'une description naturelle
@@ -658,7 +659,7 @@ Voir fichier : `config/autonomy.yml`
 
 ---
 
-## MÉTRIQUES ET OBJECTIFS v4
+## MÉTRIQUES ET OBJECTIFS v5
 
 ### Objectifs de performance
 
@@ -705,7 +706,7 @@ Voir fichier : `config/autonomy.yml`
 
 | Élément | Source | Emplacement |
 |---------|--------|-------------|
-| Code source | GitHub | `github.com/ProlexAi/Prolex` |
+| Code source | GitHub | `github.com/ProlexAi/index-prolex` |
 | Configuration | GitHub | `config/*.yml` |
 | Workflows n8n | GitHub + n8n | `n8n-workflows/*.json` (sync auto) |
 | Logs exécution | Google Sheets | SystemJournal > Automatt_Logs |
@@ -719,7 +720,7 @@ Voir fichier : `config/autonomy.yml`
 
 **Projet** : Automatt.ai
 **Version** : v4+ (avec gestion autonome workflows n8n)
-**Repository** : https://github.com/ProlexAi/Prolex
+**Repository** : https://github.com/ProlexAi/index-prolex
 **Documentation complète** : `/docs/`
 
 **Fichiers clés** :
